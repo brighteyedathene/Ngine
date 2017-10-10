@@ -4,8 +4,8 @@
 
 namespace ngine
 {
-	const int WINDOW_WIDTH = 800; // initial width
-	const int WINDOW_HEIGHT = 600; // initial height 
+	const int WINDOW_WIDTH = 1280; // initial width
+	const int WINDOW_HEIGHT = 720; // initial height 
 
 	GLFWwindow* window;
 }

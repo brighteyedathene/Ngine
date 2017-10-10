@@ -1,10 +1,24 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <stdlib.h>
 
 #include "EngineGlobals.h"
 
-//using namespace ngine;
+
+#pragma region shaderz
+
+static const char* vertexShaderSource = "\n\
+#version 450\n\
+layout (location = 0) in vec3 aPos;\n\
+\n\
+void main()\n\
+{\n\
+	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n\
+}\n\
+";
+
+#pragma endregion shaderz
 
 #pragma region callbacks
 
@@ -24,11 +38,12 @@ void ProcessInput(GLFWwindow* window)
 		glfwSetWindowShouldClose(window, true);
 }
 
-#pragma endregion register_callbacks
+#pragma endregion callbacks
 
-
+// From this point on, 'window' refers to the GFLWwindow* window defined in EngineGlobals.h
 using namespace ngine;
-int main(int argc, char** argv) 
+
+void Initialise()
 {
 	// initialise GLFW window
 	glfwInit();
@@ -42,19 +57,19 @@ int main(int argc, char** argv)
 		NULL,
 		NULL
 	);
-	if (window == NULL) 
+	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 	glfwMakeContextCurrent(window);
 
 	// initialise GLAD
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) 
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cout << "Failed to initialise GLAD" << std::endl;
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 
 	// opengl also needs to know the dimensions of the window
@@ -62,6 +77,45 @@ int main(int argc, char** argv)
 
 	// register window for window-resizing callback function
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+}
+
+
+int main(int argc, char** argv) 
+{
+	// initialise GLFWwindow and opengl rendering context
+	Initialise();
+
+#pragma region garbage
+
+	float vertices[] = {
+		-1.0f, -1.0f, 0.0f,
+		0.0f, -1.0f, 0.0f,
+		0.0f, 1.0f, 0.0f
+	};
+
+	// veery simple VBO creation
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	// compile shader
+	unsigned int vertexShader;
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+	glCompileShader(vertexShader);
+	int success;
+	char infoLog[512];
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+		std::cout << "Error: vertex shader compilation failed\n" << infoLog << std::endl;
+	}
+
+
+#pragma endregion garbage
 
 	// render loop!
 	while (!glfwWindowShouldClose(window)) 
