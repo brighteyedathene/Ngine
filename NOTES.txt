@@ -55,3 +55,13 @@ glUseProgram(ShaderProgram_2);
 glBindVertexArray(VAO_2);
 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 glBindVertexArray(0); // unbind the vertex array
+
+
+======================================================================================
+Some stupid shit with uniforms
+======================================================================================
+float time = glfwGetTime();
+float green = (sin(time) / 2.0f) + 0.5f;
+int uniColor = glGetUniformLocation(dummyShaderProgram, "uniColor");
+glUseProgram(dummyShaderProgram);
+glUniform4f(uniColor, 0.0f, green, 0.0f, 1.0f);
