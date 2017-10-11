@@ -18,6 +18,33 @@ void main()\n\
 }\n\
 ";
 
+static const char* fragmentShaderSource = "\n\
+#version 450 core\n\
+out vec4 FragColor;\n\
+\n\
+void main()\n\
+{\n\
+	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); \n\
+}\n\
+";
+
+unsigned int CompileShader(const char* shaderSource, GLenum shaderType) {
+	unsigned int shader;
+	shader = glCreateShader(shaderType);
+	glShaderSource(shader, 1, &shaderSource, NULL);
+	glCompileShader(shader);
+	int success;
+	char infoLog[512];
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		glGetShaderInfoLog(shader, 512, NULL, infoLog);
+		std::cout << "Error: Shader compilation failed\n" << infoLog << std::endl;
+		return -1;
+	}
+	return shader;
+}
+
 #pragma endregion shaderz
 
 #pragma region callbacks
@@ -39,6 +66,7 @@ void ProcessInput(GLFWwindow* window)
 }
 
 #pragma endregion callbacks
+
 
 // From this point on, 'window' refers to the GFLWwindow* window defined in EngineGlobals.h
 using namespace ngine;
@@ -100,19 +128,13 @@ int main(int argc, char** argv)
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	// compile shader
-	unsigned int vertexShader;
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-	int success;
-	char infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		std::cout << "Error: vertex shader compilation failed\n" << infoLog << std::endl;
-	}
+	// compile shaders
+	// vertex
+	unsigned int vertexShader = CompileShader(vertexShaderSource, GL_VERTEX_SHADER);
+
+	// fragment
+	unsigned int fragmentShader = CompileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
+
 
 
 #pragma endregion garbage
