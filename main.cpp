@@ -154,7 +154,6 @@ int main(int argc, char** argv)
 
 
 
-
 	// delete shaders (they're already in the program)
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
