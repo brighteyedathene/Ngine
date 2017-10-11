@@ -28,7 +28,8 @@ void main()\n\
 }\n\
 ";
 
-unsigned int CompileShader(const char* shaderSource, GLenum shaderType) {
+unsigned int CompileShader(const char* shaderSource, GLenum shaderType) 
+{
 	unsigned int shader;
 	shader = glCreateShader(shaderType);
 	glShaderSource(shader, 1, &shaderSource, NULL);
@@ -43,6 +44,26 @@ unsigned int CompileShader(const char* shaderSource, GLenum shaderType) {
 		return -1;
 	}
 	return shader;
+}
+
+unsigned int LinkShaders(unsigned int shaders[], int numShaders) 
+{
+	unsigned int shaderProgram = glCreateProgram();
+	for (int i = 0; i < numShaders; i++)
+	{
+		glAttachShader(shaderProgram, shaders[i]);
+	}
+	glLinkProgram(shaderProgram);
+	int success;
+	char infoLog[512];
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if (!success)
+	{
+		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+		std::cout << "Error: Shader linking failed\n" << infoLog << std::endl;
+		return -1;
+	}
+	return shaderProgram;
 }
 
 #pragma endregion shaderz
@@ -129,13 +150,17 @@ int main(int argc, char** argv)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	// compile shaders
-	// vertex
 	unsigned int vertexShader = CompileShader(vertexShaderSource, GL_VERTEX_SHADER);
-
-	// fragment
 	unsigned int fragmentShader = CompileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
 
+	// create linked shader program
+	unsigned int shaders[2] = { vertexShader, fragmentShader };
+	unsigned int shaderProgram = LinkShaders(shaders, 2);
+	glUseProgram(shaderProgram);
 
+	// delete shaders (they're already in the program)
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
 
 #pragma endregion garbage
 
