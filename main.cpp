@@ -11,13 +11,14 @@
 static const char* vertexShaderSource = "\n\
 #version 450\n\
 layout (location = 0) in vec3 aPos;\n\
+layout (location = 1) in vec3 aColor;\n\
 \n\
 out vec4 vertexColor;\n\
 \n\
 void main()\n\
 {\n\
 	gl_Position = vec4(aPos, 1.0f);\n\
-	vertexColor = vec4(0.5, 0.0, 0.0, 1.0);\n\
+	vertexColor = vec4(aColor, 1.0);\n\
 }\n\
 ";
 
@@ -33,26 +34,6 @@ void main()\n\
 }\n\
 ";
 
-static const char* dummyFragmentShaderSource = "\n\
-#version 450 core\n\
-out vec4 FragColor;\n\
-uniform vec4 uniColor;\n\
-\n\
-void main()\n\
-{\n\
-	FragColor = uniColor; \n\
-}\n\
-";
-
-static const char* dummyVertexShaderSource = "\n\
-#version 450\n\
-layout (location = 0) in vec3 aPos;\n\
-\n\
-void main()\n\
-{\n\
-	gl_Position = vec4(aPos.x * 0.5f, aPos.y * 0.5f, aPos.z, 1.0f);\n\
-}\n\
-";
 
 unsigned int CompileShader(const char* shaderSource, GLenum shaderType) 
 {
@@ -67,6 +48,7 @@ unsigned int CompileShader(const char* shaderSource, GLenum shaderType)
 	{
 		glGetShaderInfoLog(shader, 512, NULL, infoLog);
 		std::cout << "Error: Shader compilation failed\n" << infoLog << std::endl;
+		std::cout << shaderSource << std::endl;
 		return -1;
 	}
 	return shader;
@@ -170,12 +152,7 @@ int main(int argc, char** argv)
 	unsigned int shaderProgram = LinkShaders(shaders, 2);
 	glUseProgram(shaderProgram);
 
-	// TEST create another linked shader
-	unsigned int dummyVShader = CompileShader(dummyVertexShaderSource, GL_VERTEX_SHADER);
-	unsigned int dummyFShader = CompileShader(dummyFragmentShaderSource, GL_FRAGMENT_SHADER);
-	shaders[0] = dummyVShader;
-	shaders[1] =  dummyFShader;
-	unsigned int dummyShaderProgram = LinkShaders(shaders, 2);
+
 
 
 	// delete shaders (they're already in the program)
@@ -187,10 +164,11 @@ int main(int argc, char** argv)
 
 	// temporary data
 	float vertices[] = {
-		-1.0f, -1.0f, 0.0f,
-		1.0f, -1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 0.0f
+		// posishez          // colourz
+		-0.5f, -0.5f, 0.0f,  1.0f, 1.0f, 0.0f,
+		0.5f, -0.5f, 0.0f,   1.0f, 1.0f, 0.0f,
+		0.0f, 0.5f, 0.0f,    1.0f, 0.5f, 0.0f,
+		0.5f, 0.5f, 0.0f,    1.0f, 0.5f, 0.0f
 	};
 	unsigned int indices[] = {
 		0, 1, 3, // first
@@ -222,8 +200,12 @@ int main(int argc, char** argv)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// link vertex attributes for VAO
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0); // defined as location 0 in the vertex shader
+	// point at the positions
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0); // defined with 'layout(location = 0)' in the vertex shader
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1); // also layout'd in the vertex shader
 
 	// testing some crap before render loop
 
@@ -246,14 +228,6 @@ int main(int argc, char** argv)
 		ProcessInput(window);
 
 
-		// logic
-		float time = glfwGetTime();
-		float green = (sin(time) / 2.0f) + 0.5f;
-		int uniColor = glGetUniformLocation(dummyShaderProgram, "uniColor");
-		glUseProgram(dummyShaderProgram);
-		glUniform4f(uniColor, 0.0f, green, 0.0f, 1.0f);
-
-
 		// rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -263,12 +237,8 @@ int main(int argc, char** argv)
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0); // unbind the vertex array
 
-		glUseProgram(dummyShaderProgram);
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0); // unbind the vertex array
 
-		// swap buffers, check events
+		// swap buffers, check IO events
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

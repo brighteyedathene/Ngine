@@ -40,3 +40,18 @@ glEnableVertexAttribArray(0);
 glUseProgram(shaderProgram);
 glBindVertexArray(VAO);
 someOpenGLFunctionThatDrawsOurTriangle(); 
+
+
+======================================================================================
+Drawing with different shaders
+======================================================================================
+// Do this shit to use a different set of shaderz bai!!!
+glUseProgram(ShaderProgram_1);
+glBindVertexArray(VAO_1);
+glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+glBindVertexArray(0); // unbind the vertex array
+
+glUseProgram(ShaderProgram_2);
+glBindVertexArray(VAO_2);
+glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+glBindVertexArray(0); // unbind the vertex array
