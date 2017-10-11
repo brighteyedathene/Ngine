@@ -162,6 +162,8 @@ int main(int argc, char** argv)
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
+	// TODO vertex attribute pointers
+
 #pragma endregion garbage
 
 	// render loop!
