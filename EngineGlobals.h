@@ -1,6 +1,11 @@
 #pragma once
+#ifndef ENGINEGLOBALS_H 
+#define ENGINEGLOBALS_H
+
 
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace ngine
 {
@@ -15,4 +20,7 @@ namespace ngine
 
 	const GLchar* texturePath = "./Textures/myTexture.jpg";
 	const GLchar* otherTexturePath = "./Textures/otherTexture.jpg";
+
 }
+
+#endif

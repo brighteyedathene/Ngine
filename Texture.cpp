@@ -1,20 +1,19 @@
 #include "Texture.h"
 
-// for image loading
+#include <cassert>
+
+
 /*
+For image loading
 Including stb_image in Texture.h caused some errors
-I think it was being comiled twice (once for each include?)
+I think it was being compiled twice (once for each include of texture.h?)
 */
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Texture::Texture(const GLchar* path, int textureIndex)
+Texture::Texture(const GLchar* path)
 {
-	// set the texture index so that VAO's can have more tahn one available texture
-	this->textureIndex = textureIndex;
-
 	glGenTextures(1, &ID);
-	glActiveTexture(GL_TEXTURE0 + textureIndex);
 	glBindTexture(GL_TEXTURE_2D, ID);
 	// set wrapping and filtering options
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -46,8 +45,9 @@ Texture::~Texture()
 {
 }
 
-void Texture::Use()
+void Texture::Bind(unsigned int index)
 {
-	glActiveTexture(GL_TEXTURE0 + this->textureIndex);
+	assert(index >= 0 && index <= 31);
+	glActiveTexture(GL_TEXTURE0 + index);
 	glBindTexture(GL_TEXTURE_2D, ID);
 }
