@@ -288,9 +288,9 @@ int main(int argc, char** argv)
 	// move the second object around a bit
 	transform2.position.x = 0.6f;
 	transform2.position.z = 0.1f;
-	transform2.position.y = 0.4f;
+	transform2.position.y = 0.0f;
 	transform2.scale = glm::vec3(1.0f) * 0.5f;
-	
+	float spin = 0;
 
 
 	// render loop!
@@ -306,9 +306,9 @@ int main(int argc, char** argv)
 
 		if (spinning)
 		{
-			float spin = (float)((int)time % 360);
 			transform2.rotation.y = time;
-			transform2.position.y += 0.01f * sin(time);
+			transform2.position.y = sin(spin)/2;
+			spin += 0.01f;
 		}
 		
 
