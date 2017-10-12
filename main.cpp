@@ -5,6 +5,7 @@
 
 #include "EngineGlobals.h"
 #include "Shader.h"
+#include "Texture.h"
 
 // Macro for indexing vertex buffer (just forwards the value you give it)
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -80,20 +81,30 @@ int main(int argc, char** argv)
 	// create shader program
 	Shader shader(vertexShaderPath, fragmentShaderPath);
 
+	Texture otherTexture(otherTexturePath, 1);
+	Texture myTexture(texturePath, 0);
+
+	// Tell shader where its textures are
+	shader.Use();
+	shader.SetInt("texture1", 0); // OR...
+	glUniform1i(glGetUniformLocation(shader.ID, "texture2"), 1);
+	
+
 
 #pragma region garbage
 
 	// temporary data
 	float vertices[] = {
-		// posishez          // colourz
-		-0.5f, -0.5f, 0.0f,  1.0f, 1.0f, 0.0f,
-		0.5f, -0.5f, 0.0f,   1.0f, 1.0f, 0.0f,
-		0.0f, 0.5f, 0.0f,    1.0f, 0.5f, 0.0f,
-		0.5f, 0.5f, 0.0f,    1.0f, 0.5f, 0.0f
+		// posishez           // colourz          // texture coordz
+		-0.5f, -0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 0.0f, //bot left,
+		0.5f, -0.5f, 0.0f,    1.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bot right
+		0.0f, 0.5f, 0.0f,     1.0f, 0.5f, 0.0f,   0.5f, 1.0f, // top mid
+		0.5f, 0.5f, 0.0f,     1.0f, 0.5f, 0.0f,   1.0f, 1.0f  // top right
 	};
+
 	unsigned int indices[] = {
-		0, 1, 3, // first
-		3, 2, 0 // second
+		0, 1, 3, // first triangle
+		3, 2, 0 // second triangle
 	};
 
 	// very simple VAO creation
@@ -122,11 +133,15 @@ int main(int argc, char** argv)
 
 	// link vertex attributes for VAO
 	// point at the positions
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), BUFFER_OFFSET(0));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), BUFFER_OFFSET(0));
 	glEnableVertexAttribArray(0); // defined with 'layout(location = 0)' in the vertex shader
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), BUFFER_OFFSET(3 * sizeof(float)));
+	// point at the colors
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), BUFFER_OFFSET(3 * sizeof(float)));
 	glEnableVertexAttribArray(1); // also layout'd in the vertex shader
+	// point at the texture coords
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), BUFFER_OFFSET(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
 
 	// testing some crap before render loop
 
@@ -148,12 +163,19 @@ int main(int argc, char** argv)
 		// input
 		ProcessInput(window);
 
+		// logic (stupid)
+		float time = glfwGetTime();
+		float blend = (sin(time)/2) + 0.5f;
+		shader.SetFloat("blend", blend);
+
 
 		// rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		shader.Use();
+		myTexture.Use();
+		otherTexture.Use();
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0); // unbind the vertex array
