@@ -20,12 +20,14 @@ Transform::~Transform()
 glm::mat4 Transform::GetMatrix()
 {
 	glm::mat4 mat = glm::mat4(1.0f);
-	mat = glm::scale(mat, scale);
-
-	mat = glm::rotate(mat, rotation.x, right);
-	mat = glm::rotate(mat, rotation.y, up);
-	mat = glm::rotate(mat, rotation.z, forward);
 
 	mat = glm::translate(mat, position);
+
+	mat = glm::rotate(mat, rotation.y, up);
+	mat = glm::rotate(mat, rotation.x, right);
+	mat = glm::rotate(mat, rotation.z, forward);
+
+	mat = glm::scale(mat, scale);
+	
 	return mat;
 }

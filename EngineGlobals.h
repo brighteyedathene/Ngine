@@ -20,6 +20,7 @@ namespace ngine
 
 	const GLchar* texturePath = "./Textures/myTexture.jpg";
 	const GLchar* otherTexturePath = "./Textures/otherTexture.jpg";
+	const GLchar* eyePath = "./Textures/eye.jpg";
 
 }
 

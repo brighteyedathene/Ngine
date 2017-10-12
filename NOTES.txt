@@ -71,3 +71,41 @@ Identity matrix in GLM
 ======================================================================================
 // it is required to initialize matrix types as: 
 glm::mat4 mat = glm::mat4(1.0f)
+
+======================================================================================
+Transform class usage
+======================================================================================
+Transform transform;
+transform.SetPosition(glm::vec3(0.1, -1, 0));
+transform.position.y = 1;
+
+======================================================================================
+Input Code
+======================================================================================
+// translation
+if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	input.f_forward = 1;
+if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	input.f_forward = -1;
+if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	input.f_right = 1;
+if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	input.f_right = -1;
+if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+	input.f_up = 1;
+if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+	input.f_up = -1;
+
+======================================================================================
+How many vertex array attributes can you use?
+======================================================================================
+int n_attributes;
+glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n_attributes);
+std::cout << "Maximum number of vertex attributes suppported: " << n_attributes << std::endl;
+
+======================================================================================
+Wireframe only
+======================================================================================
+// to draw wire frame
+glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+

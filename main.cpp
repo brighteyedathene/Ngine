@@ -11,10 +11,16 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Transform.h"
+#include "Input.h"
 
 // Macro for indexing vertex buffer (just forwards the value you give it)
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
+// ...it's global for convenience
+Transform transform1;
+Transform transform2;
+Input input;
+bool spinning;
 
 #pragma region callbacks
 
@@ -30,8 +36,53 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void ProcessInput(GLFWwindow* window) 
 {
+	input.Clear();
+
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) // otherwise, GLFW_RELEASE
 		glfwSetWindowShouldClose(window, true);
+
+	// translation
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		input.f_forward = 1;
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		input.f_forward = -1;
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		input.f_right = -1;
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		input.f_right = 1;
+	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+		input.f_up = 1;
+	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+		input.f_up = -1;
+
+	// Apply translation delta
+	transform1.position += glm::vec3(input.f_right*input.translate_delta,
+									 input.f_up*input.translate_delta,
+									 input.f_forward*input.translate_delta);
+
+	// rotation (affects transform directly)
+	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+		transform1.rotation.x += input.rotate_delta; 
+	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+		transform1.rotation.y += input.rotate_delta;
+	if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
+		transform1.rotation.z += input.rotate_delta;
+
+	// scale (uniform)
+	if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
+		transform1.scale += transform1.scale * input.scale_delta;
+	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
+		transform1.scale -= transform1.scale * input.scale_delta;
+
+	// scale (non-uniform)
+	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+		transform1.scale.y += input.scale_delta;
+	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+		transform1.scale.y -= input.scale_delta;
+
+	// combo
+	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+		spinning = true;
 }
 
 #pragma endregion callbacks
@@ -39,7 +90,55 @@ void ProcessInput(GLFWwindow* window)
 
 #pragma region VAO_creation
 
-unsigned int CreateSimpleVertexArrayObject()
+unsigned int CreatePyramidVAO()
+{
+	float vertices[] = {
+		// posishez             // colourz           // texture coordz				   					    
+		-0.5f, -0.5f, -0.5f,    0.1f, 1.0f, 0.1f,    0.0f, 0.0f, //front left,
+		0.5f, -0.5f, -0.5f,     0.1f, 1.0f, 0.1f,    1.0f, 0.0f, // front right
+		-0.5f, -0.5f, 0.5f,     0.1f, 0.5f, 0.1f,    0.0f, 1.0f, // back left
+		0.5f, -0.5f, 0.5f,      0.1f, 0.5f, 0.1f,    1.0f, 1.0f, // back right
+		0.0f, 0.5f, 0.0f,       1.0f, 0.5f, 0.1f,    0.5f, 1.0f // top 
+	};
+	unsigned int indices[] = {
+		// sides
+		0,1,4,
+		1,3,4,
+		3,2,4,
+		2,0,4,
+		// base
+		0,1,3,
+		3,2,0
+	};
+
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	unsigned int EBO;
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), BUFFER_OFFSET(0));
+	glEnableVertexAttribArray(0); // defined with 'layout(location = 0)' in the vertex shader
+	 // point at the colors
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), BUFFER_OFFSET(3 * sizeof(float)));
+	glEnableVertexAttribArray(1); // also layout'd in the vertex shader
+	// point at the texture coords
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), BUFFER_OFFSET(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	return VAO;
+}
+
+
+unsigned int CreateCubeVAO()
 {
 	// sample data
 	float vertices[] = {
@@ -153,6 +252,9 @@ void Initialise()
 	// opengl also needs to know the dimensions of the window
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
+	// may as well do this here
+	glEnable(GL_DEPTH_TEST);
+
 	// register window for window-resizing callback function
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
@@ -169,6 +271,7 @@ int main(int argc, char** argv)
 
 	Texture otherTexture(otherTexturePath);
 	Texture myTexture(texturePath);
+	Texture eye(eyePath);
 
 	// Tell shader where its textures are
 	shader.Use();
@@ -176,31 +279,19 @@ int main(int argc, char** argv)
 	glUniform1i(glGetUniformLocation(shader.ID, "texture2"), 1);
 	
 
-
-#pragma region garbage
-
-	// very simple VAO creation
-	unsigned int VAO = CreateSimpleVertexArrayObject();
-
-	Transform transform;
-	//transform.SetPosition(glm::vec3(0.1, -1, 0));
-	transform.position.y = 1;
+	unsigned int cubeVAO = CreateCubeVAO();
+	int cubeCount = 36;
+	unsigned int pyrVAO = CreatePyramidVAO();
+	int pyrCount = 18;
 
 
-	// to draw wire frame
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	// move the second object around a bit
+	transform2.position.x = 0.6f;
+	transform2.position.z = 0.1f;
+	transform2.position.y = 0.4f;
+	transform2.scale = glm::vec3(1.0f) * 0.5f;
+	
 
-	int n_attributes;
-	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n_attributes);
-	std::cout << "Maximum number of vertex attributes suppported: " << n_attributes << std::endl;
-
-	// it is required to initialize matrix types as: 
-	// glm::mat4 mat = glm::mat4(1.0f)
-
-
-
-
-#pragma endregion garbage
 
 	// render loop!
 	while (!glfwWindowShouldClose(window)) 
@@ -213,24 +304,31 @@ int main(int argc, char** argv)
 		float blend = (sin(time)/2) + 0.5f;
 		shader.SetFloat("blend", blend);
 
-		//transform.position.x = blend;
-
-		shader.SetMat4("transform", transform.GetMatrix());
-		//shader.SetMat4("transform", glm::mat4(1.0f));
+		if (spinning)
+		{
+			float spin = (float)((int)time % 360);
+			transform2.rotation.y = time;
+			transform2.position.y += 0.01f * sin(time);
+		}
+		
 
 		// rendering
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClearColor(0.4f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.Use();
-		myTexture.Bind(0);
+		eye.Bind(0);
 		otherTexture.Bind(1);
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0); // unbind the vertex array
+		glBindVertexArray(pyrVAO);
 
+		shader.SetMat4("transform", transform1.GetMatrix());
+		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
+		
+		shader.SetMat4("transform", transform2.GetMatrix());
+		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 
-		// swap buffers, check IO events
+		// swap buffers, check IO events, unbind the vertex array
+		glBindVertexArray(0);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
