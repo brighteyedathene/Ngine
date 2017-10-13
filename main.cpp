@@ -43,17 +43,17 @@ void ProcessInput(GLFWwindow* window)
 
 	// translation
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		input.f_forward = 1;
+		input.f_forward += 1;
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		input.f_forward = -1;
+		input.f_forward -= 1;
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		input.f_right = -1;
+		input.f_right -= 1;
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		input.f_right = 1;
+		input.f_right += 1;
 	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
-		input.f_up = 1;
+		input.f_up += 1;
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-		input.f_up = -1;
+		input.f_up -= 1;
 
 	// Apply translation delta
 	transform1.position += glm::vec3(input.f_right*input.translate_delta,
@@ -62,9 +62,9 @@ void ProcessInput(GLFWwindow* window)
 
 	// rotation (affects transform directly)
 	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-		transform1.rotation.x += input.rotate_delta; 
+		transform1.rotation.x -= input.rotate_delta; 
 	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-		transform1.rotation.y += input.rotate_delta;
+		transform1.rotation.y -= input.rotate_delta;
 	if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
 		transform1.rotation.z += input.rotate_delta;
 
@@ -319,11 +319,12 @@ int main(int argc, char** argv)
 		shader.Use();
 		eye.Bind(0);
 		otherTexture.Bind(1);
-		glBindVertexArray(pyrVAO);
 
+		glBindVertexArray(pyrVAO);
 		shader.SetMat4("transform", transform1.GetMatrix());
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 		
+		glBindVertexArray(pyrVAO);
 		shader.SetMat4("transform", transform2.GetMatrix());
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 

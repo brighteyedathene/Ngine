@@ -13,12 +13,12 @@ public:
 	glm::vec3 position;
 	glm::vec3 rotation; // TODO change to quat
 	glm::vec3 scale;
-
+	glm::mat4 GetMatrix();
 
 	Transform();
 	~Transform();
 
-	glm::mat4 GetMatrix();
+	
 
 	inline glm::vec3* GetPosition() { return &position; }
 	inline glm::vec3* GetRotation() { return &rotation; }
