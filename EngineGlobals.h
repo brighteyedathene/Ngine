@@ -9,8 +9,9 @@
 
 namespace ngine
 {
-	const int WINDOW_WIDTH = 900; // initial width
-	const int WINDOW_HEIGHT = 601; // initial height 
+	int WINDOW_WIDTH = 900; // initial width
+	int WINDOW_HEIGHT = 601; // initial height
+	float WINDOW_ASPECT = WINDOW_WIDTH/WINDOW_HEIGHT;
 
 	GLFWwindow* window;
 

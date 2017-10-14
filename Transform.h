@@ -4,8 +4,9 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-
+#include <glm/gtc/quaternion.hpp>
+#include <string>
+#include <sstream>
 class Transform
 {
 public:
@@ -18,7 +19,7 @@ public:
 	Transform();
 	~Transform();
 
-	
+	std::string ToString();
 
 	inline glm::vec3* GetPosition() { return &position; }
 	inline glm::vec3* GetRotation() { return &rotation; }

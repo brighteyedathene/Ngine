@@ -15,6 +15,7 @@ public:
 	Texture(const GLchar* path);
 	~Texture();
 
+	/*Bind this texture to [GL_TEXTURE0 + index]*/
 	void Bind(unsigned int index);
 };
 

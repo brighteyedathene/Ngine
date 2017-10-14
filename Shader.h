@@ -6,6 +6,8 @@
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
 
+/* A shader program class
+Use it to set uniform variables */
 class Shader
 {
 public:

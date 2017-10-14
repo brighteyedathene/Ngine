@@ -21,6 +21,31 @@ Transform transform1;
 Transform transform2;
 Input input;
 bool spinning;
+float fov = 45.0f;
+
+
+void print_matrix(std::string name, glm::mat4 mat)
+{
+
+	float dArray[16] = { 0.0 };
+
+	const float *pSource = (const float*)glm::value_ptr(mat);
+	for (int i = 0; i < 16; ++i)
+		dArray[i] = pSource[i];
+
+
+
+	std::cout << name << ":" << std::endl;
+	for (int i = 0; i < 4; i++)
+	{
+		std::cout << "[ ";
+		for (int j = 0; j < 4; j++)
+		{
+			std::cout << pSource[i+j*4] << " ";
+		}
+		std::cout << "]" << std::endl;
+	}
+}
 
 #pragma region callbacks
 
@@ -31,7 +56,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	This is a callback function to resize the opengl viewport when the 
 	glfw-window size changes 
 	*/
+	ngine::WINDOW_WIDTH = width;
+	ngine::WINDOW_HEIGHT = height;
+	ngine::WINDOW_ASPECT = (float)width / height;
 	glViewport(0, 0, width, height);
+
+	std::cout << "Dimensions: " << width << "x" << height << "    Aspect: " << ngine::WINDOW_ASPECT << std::endl;
 }
 
 void ProcessInput(GLFWwindow* window) 
@@ -83,6 +113,11 @@ void ProcessInput(GLFWwindow* window)
 	// combo
 	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
 		spinning = true;
+
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+		fov += 1.0f;
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+		fov -= 1.0f;
 }
 
 #pragma endregion callbacks
@@ -279,10 +314,36 @@ int main(int argc, char** argv)
 	glUniform1i(glGetUniformLocation(shader.ID, "texture2"), 1);
 	
 
+	// create meshes (garbage section)
+	// TODO this but better using member variables and shi
 	unsigned int cubeVAO = CreateCubeVAO();
 	int cubeCount = 36;
 	unsigned int pyrVAO = CreatePyramidVAO();
 	int pyrCount = 18;
+
+
+#pragma region camera_init
+	
+	// Testing matrix printibng
+	glm::mat4 exmata = glm::mat4(1.0f);
+	glm::mat4 exmatb = glm::translate(exmata, glm::vec3(0.1f, 0.2f, 0.3f));
+	print_matrix("a", exmata);
+	print_matrix("b", exmatb);
+
+	glm::mat4 projection;
+	projection = glm::perspective(
+		glm::radians(fov),
+		WINDOW_ASPECT,
+		0.1f,
+		100.0f
+	);
+	//print_matrix(projection);
+
+	glm::mat4 view;
+
+	glm::mat4 mvp;
+
+#pragma endregion camera_init
 
 
 	// move the second object around a bit
@@ -312,6 +373,19 @@ int main(int argc, char** argv)
 		}
 		
 
+		// TODO create Camera object
+		projection = glm::perspective(
+			glm::radians(fov),
+			WINDOW_ASPECT,
+			0.1f,
+			100.0f
+		);
+
+		//print_matrix(projection);
+
+		view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
+
+
 		// rendering
 		glClearColor(0.4f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -321,11 +395,20 @@ int main(int argc, char** argv)
 		otherTexture.Bind(1);
 
 		glBindVertexArray(pyrVAO);
-		shader.SetMat4("transform", transform1.GetMatrix());
+
+
+		glm::mat4 pv = projection * view;
+		mvp = pv * transform1.GetMatrix();
+
+		std::cout << "transform:\n" << transform1.ToString() << std::endl;
+
+
+		shader.SetMat4("mvp", mvp);
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 		
 		glBindVertexArray(pyrVAO);
-		shader.SetMat4("transform", transform2.GetMatrix());
+		mvp = projection * view * transform2.GetMatrix();
+		shader.SetMat4("mvp", transform2.GetMatrix());
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 
 		// swap buffers, check IO events, unbind the vertex array
