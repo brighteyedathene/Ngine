@@ -1,13 +1,20 @@
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
+
+//#include <GLFW/3.h>
+
+
 #include <iostream>
 #include <stdlib.h>
+#include <chrono>
 
 //#include <glm/glm.hpp>
 //#include <glm/gtc/matrix_transform.hpp>
 //#include <glm/gtc/type_ptr.hpp>
 
 #include "EngineGlobals.h"
+
+#include "Display.h"
+
 #include "Shader.h"
 #include "Texture.h"
 #include "Transform.h"
@@ -20,7 +27,7 @@
 Transform transform1;
 Transform transform2;
 Input input;
-bool spinning;
+bool spinning = true;
 float fov = 45.0f;
 
 
@@ -49,76 +56,7 @@ void print_matrix(std::string name, glm::mat4 mat)
 
 #pragma region callbacks
 
-// window-resizing callback function
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) 
-{
-	/* 
-	This is a callback function to resize the opengl viewport when the 
-	glfw-window size changes 
-	*/
-	ngine::WINDOW_WIDTH = width;
-	ngine::WINDOW_HEIGHT = height;
-	ngine::WINDOW_ASPECT = (float)width / height;
-	glViewport(0, 0, width, height);
 
-	std::cout << "Dimensions: " << width << "x" << height << "    Aspect: " << ngine::WINDOW_ASPECT << std::endl;
-}
-
-void ProcessInput(GLFWwindow* window) 
-{
-	input.Clear();
-
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) // otherwise, GLFW_RELEASE
-		glfwSetWindowShouldClose(window, true);
-
-	// translation
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		input.f_forward += 1;
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		input.f_forward -= 1;
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		input.f_right -= 1;
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		input.f_right += 1;
-	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
-		input.f_up += 1;
-	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-		input.f_up -= 1;
-
-	// Apply translation delta
-	transform1.position += glm::vec3(input.f_right*input.translate_delta,
-									 input.f_up*input.translate_delta,
-									 input.f_forward*input.translate_delta);
-
-	// rotation (affects transform directly)
-	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-		transform1.rotation.x -= input.rotate_delta; 
-	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-		transform1.rotation.y -= input.rotate_delta;
-	if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
-		transform1.rotation.z += input.rotate_delta;
-
-	// scale (uniform)
-	if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
-		transform1.scale += transform1.scale * input.scale_delta;
-	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
-		transform1.scale -= transform1.scale * input.scale_delta;
-
-	// scale (non-uniform)
-	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
-		transform1.scale.y += input.scale_delta;
-	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-		transform1.scale.y -= input.scale_delta;
-
-	// combo
-	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
-		spinning = true;
-
-	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-		fov += 1.0f;
-	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
-		fov -= 1.0f;
-}
 
 #pragma endregion callbacks
 
@@ -252,54 +190,17 @@ unsigned int CreateCubeVAO()
 #pragma endregion VAO_creation
 
 
-// From this point on, 'window' refers to the GFLWwindow* window defined in EngineGlobals.h
+// From this point on, 'display' refers to the Display defined in EngineGlobals.h
 using namespace ngine;
 
-void Initialise()
+
+#undef main
+int main(int argc, char* argv[]) 
 {
-	// initialise GLFW window
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	window = glfwCreateWindow(
-		WINDOW_WIDTH,
-		WINDOW_HEIGHT,
-		"My windwo",
-		NULL,
-		NULL
-	);
-	if (window == NULL)
-	{
-		std::cout << "Failed to create GLFW window" << std::endl;
-		glfwTerminate();
-		exit(EXIT_FAILURE);
-	}
-	glfwMakeContextCurrent(window);
 
-	// initialise GLAD
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
-		std::cout << "Failed to initialise GLAD" << std::endl;
-		exit(EXIT_FAILURE);
-	}
-
-	// opengl also needs to know the dimensions of the window
-	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-	// may as well do this here
-	glEnable(GL_DEPTH_TEST);
-
-	// register window for window-resizing callback function
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-}
+	Display display(WINDOW_WIDTH, WINDOW_HEIGHT, "My SDL window");
 
 
-int main(int argc, char** argv) 
-{
-	// initialise GLFWwindow and opengl rendering context
-	Initialise();
 
 	// create shader program
 	Shader shader(vertexShaderPath, fragmentShaderPath);
@@ -316,24 +217,18 @@ int main(int argc, char** argv)
 
 	// create meshes (garbage section)
 	// TODO this but better using member variables and shi
-	unsigned int cubeVAO = CreateCubeVAO();
-	int cubeCount = 36;
+	//unsigned int cubeVAO = CreateCubeVAO();
+	//int cubeCount = 36;
 	unsigned int pyrVAO = CreatePyramidVAO();
 	int pyrCount = 18;
 
 
 #pragma region camera_init
-	
-	// Testing matrix printibng
-	glm::mat4 exmata = glm::mat4(1.0f);
-	glm::mat4 exmatb = glm::translate(exmata, glm::vec3(0.1f, 0.2f, 0.3f));
-	print_matrix("a", exmata);
-	print_matrix("b", exmatb);
 
 	glm::mat4 projection;
 	projection = glm::perspective(
 		glm::radians(fov),
-		WINDOW_ASPECT,
+		display.Aspect(),
 		0.1f,
 		100.0f
 	);
@@ -345,6 +240,12 @@ int main(int argc, char** argv)
 
 #pragma endregion camera_init
 
+#pragma region triangle
+
+
+
+#pragma endregion triangle
+
 
 	// move the second object around a bit
 	transform2.position.x = 0.6f;
@@ -354,42 +255,48 @@ int main(int argc, char** argv)
 	float spin = 0;
 
 
+	// Start the clock just before render loop
+	struct Clock clock;
+
+	float time = 0;
 	// render loop!
-	while (!glfwWindowShouldClose(window)) 
+	while (!display.IsClosed()) 
 	{
-		// input
-		ProcessInput(window);
+		display.Clear(0.4f, 0.1f, 0.1f, 1.0f);
 
 		// logic (stupid)
-		float time = glfwGetTime();
-		float blend = (sin(time)/2) + 0.5f;
-		shader.SetFloat("blend", blend);
+		clock.tick();
 
+		time += clock.deltaTime;
+
+		float blend = sin(time) / 2 + 0.5f;
+
+		//std::cout << clock.deltaTime << std::endl;
+
+		shader.SetFloat("blend", blend);
 		if (spinning)
 		{
-			transform2.rotation.y = time;
+			transform2.rotation.y = spin*360;
 			transform2.position.y = sin(spin)/2;
-			spin += 0.01f;
+			transform2.position.x = sin(spin) / 2;
+			spin += clock.deltaTime;
 		}
 		
+
 
 		// TODO create Camera object
 		projection = glm::perspective(
 			glm::radians(fov),
-			WINDOW_ASPECT,
+			display.Aspect(),
 			0.1f,
 			100.0f
 		);
 
-		//print_matrix(projection);
 
 		view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
 
 
 		// rendering
-		glClearColor(0.4f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		shader.Use();
 		eye.Bind(0);
 		otherTexture.Bind(1);
@@ -400,24 +307,27 @@ int main(int argc, char** argv)
 		glm::mat4 pv = projection * view;
 		mvp = pv * transform1.GetMatrix();
 
-		std::cout << "transform:\n" << transform1.ToString() << std::endl;
+		//std::cout << "transform:\n" << transform1.ToString() << std::endl;
 
 
 		shader.SetMat4("mvp", mvp);
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 		
+
 		glBindVertexArray(pyrVAO);
 		mvp = projection * view * transform2.GetMatrix();
 		shader.SetMat4("mvp", transform2.GetMatrix());
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 
+
 		// swap buffers, check IO events, unbind the vertex array
 		glBindVertexArray(0);
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		
+
+		display.Update();
 	}
 
-	// delete the glfw shit
-	glfwTerminate();
+	// delete the Display shit
+	display.~Display();
 	return 0;
 }

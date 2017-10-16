@@ -16,6 +16,10 @@ public:
 	glm::vec3 scale;
 	glm::mat4 GetMatrix();
 
+	glm::vec3 Forward();
+	glm::vec3 Right();
+	glm::vec3 Up();
+
 	Transform();
 	~Transform();
 
@@ -28,6 +32,8 @@ public:
 	inline void SetPosition(glm::vec3 value) { this->position = value; }
 	inline void SetRotation(glm::vec3 value) { this->rotation = value; }
 	inline void SetScale(glm::vec3 value) { this->scale = value; }
+
+
 
 };
 
