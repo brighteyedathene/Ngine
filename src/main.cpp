@@ -3,7 +3,9 @@
 //#include <GLFW/3.h>
 
 
+
 #include <iostream>
+#include <iomanip>
 #include <stdlib.h>
 #include <chrono>
 
@@ -14,7 +16,7 @@
 #include "EngineGlobals.h"
 
 #include "Display.h"
-
+#include "EventHandler.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "Transform.h"
@@ -33,32 +35,26 @@ float fov = 45.0f;
 
 void print_matrix(std::string name, glm::mat4 mat)
 {
-
 	float dArray[16] = { 0.0 };
-
 	const float *pSource = (const float*)glm::value_ptr(mat);
 	for (int i = 0; i < 16; ++i)
 		dArray[i] = pSource[i];
 
-
-
 	std::cout << name << ":" << std::endl;
+	std::cout << std::fixed;
+	std::cout << std::setprecision(2);
 	for (int i = 0; i < 4; i++)
 	{
 		std::cout << "[ ";
 		for (int j = 0; j < 4; j++)
 		{
+			if (pSource[i+j*4] >= 0)
+				std::cout << " ";
 			std::cout << pSource[i+j*4] << " ";
 		}
 		std::cout << "]" << std::endl;
 	}
 }
-
-#pragma region callbacks
-
-
-
-#pragma endregion callbacks
 
 
 #pragma region VAO_creation
@@ -199,7 +195,8 @@ int main(int argc, char* argv[])
 {
 
 	Display display(WINDOW_WIDTH, WINDOW_HEIGHT, "My SDL window");
-
+	Input input;
+	EventHandler events(&display, &input);
 
 
 	// create shader program
@@ -232,7 +229,7 @@ int main(int argc, char* argv[])
 		0.1f,
 		100.0f
 	);
-	//print_matrix(projection);
+	print_matrix("projection matrix", projection);
 
 	glm::mat4 view;
 
@@ -241,7 +238,7 @@ int main(int argc, char* argv[])
 #pragma endregion camera_init
 
 #pragma region triangle
-
+	input.CreateButtonMapping("h", SDL_SCANCODE_H);
 
 
 #pragma endregion triangle
@@ -253,19 +250,55 @@ int main(int argc, char* argv[])
 	transform2.position.y = 0.0f;
 	transform2.scale = glm::vec3(1.0f) * 0.5f;
 	float spin = 0;
-
+	float time = 0;
 
 	// Start the clock just before render loop
 	struct Clock clock;
 
-	float time = 0;
+
 	// render loop!
 	while (!display.IsClosed()) 
 	{
 		display.Clear(0.4f, 0.1f, 0.1f, 1.0f);
 
-		// logic (stupid)
-		clock.tick();
+		// logic
+		
+
+		std::cout << "\nbefore tick:\n";
+		std::cout << "       downFrame: " << input.GetButtonDown("h") << std::endl;
+		std::cout << "    releaseFrame: " << input.GetButtonReleased("h") << std::endl;
+		std::cout << "            down: " << input.GetButton("h") << std::endl;
+		
+		input.Tick();
+		
+		std::cout << "after  tick:\n";
+		std::cout << "       downFrame: " << input.GetButtonDown("h") << std::endl;
+		std::cout << "    releaseFrame: " << input.GetButtonReleased("h") << std::endl;
+		std::cout << "            down: " << input.GetButton("h") << std::endl;
+
+		events.Tick();
+		clock.Tick();
+
+
+		// testing input
+
+		bool mybutton = input.GetButton("h");
+		
+		//std::cout << input.GetButtonDown("h") << std::endl;;
+
+		if (input.GetButtonDown("h"))
+		{
+			std::cout << "hi down" << std::endl;
+		}
+
+		if (input.GetButtonReleased("h"))
+		{
+			//std::cout << "hi released" << std::endl;
+		}
+
+
+
+
 
 		time += clock.deltaTime;
 

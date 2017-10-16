@@ -82,27 +82,11 @@ Display::~Display()
 void Display::Update()
 {
 	SDL_GL_SwapWindow(m_window);
-	
-	// TODO move this event shit to somewhere more visible
-	SDL_Event e;
-	while (SDL_PollEvent(&e))
-	{
-		if (e.type == SDL_QUIT)
-		{
-			m_isClosed = true;
-		}
-		else if (e.type == SDL_WINDOWEVENT)
-		{
-			switch (e.window.event)
-			{
-			case SDL_WINDOWEVENT_RESIZED:
-				printf("window resized in Display");
-				ResizeViewPort();
-				break;
-			}
-		}
+}
 
-	}
+void Display::Close()
+{
+	m_isClosed = true;
 }
 
 bool Display::IsClosed()

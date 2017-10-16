@@ -11,7 +11,11 @@ public:
 
 	void Clear(float r, float g, float b, float a);
 	void Update();
+
+	void Close();
 	bool IsClosed();
+
+	void ResizeViewPort();
 	float Aspect();
 
 private:
@@ -20,7 +24,7 @@ private:
 	bool m_isClosed;
 	float m_aspect;
 
-	void ResizeViewPort();
+
 
 };
 

@@ -28,7 +28,7 @@ namespace ngine
 		Uint64 NOW = 0;
 		Uint64 LAST = 0;
 		
-		void tick()
+		void Tick()
 		{
 			LAST = NOW;
 			NOW = SDL_GetPerformanceCounter();
