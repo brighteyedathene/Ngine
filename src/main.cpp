@@ -237,11 +237,11 @@ int main(int argc, char* argv[])
 
 #pragma endregion camera_init
 
-#pragma region triangle
+#pragma region button_mapping
 	input.CreateButtonMapping("h", SDL_SCANCODE_H);
+	input.CreateButtonMapping("Escape", SDL_SCANCODE_ESCAPE);
 
-
-#pragma endregion triangle
+#pragma endregion button_mapping
 
 
 	// move the second object around a bit
@@ -260,21 +260,26 @@ int main(int argc, char* argv[])
 	while (!display.IsClosed()) 
 	{
 		display.Clear(0.4f, 0.1f, 0.1f, 1.0f);
+		Sleep(70);
+		//std::cout << "new frame" << std::endl;
 
 		// logic
-		
+		if (input.GetButtonDown("Escape"))
+		{
+			display.Close();
+		}
 
-		std::cout << "\nbefore tick:\n";
-		std::cout << "       downFrame: " << input.GetButtonDown("h") << std::endl;
-		std::cout << "    releaseFrame: " << input.GetButtonReleased("h") << std::endl;
-		std::cout << "            down: " << input.GetButton("h") << std::endl;
+		//std::cout << "\nbefore tick:\n";
+		//std::cout << "       downFrame: " << input.GetButtonDown("h") << std::endl;
+		//std::cout << "    releaseFrame: " << input.GetButtonReleased("h") << std::endl;
+		//std::cout << "            down: " << input.GetButton("h") << std::endl;
 		
 		input.Tick();
 		
-		std::cout << "after  tick:\n";
-		std::cout << "       downFrame: " << input.GetButtonDown("h") << std::endl;
-		std::cout << "    releaseFrame: " << input.GetButtonReleased("h") << std::endl;
-		std::cout << "            down: " << input.GetButton("h") << std::endl;
+		//std::cout << "after  tick:\n";
+		//std::cout << "       downFrame: " << input.GetButtonDown("h") << std::endl;
+		//std::cout << "    releaseFrame: " << input.GetButtonReleased("h") << std::endl;
+		//std::cout << "            down: " << input.GetButton("h") << std::endl;
 
 		events.Tick();
 		clock.Tick();
