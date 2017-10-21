@@ -10,7 +10,8 @@ class EventHandler
 public:
 	EventHandler(Display* p_display, Input* p_input);
 	~EventHandler();
-
+	
+	// Collects ALL events and forwards them to wherever
 	void Tick();
 
 private:

@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\CameraController.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Display.cpp" />
     <ClCompile Include="src\EventHandler.cpp" />
@@ -164,6 +165,7 @@
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\CameraController.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Display.h" />
     <ClInclude Include="src\EngineGlobals.h" />

@@ -1,0 +1,47 @@
+#include "CameraController.h"
+
+
+
+CameraController::CameraController(Camera* p_camera, Input* p_input, bool constrainPitch)
+{
+	this->p_camera = p_camera;
+	this->p_input = p_input;
+	this->constrainPitch = constrainPitch;
+	this->mouseSensitivity = DEFAULT_MOUSE_SENSITIVITY;
+}
+
+
+CameraController::~CameraController()
+{
+}
+
+void CameraController::Tick()
+{
+	// movement
+	if (p_input->GetButton("Forward"))
+		p_camera->transform.position += p_camera->transform.Forward() * SPEED;
+	if (p_input->GetButton("Backward"))
+		p_camera->transform.position -= p_camera->transform.Forward() * SPEED;
+	if (p_input->GetButton("Left"))
+		p_camera->transform.position -= p_camera->transform.Right() * SPEED;
+	if (p_input->GetButton("Right"))
+		p_camera->transform.position += p_camera->transform.Right() * SPEED;
+
+	// rotation
+	float xoffset = p_input->mouse_xrel * mouseSensitivity;
+	float yoffset = p_input->mouse_yrel * mouseSensitivity;
+
+	p_camera->transform.rotation.y += xoffset;
+	p_camera->transform.rotation.x -= yoffset;
+
+	if (constrainPitch)
+	{
+		if (p_camera->transform.rotation.x > 89.0f)
+			p_camera->transform.rotation.x = 89.0f;
+		if (p_camera->transform.rotation.x < -89.0f)
+			p_camera->transform.rotation.x = -89.0f;
+	}
+
+
+}
+

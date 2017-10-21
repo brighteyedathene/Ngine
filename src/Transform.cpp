@@ -1,11 +1,5 @@
 #include "Transform.h"
 
-// World-space right vector
-const glm::vec3 WORLD_RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
-// World-space up vector
-const glm::vec3 WORLD_UP = glm::vec3(0.0f, 1.0f, 0.0f);
-// World-space forward vector
-const glm::vec3 WORLD_FORWARD = glm::vec3(0.0f, 0.0f, 1.0f);
 
 Transform::Transform()
 {

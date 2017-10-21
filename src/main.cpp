@@ -21,6 +21,8 @@
 #include "Texture.h"
 #include "Transform.h"
 #include "Input.h"
+#include "Camera.h"
+#include "CameraController.h"
 
 // Macro for indexing vertex buffer (just forwards the value you give it)
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -222,24 +224,25 @@ int main(int argc, char* argv[])
 
 #pragma region camera_init
 
-	glm::mat4 projection;
-	projection = glm::perspective(
-		glm::radians(fov),
-		display.Aspect(),
-		0.1f,
-		100.0f
-	);
-	print_matrix("projection matrix", projection);
-
-	glm::mat4 view;
-
-	glm::mat4 mvp;
+	Camera mainCamera;
+	CameraController camController(&mainCamera, &input);
 
 #pragma endregion camera_init
 
 #pragma region button_mapping
+
 	input.CreateButtonMapping("h", SDL_SCANCODE_H);
+	input.CreateButtonMapping("h", SDL_SCANCODE_O);
+
+	input.CreateButtonMapping("Forward", SDL_SCANCODE_W);
+	input.CreateButtonMapping("Backward", SDL_SCANCODE_S);
+	input.CreateButtonMapping("Left", SDL_SCANCODE_A);
+	input.CreateButtonMapping("Right", SDL_SCANCODE_D);
+
 	input.CreateButtonMapping("Escape", SDL_SCANCODE_ESCAPE);
+
+	// putting controls stuff here too - maybe move this later
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 #pragma endregion button_mapping
 
@@ -260,8 +263,6 @@ int main(int argc, char* argv[])
 	while (!display.IsClosed()) 
 	{
 		display.Clear(0.4f, 0.1f, 0.1f, 1.0f);
-		Sleep(70);
-		//std::cout << "new frame" << std::endl;
 
 		// logic
 		if (input.GetButtonDown("Escape"))
@@ -269,92 +270,56 @@ int main(int argc, char* argv[])
 			display.Close();
 		}
 
-		//std::cout << "\nbefore tick:\n";
-		//std::cout << "       downFrame: " << input.GetButtonDown("h") << std::endl;
-		//std::cout << "    releaseFrame: " << input.GetButtonReleased("h") << std::endl;
-		//std::cout << "            down: " << input.GetButton("h") << std::endl;
-		
 		input.Tick();
-		
-		//std::cout << "after  tick:\n";
-		//std::cout << "       downFrame: " << input.GetButtonDown("h") << std::endl;
-		//std::cout << "    releaseFrame: " << input.GetButtonReleased("h") << std::endl;
-		//std::cout << "            down: " << input.GetButton("h") << std::endl;
-
 		events.Tick();
 		clock.Tick();
 
 
 		// testing input
-
 		bool mybutton = input.GetButton("h");
-		
-		//std::cout << input.GetButtonDown("h") << std::endl;;
 
 		if (input.GetButtonDown("h"))
-		{
 			std::cout << "hi down" << std::endl;
-		}
-
 		if (input.GetButtonReleased("h"))
-		{
-			//std::cout << "hi released" << std::endl;
-		}
-
-
-
-
+			std::cout << "hi released" << std::endl;
 
 		time += clock.deltaTime;
-
 		float blend = sin(time) / 2 + 0.5f;
 
-		//std::cout << clock.deltaTime << std::endl;
-
-		shader.SetFloat("blend", blend);
 		if (spinning)
 		{
-			transform2.rotation.y = spin*360;
+			transform2.rotation.y = -spin*360;
 			transform2.position.y = sin(spin)/2;
-			transform2.position.x = sin(spin) / 2;
+			transform2.position.x = 1.5*sin(spin*4);
+			transform2.position.z = 1.5*cos(spin * 4);
 			spin += clock.deltaTime;
 		}
 		
-
-
-		// TODO create Camera object
-		projection = glm::perspective(
-			glm::radians(fov),
-			display.Aspect(),
-			0.1f,
-			100.0f
-		);
-
-
-		view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
-
+		// objects
+		camController.Tick();
 
 		// rendering
 		shader.Use();
 		eye.Bind(0);
 		otherTexture.Bind(1);
+		
+		glm::mat4 mvp; // more from this later
+		glm::mat4 pv = mainCamera.GetViewProjectionMatrix();
+
+		//Sleep(2 * 1000);
+		//print_matrix("projection view",pv);
 
 		glBindVertexArray(pyrVAO);
-
-
-		glm::mat4 pv = projection * view;
 		mvp = pv * transform1.GetMatrix();
-
-		//std::cout << "transform:\n" << transform1.ToString() << std::endl;
-
-
 		shader.SetMat4("mvp", mvp);
+		shader.SetFloat("blend", blend);
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 		
 
 		glBindVertexArray(pyrVAO);
-		mvp = projection * view * transform2.GetMatrix();
-		shader.SetMat4("mvp", transform2.GetMatrix());
+		mvp = pv * transform2.GetMatrix();
+		shader.SetMat4("mvp", mvp);
+		shader.SetFloat("blend", 1/blend+0.001f);
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 
 

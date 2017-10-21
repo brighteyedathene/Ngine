@@ -7,6 +7,14 @@
 #include <glm/gtc/quaternion.hpp>
 #include <string>
 #include <sstream>
+
+// World-space right vector
+const glm::vec3 WORLD_RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
+// World-space up vector
+const glm::vec3 WORLD_UP = glm::vec3(0.0f, 1.0f, 0.0f);
+// World-space forward vector
+const glm::vec3 WORLD_FORWARD = glm::vec3(0.0f, 0.0f, 1.0f);
+
 class Transform
 {
 public:
@@ -32,7 +40,6 @@ public:
 	inline void SetPosition(glm::vec3 value) { this->position = value; }
 	inline void SetRotation(glm::vec3 value) { this->rotation = value; }
 	inline void SetScale(glm::vec3 value) { this->scale = value; }
-
 
 
 };

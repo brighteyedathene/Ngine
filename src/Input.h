@@ -25,6 +25,12 @@ public:
 class Input
 {
 public:
+	
+	// position of mouse
+	int mouse_x, mouse_y;
+	// movement of mouse this frame
+	int mouse_xrel, mouse_yrel;
+
 
 	float f_forward;
 	float f_up;
@@ -53,14 +59,17 @@ public:
 	void SetButtonDown(SDL_Scancode scancode);
 	void SetButtonReleased(SDL_Scancode scancode);
 
+
 	bool GetButton(std::string label);
 	bool GetButtonDown(std::string label);
 	bool GetButtonReleased(std::string label);
 
+	// Adds scancode to the list of SDL_Scancodes associate with label
 	void CreateButtonMapping(std::string label, SDL_Scancode scancode);
 
+
 private:
-	std::unordered_map<std::string, SDL_Scancode> labelMap;
+	std::unordered_map<std::string, std::vector<SDL_Scancode>> labelMap;
 	std::unordered_map<SDL_Scancode, Button> scancodeMap;
 
 	bool ButtonExists(std::string label);
