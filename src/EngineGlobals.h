@@ -20,6 +20,7 @@ namespace ngine
 	const GLchar* otherTexturePath = "./Textures/otherTexture.jpg";
 	const GLchar* eyePath = "./Textures/eye.jpg";
 
+	const char* modelPath = "./Models/ybot.fbx";
 
 	struct Clock
 	{

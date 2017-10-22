@@ -24,6 +24,12 @@
 #include "Camera.h"
 #include "CameraController.h"
 
+
+//TODO remove this assimp stuff and put it in Mesh.h
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 // Macro for indexing vertex buffer (just forwards the value you give it)
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
@@ -195,6 +201,21 @@ using namespace ngine;
 #undef main
 int main(int argc, char* argv[]) 
 {
+
+#pragma region garbish
+
+	// TODO remove this and put it in Mesh.cpp or whatever
+	Assimp::Importer importer;
+	const aiScene *scene = importer.ReadFile(modelPath, aiProcess_Triangulate | aiProcess_FlipUVs);
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+		std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+	}
+	//directory = path.substr(0, path.find_last_of('/'));
+
+#pragma endregion garbish
+
+
 
 	Display display(WINDOW_WIDTH, WINDOW_HEIGHT, "My SDL window");
 	Input input;
