@@ -1,4 +1,4 @@
-#include "Texture.h"
+#include "SATexture.h"
 
 #include <cassert>
 
@@ -11,7 +11,7 @@ I think it was being compiled twice (once for each include of texture.h?)
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Texture::Texture(const GLchar* path)
+SATexture::SATexture(const GLchar* path)
 {
 	glGenTextures(1, &ID);
 	glBindTexture(GL_TEXTURE_2D, ID);
@@ -41,11 +41,11 @@ Texture::Texture(const GLchar* path)
 }
 
 
-Texture::~Texture()
+SATexture::~SATexture()
 {
 }
 
-void Texture::Bind(unsigned int index)
+void SATexture::Bind(unsigned int index)
 {
 	assert(index >= 0 && index <= 31);
 	glActiveTexture(GL_TEXTURE0 + index);

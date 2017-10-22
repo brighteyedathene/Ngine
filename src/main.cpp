@@ -1,34 +1,22 @@
 #include <glad/glad.h>
-
-//#include <GLFW/3.h>
-
-
-
 #include <iostream>
 #include <iomanip>
 #include <stdlib.h>
 #include <chrono>
-
-//#include <glm/glm.hpp>
-//#include <glm/gtc/matrix_transform.hpp>
-//#include <glm/gtc/type_ptr.hpp>
 
 #include "EngineGlobals.h"
 
 #include "Display.h"
 #include "EventHandler.h"
 #include "Shader.h"
-#include "Texture.h"
+#include "SATexture.h"
 #include "Transform.h"
 #include "Input.h"
 #include "Camera.h"
 #include "CameraController.h"
+#include "Mesh.h"
+#include "Model.h"
 
-
-//TODO remove this assimp stuff and put it in Mesh.h
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 
 // Macro for indexing vertex buffer (just forwards the value you give it)
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -201,33 +189,18 @@ using namespace ngine;
 #undef main
 int main(int argc, char* argv[]) 
 {
-
-#pragma region garbish
-
-	// TODO remove this and put it in Mesh.cpp or whatever
-	Assimp::Importer importer;
-	const aiScene *scene = importer.ReadFile(modelPath, aiProcess_Triangulate | aiProcess_FlipUVs);
-	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-	{
-		std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
-	}
-	//directory = path.substr(0, path.find_last_of('/'));
-
-#pragma endregion garbish
-
-
-
 	Display display(WINDOW_WIDTH, WINDOW_HEIGHT, "My SDL window");
 	Input input;
 	EventHandler events(&display, &input);
 
-
 	// create shader program
 	Shader shader(vertexShaderPath, fragmentShaderPath);
 
-	Texture otherTexture(otherTexturePath);
-	Texture myTexture(texturePath);
-	Texture eye(eyePath);
+	SATexture otherTexture(otherTexturePath);
+	SATexture myTexture(texturePath);
+	SATexture eye(eyePath);
+
+	Model mymodel(modelPath);
 
 	// Tell shader where its textures are
 	shader.Use();
@@ -337,11 +310,14 @@ int main(int argc, char* argv[])
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 		
 
-		glBindVertexArray(pyrVAO);
+		//glBindVertexArray(pyrVAO);
 		mvp = pv * transform2.GetMatrix();
 		shader.SetMat4("mvp", mvp);
 		shader.SetFloat("blend", 1/blend+0.001f);
-		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
+
+		//mymodel.Draw(shader);
+
+		//glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 
 
 		// swap buffers, check IO events, unbind the vertex array
