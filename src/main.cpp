@@ -200,8 +200,6 @@ int main(int argc, char* argv[])
 	SATexture myTexture(texturePath);
 	SATexture eye(eyePath);
 
-	Model mymodel(modelPath);
-
 	// Tell shader where its textures are
 	shader.Use();
 	shader.SetInt("texture1", 0); // OR...
@@ -215,6 +213,11 @@ int main(int argc, char* argv[])
 	unsigned int pyrVAO = CreatePyramidVAO();
 	int pyrCount = 18;
 
+	Model mymodel(modelPath);
+	Transform mymodelTransform;
+	mymodelTransform.position += 1.0f;
+	mymodelTransform.rotation.y = 180;
+	mymodelTransform.scale *= 0.5f;
 
 #pragma region camera_init
 
@@ -296,12 +299,10 @@ int main(int argc, char* argv[])
 		shader.Use();
 		eye.Bind(0);
 		otherTexture.Bind(1);
-		
+
 		glm::mat4 mvp; // more from this later
 		glm::mat4 pv = mainCamera.GetViewProjectionMatrix();
 
-		//Sleep(2 * 1000);
-		//print_matrix("projection view",pv);
 
 		glBindVertexArray(pyrVAO);
 		mvp = pv * transform1.GetMatrix();
@@ -314,10 +315,13 @@ int main(int argc, char* argv[])
 		mvp = pv * transform2.GetMatrix();
 		shader.SetMat4("mvp", mvp);
 		shader.SetFloat("blend", 1/blend+0.001f);
+		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 
-		//mymodel.Draw(shader);
+		mymodelTransform.rotation.z = time*190;
+		mvp = pv * mymodelTransform.GetMatrix();
+		shader.SetMat4("mvp", mvp);
+		mymodel.Draw(shader);
 
-		//glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 
 
 		// swap buffers, check IO events, unbind the vertex array

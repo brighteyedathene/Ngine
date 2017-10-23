@@ -32,6 +32,7 @@ public:
 	vector<Vertex> vertices;
 	vector<unsigned int> indices;
 	vector<Texture> textures;
+	unsigned int VAO;
 
 	Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures);
 	~Mesh();
@@ -39,7 +40,7 @@ public:
 
 private:
 	// Render data
-	unsigned int VAO, VBO, EBO;
+	unsigned int VBO, EBO;
 
 	void SetupMesh();
 

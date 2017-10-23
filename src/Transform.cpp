@@ -26,7 +26,7 @@ glm::mat4 Transform::GetMatrix()
 	mat = glm::rotate(mat, glm::radians(rotation.x), WORLD_RIGHT);
 	mat = glm::rotate(mat, glm::radians(rotation.z), WORLD_FORWARD);
 
-	glm::mat4 mat_scale = glm::scale(mat, scale);
+	mat = glm::scale(mat, scale);
 	
 	//mat = mat_translation * mat_rotation * mat_scale;
 
