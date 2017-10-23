@@ -21,7 +21,8 @@ uniform float blend;
 
 void main()
 {
-	FragColor = vertexColor * texture(texture1, texCoords);
+	//FragColor = vertexColor * texture(texture1, texCoords);
+	FragColor =  texture(texture_diffuse1, texCoords);
 	//FragColor = vertexColor * mix(texture(texture1, texCoords), texture(texture2, texCoords), blend);
 	//FragColor = vec4(0.8f, 0.8f, 0.1f, 1.0f);
 }

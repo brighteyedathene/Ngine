@@ -10,7 +10,7 @@ uniform mat4 mvp;
 
 void main()
 {
-	gl_Position = mvp * vec4(aPos, 1.0f);
-	vertexColor = vec4(aColor, 1.0);
-	texCoords = aTexCoords;
+    gl_Position = mvp * vec4(aPos, 1.0f);
+    vertexColor = vec4(aColor, 1.0);
+    texCoords = aTexCoords;
 }

@@ -22,8 +22,6 @@
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 // ...it's global for convenience
-Transform transform1;
-Transform transform2;
 Input input;
 bool spinning = true;
 float fov = 45.0f;
@@ -101,7 +99,6 @@ unsigned int CreatePyramidVAO()
 
 	return VAO;
 }
-
 
 unsigned int CreateCubeVAO()
 {
@@ -195,29 +192,49 @@ int main(int argc, char* argv[])
 
 	// create shader program
 	Shader shader(vertexShaderPath, fragmentShaderPath);
+	Shader lightingTestShader(lightingTestVertexShaderPath, lightingTestFragmentShaderPath);
+	Shader lightShader(lightVertexShaderPath, lightFragmentShaderPath);
 
 	SATexture otherTexture(otherTexturePath);
 	SATexture myTexture(texturePath);
 	SATexture eye(eyePath);
 
 	// Tell shader where its textures are
-	shader.Use();
 	shader.SetInt("texture1", 0); // OR...
 	glUniform1i(glGetUniformLocation(shader.ID, "texture2"), 1);
 	
 
 	// create meshes (garbage section)
 	// TODO this but better using member variables and shi
+
 	//unsigned int cubeVAO = CreateCubeVAO();
 	//int cubeCount = 36;
+	
+
+	// this will be the light
 	unsigned int pyrVAO = CreatePyramidVAO();
 	int pyrCount = 18;
+	Transform lightTransform;
+	lightTransform.position.x = 0.6f;
+	lightTransform.position.z = 0.1f;
+	lightTransform.position.y = 0.0f;
+	lightTransform.scale = glm::vec3(1.0f) * 0.1f;
 
+	Model cube(cubeModelPath);
+	Transform cubeTransform;
+	cubeTransform.position.y = 1.0f;
+	cubeTransform.rotation.x = 90.0f;
+	cubeTransform.scale = glm::vec3(0.01f);
+	
 	Model mymodel(modelPath);
 	Transform mymodelTransform;
-	mymodelTransform.position += 1.0f;
+	mymodelTransform.position = glm::vec3(3.0f, 1.0f, 2.0f);
 	mymodelTransform.rotation.y = 180;
 	mymodelTransform.scale *= 0.5f;
+
+	Transform litCubeTransform;
+	litCubeTransform.scale = glm::vec3(0.03f);
+	
 
 #pragma region camera_init
 
@@ -235,6 +252,8 @@ int main(int argc, char* argv[])
 	input.CreateButtonMapping("Backward", SDL_SCANCODE_S);
 	input.CreateButtonMapping("Left", SDL_SCANCODE_A);
 	input.CreateButtonMapping("Right", SDL_SCANCODE_D);
+	input.CreateButtonMapping("Up", SDL_SCANCODE_Z);
+	input.CreateButtonMapping("Down", SDL_SCANCODE_X);
 
 	input.CreateButtonMapping("Escape", SDL_SCANCODE_ESCAPE);
 
@@ -244,11 +263,7 @@ int main(int argc, char* argv[])
 #pragma endregion button_mapping
 
 
-	// move the second object around a bit
-	transform2.position.x = 0.6f;
-	transform2.position.z = 0.1f;
-	transform2.position.y = 0.0f;
-	transform2.scale = glm::vec3(1.0f) * 0.5f;
+
 	float spin = 0;
 	float time = 0;
 
@@ -259,7 +274,7 @@ int main(int argc, char* argv[])
 	// render loop!
 	while (!display.IsClosed()) 
 	{
-		display.Clear(0.4f, 0.1f, 0.1f, 1.0f);
+		display.Clear(0.1f, 0.1f, 0.1f, 1.0f);
 
 		// logic
 		if (input.GetButtonDown("Escape"))
@@ -285,45 +300,63 @@ int main(int argc, char* argv[])
 
 		if (spinning)
 		{
-			transform2.rotation.y = -spin*360;
-			transform2.position.y = sin(spin)/2;
-			transform2.position.x = 1.5*sin(spin*4);
-			transform2.position.z = 1.5*cos(spin * 4);
+			lightTransform.rotation.y += 360*clock.deltaTime;
+			lightTransform.position.y = sin(spin)/2;
+			lightTransform.position.x = 1.5*sin(spin);
+			lightTransform.position.z = 1.5*cos(spin);
 			spin += clock.deltaTime;
 		}
 		
-		// objects
+		// update game objects
 		camController.Tick();
 
 		// rendering
-		shader.Use();
 		eye.Bind(0);
 		otherTexture.Bind(1);
 
 		glm::mat4 mvp; // more from this later
 		glm::mat4 pv = mainCamera.GetViewProjectionMatrix();
 
-
+		// Draw the light
+		lightShader.Use();
 		glBindVertexArray(pyrVAO);
-		mvp = pv * transform1.GetMatrix();
-		shader.SetMat4("mvp", mvp);
-		shader.SetFloat("blend", blend);
+		mvp = pv * lightTransform.GetMatrix();
+		lightShader.SetMat4("mvp", mvp);
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
+
+
+		// Now draw the lit objects
+		lightingTestShader.Use();
+		lightingTestShader.SetVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+		lightingTestShader.SetVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
+		lightingTestShader.SetVec3("light.specular", 1.0f, 1.0f, 1.0f);
+		lightingTestShader.SetVec3("light.position", lightTransform.position);
 		
+		lightingTestShader.SetVec3("viewPos", mainCamera.transform.position);
 
-		//glBindVertexArray(pyrVAO);
-		mvp = pv * transform2.GetMatrix();
-		shader.SetMat4("mvp", mvp);
-		shader.SetFloat("blend", 1/blend+0.001f);
-		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
+		lightingTestShader.SetVec3("material.ambient", 0.1f, 0.1f, 0.4f);
+		lightingTestShader.SetVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+		lightingTestShader.SetVec3("material.specular", 0.5, 0.5f, 0.5f);
+		lightingTestShader.SetFloat("material.shininess", 60.0f);
+		mvp = pv * litCubeTransform.GetMatrix();
+		lightingTestShader.SetMat4("mvp", mvp);
+		lightingTestShader.SetMat4("model", litCubeTransform.GetMatrix());
+		cube.Draw(lightingTestShader);
 
+		// still drawing the other object so i don't forget how
 		mymodelTransform.rotation.z = time*190;
 		mvp = pv * mymodelTransform.GetMatrix();
-		shader.SetMat4("mvp", mvp);
-		//mymodel.Draw(shader);
+		lightingTestShader.SetMat4("mvp", mvp);
+		lightingTestShader.SetMat4("model", mymodelTransform.GetMatrix());
+		mymodel.Draw(lightingTestShader);
 
-		Sleep(1);
-		std::cout << transform2.ToString() << std::endl;
+		shader.Use();
+		cubeTransform.rotation.y += 360 * clock.deltaTime;
+		cubeTransform.position.y = 2.0f + sin(time)*0.5f;// * clock.deltaTime;
+		mvp = pv* cubeTransform.GetMatrix();
+		shader.SetMat4("mvp", mvp);
+		cube.Draw(shader);
+
 		// swap buffers, check IO events, unbind the vertex array
 		glBindVertexArray(0);
 		

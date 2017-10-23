@@ -16,11 +16,19 @@ namespace ngine
 	const GLchar* vertexShaderPath = "./Shaders/shader.vs";
 	const GLchar* fragmentShaderPath = "./Shaders/shader.fs";
 
+	const GLchar* lightingTestVertexShaderPath = "./Shaders/lightingTestShader.vs";
+	const GLchar* lightingTestFragmentShaderPath = "./Shaders/lightingtestShader.fs";
+
+	const GLchar* lightVertexShaderPath = "./Shaders/lightShader.vs";
+	const GLchar* lightFragmentShaderPath = "./Shaders/lightShader.fs";
+
 	const GLchar* texturePath = "./Textures/myTexture.jpg";
 	const GLchar* otherTexturePath = "./Textures/otherTexture.jpg";
 	const GLchar* eyePath = "./Textures/eye.jpg";
 
 	const char* modelPath = "./Models/bear/bear.fbx";
+
+	const char* cubeModelPath = "./Models/cube/cube.obj";
 	//const char* modelPath = "./Models/nanosuit/nanosuit.obj";
 	//const char* modelPath = "./Models/ybot.fbx";
 
