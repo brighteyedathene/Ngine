@@ -320,10 +320,10 @@ int main(int argc, char* argv[])
 		mymodelTransform.rotation.z = time*190;
 		mvp = pv * mymodelTransform.GetMatrix();
 		shader.SetMat4("mvp", mvp);
-		mymodel.Draw(shader);
+		//mymodel.Draw(shader);
 
-
-
+		Sleep(1);
+		std::cout << transform2.ToString() << std::endl;
 		// swap buffers, check IO events, unbind the vertex array
 		glBindVertexArray(0);
 		
