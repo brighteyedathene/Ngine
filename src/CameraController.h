@@ -11,6 +11,7 @@ class CameraController
 {
 public:
 	float mouseSensitivity;
+	bool constrainPitch;
 
 	CameraController(Camera* p_camera, Input* p_input, bool constrainPitch = true);
 	~CameraController();
@@ -21,7 +22,7 @@ private:
 	Camera* p_camera;
 	Input* p_input;
 
-	bool constrainPitch;
+
 
 };
 

@@ -226,9 +226,9 @@ int main(int argc, char* argv[])
 	cubeTransform.rotation.x = 90.0f;
 	cubeTransform.scale = glm::vec3(0.01f);
 	
-	Model mymodel(modelPath);
+	Model bear(bearPath);
 	Transform mymodelTransform;
-	mymodelTransform.position = glm::vec3(3.0f, 1.0f, 2.0f);
+	//mymodelTransform.position = glm::vec3(3.0f, 1.0f, 2.0f);
 	mymodelTransform.rotation.y = 180;
 	mymodelTransform.scale *= 0.5f;
 
@@ -240,6 +240,19 @@ int main(int argc, char* argv[])
 
 	Camera mainCamera;
 	CameraController camController(&mainCamera, &input);
+
+	//mainCamera.orthographic = true;
+	//camController.constrainPitch = false;
+
+	Camera cam2;
+	cam2.orthographic = true;
+	Camera cam3;
+	cam3.fov = 120.0f;
+
+	Camera cam4;
+
+	cam2.orthographic = true;
+
 
 #pragma endregion camera_init
 
@@ -270,12 +283,11 @@ int main(int argc, char* argv[])
 	// Start the clock just before render loop
 	struct Clock clock;
 
-
 	// render loop!
 	while (!display.IsClosed()) 
 	{
 		display.Clear(0.1f, 0.1f, 0.1f, 1.0f);
-
+		Sleep(70);
 		// logic
 		if (input.GetButtonDown("Escape"))
 		{
@@ -285,15 +297,6 @@ int main(int argc, char* argv[])
 		input.Tick();
 		events.Tick();
 		clock.Tick();
-
-
-		// testing input
-		bool mybutton = input.GetButton("h");
-
-		if (input.GetButtonDown("h"))
-			std::cout << "hi down" << std::endl;
-		if (input.GetButtonReleased("h"))
-			std::cout << "hi released" << std::endl;
 
 		time += clock.deltaTime;
 		float blend = sin(time) / 2 + 0.5f;
@@ -315,6 +318,19 @@ int main(int argc, char* argv[])
 		otherTexture.Bind(1);
 
 		glm::mat4 mvp; // more from this later
+
+
+		/*-------------------------------------------------------------------*/
+		/*-------------------------- Viewports ------------------------------*/
+		/*-------------------------------------------------------------------*/
+		int d_width, d_height;
+		display.GetWindowSize(&d_width, &d_height);
+		std::cout << d_width << "x" << d_height << std::endl;
+		/*-------------------------------------------------------------------*/
+		/*---------------------- CAMERA 1 -----------------------------------*/
+		/*-------------------------------------------------------------------*/
+		glViewport(0, d_height / 2, d_width/2, d_height);
+
 		glm::mat4 pv = mainCamera.GetViewProjectionMatrix();
 
 		// Draw the light
@@ -348,7 +364,9 @@ int main(int argc, char* argv[])
 		mvp = pv * mymodelTransform.GetMatrix();
 		lightingTestShader.SetMat4("mvp", mvp);
 		lightingTestShader.SetMat4("model", mymodelTransform.GetMatrix());
-		mymodel.Draw(lightingTestShader);
+		bear.Draw(lightingTestShader);
+
+
 
 		shader.Use();
 		cubeTransform.rotation.y += 360 * clock.deltaTime;
@@ -360,6 +378,100 @@ int main(int argc, char* argv[])
 		// swap buffers, check IO events, unbind the vertex array
 		glBindVertexArray(0);
 		
+
+		/*-------------------------------------------------------------------*/
+		/*---------------------- CAMERA 2 -----------------------------------*/
+		/*-------------------------------------------------------------------*/
+		glViewport(d_width / 2, d_height / 2, d_width, d_height);
+		
+		pv = cam2.GetViewProjectionMatrix();
+		
+
+
+		// Draw the light
+		lightShader.Use();
+		glBindVertexArray(pyrVAO);
+		mvp = pv * lightTransform.GetMatrix();
+		lightShader.SetMat4("mvp", mvp);
+		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
+
+		lightingTestShader.Use();
+		lightingTestShader.SetVec3("viewPos", cam2.transform.position);
+
+		Transform bear2;
+		bear2.rotation.y = time*2;
+		bear2.scale *= 0.1f;
+		mvp = pv * bear2.GetMatrix();
+		lightingTestShader.SetMat4("mvp", mvp);
+		lightingTestShader.SetMat4("model", bear2.GetMatrix());
+		bear.Draw(lightingTestShader);
+
+		/*-------------------------------------------------------------------*/
+		/*---------------------- CAMERA 3 -----------------------------------*/
+		/*-------------------------------------------------------------------*/
+		glViewport(0, 0, d_width / 2, d_height / 2);
+
+		pv = cam3.GetViewProjectionMatrix();
+
+		Transform staticLight;
+		staticLight.position = glm::vec3(0, -2, -1);
+		// Draw the light
+		lightShader.Use();
+		glBindVertexArray(pyrVAO);
+		mvp = pv * staticLight.GetMatrix();
+		lightShader.SetMat4("mvp", mvp);
+		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
+
+		lightingTestShader.Use();
+		lightingTestShader.SetVec3("viewPos", cam3.transform.position);
+		lightingTestShader.SetVec3("light.position", staticLight.position);
+
+		Transform bear3;
+		bear3.position.z = 1 - sin(time)*2;
+		bear3.rotation.y = 180.0f;
+		mvp = pv * bear3.GetMatrix();
+		lightingTestShader.SetMat4("mvp", mvp);
+		lightingTestShader.SetMat4("model", bear3.GetMatrix());
+		bear.Draw(lightingTestShader);
+
+
+		/*-------------------------------------------------------------------*/
+		/*---------------------- CAMERA 4 -----------------------------------*/
+		/*-------------------------------------------------------------------*/
+		glViewport(d_width / 2, 0, d_width, d_height / 2);
+		cam4.transform.position = glm::vec3(-1.0, 0.0f, -3.0f);
+		//std::cout << cam4.transform.ToString() << std::endl;
+
+		pv = cam4.GetViewProjectionMatrix();
+
+		staticLight.position = glm::vec3(0, 0, 0);
+		// Draw the light
+		lightShader.Use();
+		glBindVertexArray(pyrVAO);
+		mvp = pv * staticLight.GetMatrix();
+		lightShader.SetMat4("mvp", mvp);
+		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
+		
+		lightingTestShader.Use();
+		lightingTestShader.SetVec3("viewPos", cam4.transform.position);
+		lightingTestShader.SetVec3("light.position", staticLight.position);
+		// draw bears
+		for (int i = 0; i < 10; i++)
+		{
+			Transform b;
+			b.scale *= 0.1f;
+			b.position.y = sin((time + i*2) * 2);
+			b.position.x = cos((time + i*2) * 2);
+			
+			b.rotation.y = 180.0f;
+			b.rotation.z = i * 360 / 10;
+
+			mvp = pv * b.GetMatrix();
+			lightingTestShader.SetMat4("mvp", mvp);
+			lightingTestShader.SetMat4("model", b.GetMatrix());
+			bear.Draw(lightingTestShader);
+
+		}
 
 		display.Update();
 	}

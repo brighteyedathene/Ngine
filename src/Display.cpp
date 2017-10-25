@@ -106,3 +106,8 @@ void Display::ResizeViewPort()
 	glViewport(0, 0, width, height);
 	m_aspect = (float) width / height;
 }
+
+void Display::GetWindowSize(int *w, int* h)
+{
+	SDL_GetWindowSize(m_window, w, h);
+}

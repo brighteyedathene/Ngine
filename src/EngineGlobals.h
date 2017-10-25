@@ -11,7 +11,7 @@
 namespace ngine
 {
 	int WINDOW_WIDTH = 900; // initial width
-	int WINDOW_HEIGHT = 601; // initial height
+	int WINDOW_HEIGHT = 600; // initial height
 
 	const GLchar* vertexShaderPath = "./Shaders/shader.vs";
 	const GLchar* fragmentShaderPath = "./Shaders/shader.fs";
@@ -26,7 +26,7 @@ namespace ngine
 	const GLchar* otherTexturePath = "./Textures/otherTexture.jpg";
 	const GLchar* eyePath = "./Textures/eye.jpg";
 
-	const char* modelPath = "./Models/bear/bear.fbx";
+	const char* bearPath = "./Models/bear/bear.fbx";
 
 	const char* cubeModelPath = "./Models/cube/cube.obj";
 	//const char* modelPath = "./Models/nanosuit/nanosuit.obj";

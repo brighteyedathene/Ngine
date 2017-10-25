@@ -18,6 +18,8 @@ public:
 	void ResizeViewPort();
 	float Aspect();
 
+	void GetWindowSize(int *w, int* h);
+
 private:
 	SDL_Window* m_window;
 	SDL_GLContext m_glContext;
