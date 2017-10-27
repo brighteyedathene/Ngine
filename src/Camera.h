@@ -34,7 +34,6 @@ public:
 	float nearClipDistance;
 	float farClipDistance;
 
-
 	Transform transform;
 	Camera(bool orthographic = false);
 	~Camera();

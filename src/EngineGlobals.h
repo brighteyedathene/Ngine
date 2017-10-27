@@ -36,8 +36,8 @@ namespace ngine
 	{
 
 		double deltaTime;
-		Uint64 NOW = 0;
-		Uint64 LAST = 0;
+		Uint64 NOW = SDL_GetPerformanceCounter();
+		Uint64 LAST = SDL_GetPerformanceCounter();
 		
 		void Tick()
 		{

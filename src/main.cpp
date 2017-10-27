@@ -258,8 +258,8 @@ int main(int argc, char* argv[])
 
 #pragma region button_mapping
 
-	input.CreateButtonMapping("h", SDL_SCANCODE_H);
-	input.CreateButtonMapping("h", SDL_SCANCODE_O);
+	input.CreateButtonMapping("IncreaseSleepTime", SDL_SCANCODE_H);
+	input.CreateButtonMapping("DecreaseSleepTime", SDL_SCANCODE_L);
 
 	input.CreateButtonMapping("Forward", SDL_SCANCODE_W);
 	input.CreateButtonMapping("Backward", SDL_SCANCODE_S);
@@ -287,7 +287,7 @@ int main(int argc, char* argv[])
 	while (!display.IsClosed()) 
 	{
 		display.Clear(0.1f, 0.1f, 0.1f, 1.0f);
-		Sleep(70);
+
 		// logic
 		if (input.GetButtonDown("Escape"))
 		{
@@ -320,12 +320,13 @@ int main(int argc, char* argv[])
 		glm::mat4 mvp; // more from this later
 
 
+
 		/*-------------------------------------------------------------------*/
 		/*-------------------------- Viewports ------------------------------*/
 		/*-------------------------------------------------------------------*/
 		int d_width, d_height;
 		display.GetWindowSize(&d_width, &d_height);
-		std::cout << d_width << "x" << d_height << std::endl;
+		//std::cout << d_width << "x" << d_height << std::endl;
 		/*-------------------------------------------------------------------*/
 		/*---------------------- CAMERA 1 -----------------------------------*/
 		/*-------------------------------------------------------------------*/
@@ -360,7 +361,7 @@ int main(int argc, char* argv[])
 		cube.Draw(lightingTestShader);
 
 		// still drawing the other object so i don't forget how
-		mymodelTransform.rotation.z = time*190;
+		//mymodelTransform.rotation.z = time*190;
 		mvp = pv * mymodelTransform.GetMatrix();
 		lightingTestShader.SetMat4("mvp", mvp);
 		lightingTestShader.SetMat4("model", mymodelTransform.GetMatrix());
@@ -414,7 +415,7 @@ int main(int argc, char* argv[])
 		pv = cam3.GetViewProjectionMatrix();
 
 		Transform staticLight;
-		staticLight.position = glm::vec3(0, -2, -1);
+		staticLight.position = glm::vec3(0, 2, -3);
 		// Draw the light
 		lightShader.Use();
 		glBindVertexArray(pyrVAO);
@@ -427,7 +428,8 @@ int main(int argc, char* argv[])
 		lightingTestShader.SetVec3("light.position", staticLight.position);
 
 		Transform bear3;
-		bear3.position.z = 1 - sin(time)*2;
+		//printf("Z: %13.8f\n", time);
+		bear3.position.z = 1.0f - sin(time)*2.0f;
 		bear3.rotation.y = 180.0f;
 		mvp = pv * bear3.GetMatrix();
 		lightingTestShader.SetMat4("mvp", mvp);
@@ -439,7 +441,7 @@ int main(int argc, char* argv[])
 		/*---------------------- CAMERA 4 -----------------------------------*/
 		/*-------------------------------------------------------------------*/
 		glViewport(d_width / 2, 0, d_width, d_height / 2);
-		cam4.transform.position = glm::vec3(-1.0, 0.0f, -3.0f);
+		cam4.transform.position = glm::vec3(-2.0f, 0.0f, -3.0f);
 		//std::cout << cam4.transform.ToString() << std::endl;
 
 		pv = cam4.GetViewProjectionMatrix();

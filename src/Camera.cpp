@@ -36,7 +36,6 @@ glm::mat4 Camera::GetViewProjectionMatrix()
 	if (orthographic)
 	{
 		//projection = glm::ortho((float)vp[0], (float)vp[2], (float)vp[1], (float)vp[3], -1.0f, 1.0f);
-		projection = glm::ortho(0.0f, 900.0f, 0.0f, 601.0f, -10.0f, 10.0f);
 		projection = glm::ortho(-1.0f, 2.0f, -1.0f, 2.0f, -10.0f, 10.0f);
 	}
 	else
