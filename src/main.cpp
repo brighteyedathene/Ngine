@@ -286,7 +286,7 @@ int main(int argc, char* argv[])
 	// render loop!
 	while (!display.IsClosed()) 
 	{
-		display.Clear(0.1f, 0.1f, 0.1f, 1.0f);
+		display.Clear(0.5f, 0.5f, 0.1f, 1.0f);
 
 		// logic
 		if (input.GetButtonDown("Escape"))
@@ -326,11 +326,12 @@ int main(int argc, char* argv[])
 		/*-------------------------------------------------------------------*/
 		int d_width, d_height;
 		display.GetWindowSize(&d_width, &d_height);
-		//std::cout << d_width << "x" << d_height << std::endl;
 		/*-------------------------------------------------------------------*/
 		/*---------------------- CAMERA 1 -----------------------------------*/
 		/*-------------------------------------------------------------------*/
-		glViewport(0, d_height / 2, d_width/2, d_height);
+		glViewport(0, 0, d_width, d_height);
+
+		glPolygonMode(GL_FRONT, GL_FILL);
 
 		glm::mat4 pv = mainCamera.GetViewProjectionMatrix();
 
@@ -380,72 +381,22 @@ int main(int argc, char* argv[])
 		glBindVertexArray(0);
 		
 
-		/*-------------------------------------------------------------------*/
-		/*---------------------- CAMERA 2 -----------------------------------*/
-		/*-------------------------------------------------------------------*/
-		glViewport(d_width / 2, d_height / 2, d_width, d_height);
-		
-		pv = cam2.GetViewProjectionMatrix();
-		
-
-
-		// Draw the light
-		lightShader.Use();
-		glBindVertexArray(pyrVAO);
-		mvp = pv * lightTransform.GetMatrix();
-		lightShader.SetMat4("mvp", mvp);
-		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
-
-		lightingTestShader.Use();
-		lightingTestShader.SetVec3("viewPos", cam2.transform.position);
-
-		Transform bear2;
-		bear2.rotation.y = time*2;
-		bear2.scale *= 0.1f;
-		mvp = pv * bear2.GetMatrix();
-		lightingTestShader.SetMat4("mvp", mvp);
-		lightingTestShader.SetMat4("model", bear2.GetMatrix());
-		bear.Draw(lightingTestShader);
-
-		/*-------------------------------------------------------------------*/
-		/*---------------------- CAMERA 3 -----------------------------------*/
-		/*-------------------------------------------------------------------*/
-		glViewport(0, 0, d_width / 2, d_height / 2);
-
-		pv = cam3.GetViewProjectionMatrix();
-
-		Transform staticLight;
-		staticLight.position = glm::vec3(0, 2, -3);
-		// Draw the light
-		lightShader.Use();
-		glBindVertexArray(pyrVAO);
-		mvp = pv * staticLight.GetMatrix();
-		lightShader.SetMat4("mvp", mvp);
-		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
-
-		lightingTestShader.Use();
-		lightingTestShader.SetVec3("viewPos", cam3.transform.position);
-		lightingTestShader.SetVec3("light.position", staticLight.position);
-
-		Transform bear3;
-		//printf("Z: %13.8f\n", time);
-		bear3.position.z = 1.0f - sin(time)*2.0f;
-		bear3.rotation.y = 180.0f;
-		mvp = pv * bear3.GetMatrix();
-		lightingTestShader.SetMat4("mvp", mvp);
-		lightingTestShader.SetMat4("model", bear3.GetMatrix());
-		bear.Draw(lightingTestShader);
 
 
 		/*-------------------------------------------------------------------*/
 		/*---------------------- CAMERA 4 -----------------------------------*/
 		/*-------------------------------------------------------------------*/
-		glViewport(d_width / 2, 0, d_width, d_height / 2);
+		glViewport(7 * d_width / 8, 0, d_width, d_height / 8);
 		cam4.transform.position = glm::vec3(-2.0f, 0.0f, -3.0f);
-		//std::cout << cam4.transform.ToString() << std::endl;
+		cam4.fov = 100;
+		//glScissor( d_width / 2, 0, d_width, d_height / 2);
+		//glEnable(GL_SCISSOR_TEST);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // (or whatever buffer you want to clear)
+		//glDisable(GL_SCISSOR_TEST);
 
 		pv = cam4.GetViewProjectionMatrix();
-
+		
+		Transform staticLight;
 		staticLight.position = glm::vec3(0, 0, 0);
 		// Draw the light
 		lightShader.Use();
