@@ -228,9 +228,12 @@ int main(int argc, char* argv[])
 	
 	Model bear(bearPath);
 	Transform mymodelTransform;
-	//mymodelTransform.position = glm::vec3(3.0f, 1.0f, 2.0f);
+	mymodelTransform.position = glm::vec3(3.0f, 1.0f, 2.0f);
 	mymodelTransform.rotation.y = 180;
 	mymodelTransform.scale *= 0.5f;
+
+	Model bninjaModel(bninjaPath);
+
 
 	Transform litCubeTransform;
 	litCubeTransform.scale = glm::vec3(0.03f);
