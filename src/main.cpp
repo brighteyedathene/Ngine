@@ -226,7 +226,8 @@ int main(int argc, char* argv[])
 	cubeTransform.rotation.x = 90.0f;
 	cubeTransform.scale = glm::vec3(0.01f);
 	
-	Model bear(bearPath);
+	Model bearModel(bearPath);
+	
 	Transform mymodelTransform;
 	mymodelTransform.position = glm::vec3(3.0f, 1.0f, 2.0f);
 	mymodelTransform.rotation.y = 180;
@@ -369,7 +370,7 @@ int main(int argc, char* argv[])
 		mvp = pv * mymodelTransform.GetMatrix();
 		lightingTestShader.SetMat4("mvp", mvp);
 		lightingTestShader.SetMat4("model", mymodelTransform.GetMatrix());
-		bear.Draw(lightingTestShader);
+		bninjaModel.Draw(lightingTestShader);
 
 
 
@@ -425,7 +426,7 @@ int main(int argc, char* argv[])
 			mvp = pv * b.GetMatrix();
 			lightingTestShader.SetMat4("mvp", mvp);
 			lightingTestShader.SetMat4("model", b.GetMatrix());
-			bear.Draw(lightingTestShader);
+			bearModel.Draw(lightingTestShader);
 
 		}
 
