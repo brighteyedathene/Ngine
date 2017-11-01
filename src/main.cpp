@@ -17,6 +17,7 @@
 #include "Mesh.h"
 #include "Model.h"
 
+#include "AnimatedModel.h"
 
 // Macro for indexing vertex buffer (just forwards the value you give it)
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -25,30 +26,6 @@
 Input input;
 bool spinning = true;
 float fov = 45.0f;
-
-
-void print_matrix(std::string name, glm::mat4 mat)
-{
-	float dArray[16] = { 0.0 };
-	const float *pSource = (const float*)glm::value_ptr(mat);
-	for (int i = 0; i < 16; ++i)
-		dArray[i] = pSource[i];
-
-	std::cout << name << ":" << std::endl;
-	std::cout << std::fixed;
-	std::cout << std::setprecision(2);
-	for (int i = 0; i < 4; i++)
-	{
-		std::cout << "[ ";
-		for (int j = 0; j < 4; j++)
-		{
-			if (pSource[i+j*4] >= 0)
-				std::cout << " ";
-			std::cout << pSource[i+j*4] << " ";
-		}
-		std::cout << "]" << std::endl;
-	}
-}
 
 
 #pragma region VAO_creation
@@ -233,8 +210,11 @@ int main(int argc, char* argv[])
 	mymodelTransform.rotation.y = 180;
 	mymodelTransform.scale *= 0.5f;
 
-	Model bninjaModel(bninjaPath);
 
+
+	Model bninjaModel(bninjaPath);
+	AnimatedModel animModel;
+	animModel.LoadMesh(bninjaPath);
 
 	Transform litCubeTransform;
 	litCubeTransform.scale = glm::vec3(0.03f);
@@ -302,7 +282,7 @@ int main(int argc, char* argv[])
 		events.Tick();
 		clock.Tick();
 
-		time += clock.deltaTime;
+		time = clock.time;
 		float blend = sin(time) / 2 + 0.5f;
 
 		if (spinning)

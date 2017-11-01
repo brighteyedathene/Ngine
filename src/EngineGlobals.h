@@ -37,6 +37,7 @@ namespace ngine
 	{
 
 		double deltaTime;
+		double time = 0;
 		Uint64 NOW = SDL_GetPerformanceCounter();
 		Uint64 LAST = SDL_GetPerformanceCounter();
 		
@@ -45,6 +46,7 @@ namespace ngine
 			LAST = NOW;
 			NOW = SDL_GetPerformanceCounter();
 			deltaTime = (double)(NOW - LAST) / (double)SDL_GetPerformanceFrequency();
+			time += deltaTime;
 		}
 	};
 }
