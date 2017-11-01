@@ -7,13 +7,8 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-// some handy shit from ogldev's thing
-#define SAFE_DELETE(p) if (p) { delete p; p = NULL; }
-#define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
-#define ZERO_MEM(a) memset(a, 0, sizeof(a))
 
-namespace Assorted
-{
+
 	// copy from Row-major to Column major matrix
 	// i.e. from aiMatrix4x4 to glm::mat4
 	template <typename RM, typename CM>
@@ -51,4 +46,3 @@ namespace Assorted
 			std::cout << "]" << std::endl;
 		}
 	}
-}
