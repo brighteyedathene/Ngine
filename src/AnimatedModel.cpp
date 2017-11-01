@@ -1,6 +1,5 @@
 #include "AnimatedModel.h"
 
-#include "AssortedUtils.h"
 
 #define POSITION_LOCATION    0
 #define TEX_COORD_LOCATION   1
@@ -69,6 +68,10 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string* filename)
 	vector<glm::vec2> TexCoords;
 	vector<VertexBoneData> Bones;
 	vector<unsigned int> Indices;
+
+	// TODO finish this function (ogldev_skinned_mesh.cpp)
+
+	return false;
 }
 
 void AnimatedModel::Render()
