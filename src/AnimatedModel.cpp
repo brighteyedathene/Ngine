@@ -108,8 +108,9 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 	Positions.reserve(NumVertices);
 	Normals.reserve(NumVertices);
 	TexCoords.reserve(NumVertices);
-	Bones.reserve(NumVertices);
 	Indices.reserve(NumVertices);
+
+	Bones.resize(NumVertices); // Resize!!
 
 	// Initialize the meshes in the scene one by one
 	for (unsigned int i = 0; i < m_Entries.size(); i++)
@@ -196,6 +197,7 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			unsigned int VertexID = m_Entries[MeshIndex].BaseVertex + pMesh->mBones[i]->mWeights[j].mVertexId;
 			float Weight = pMesh->mBones[i]->mWeights[j].mWeight;
 			Bones[VertexID].AddBoneData(BoneIndex, Weight);
+			std::cout << j << "   ";
 		}
 	}
 }
