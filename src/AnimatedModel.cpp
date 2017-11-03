@@ -70,15 +70,6 @@ bool AnimatedModel::LoadMesh(const string& Filename)
 		printf("Error parsing '%s': '%s'\n", Filename.c_str(), m_Importer.GetErrorString());
 	}
 
-	myAssMatrix = aiMatrix4x4();
-	myAssMatrix = myAssMatrix.Translation(aiVector3D(1.0f, 2.0f, 3.0f), myAssMatrix);
-
-	// copies the elements from assimp's aiMatrix4x4 to glm's mat4
-	AssToGlmMat4(myAssMatrix, matfromass);
-
-	print_matrix("ass", matfromass);
-	print_matrix("raw glm", glm_matrix);
-
 	return ret;
 }
 
@@ -203,7 +194,6 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 
 
 
-
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[POS_VB]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Positions[0]) * Positions.size(), &Positions[0], GL_STATIC_DRAW);
 	glEnableVertexAttribArray(POSITION_LOCATION);
@@ -255,6 +245,7 @@ void AnimatedModel::InitMesh(unsigned int MeshIndex,
 		TexCoords.push_back(glm::vec2(pTexCoord->x, pTexCoord->y));
 	}
 
+
 	LoadBones(MeshIndex, paiMesh, SkinWeights);
 	// TODO normalise SkinWeights
 
@@ -269,8 +260,14 @@ void AnimatedModel::InitMesh(unsigned int MeshIndex,
 	}
 }
 
+
+// assemeble skin and bones
 void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vector<VertexBoneData>& SkinWeights)
 {
+	m_Skeleton.m_jointCount = pMesh->mNumBones;
+	m_Skeleton.m_joints.resize(m_Skeleton.m_jointCount);
+	aiNode* pRoot = m_pScene->mRootNode;
+
 	for (unsigned int i = 0; i < pMesh->mNumBones; i++)
 	{
 		unsigned int BoneIndex = 0;
@@ -278,6 +275,46 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 
 		if (m_BoneMapping.find(BoneName) == m_BoneMapping.end())
 		{
+
+			// Joints
+			Joint joint;
+			// 1.
+			// Attempt to find this bone's parent in the node hierarchy
+			aiNode* pNode = pRoot->aiNode::FindNode(BoneName.c_str());
+			if (!pNode)
+			{
+				std::cout << "Couldn't find a node with name: " << BoneName.c_str() << std::endl;
+			}
+			//2.
+			// Now try to find the node's parent
+			// if it hasn't been mapped yet, assume this node is a root and give it no parent
+			string parentName(pNode->mParent->mName.data);
+			if (m_BoneMapping.find(parentName) == m_BoneMapping.end())
+			{
+				std::cout << "This node was referenced as a parent bone without being mapped: " << parentName << std::endl;
+				std::cout << "----Assuming the following node is a root: " << BoneName.c_str() << std::endl;
+				joint.m_parentIndex = NULL;
+			}
+			else
+			{
+				joint.m_parentIndex = m_BoneMapping[parentName];
+			}
+
+			// 3.
+			// Set the joint ID
+			joint.m_index = m_NumBones;
+			//4.
+			// Set the local Bind transform (maybe)
+			glm::mat4 localBindTransform;
+			AssToGlmMat4(pMesh->mBones[i]->mOffsetMatrix, localBindTransform);
+			joint.m_localBindTransform = localBindTransform;
+
+
+			print_matrix(BoneName.c_str(), joint.m_localBindTransform);
+
+			m_Skeleton.m_joints[joint.m_index] = joint;
+
+			// X. This is the old stuff
 			// Allocate an index for anew bone
 			BoneIndex = m_NumBones;
 			m_NumBones++;
@@ -291,7 +328,6 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 		else
 		{
 			BoneIndex = m_BoneMapping[BoneName];
-			std::cout << "a bone was loaded twice" << std::endl;
 		}
 
 		// fucking dump all this bone's influences into the vertex-bone-weights blob

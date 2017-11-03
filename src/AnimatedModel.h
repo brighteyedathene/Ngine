@@ -33,24 +33,14 @@ struct Joint
 	const char* m_name;
 	int m_index;
 	int m_parentIndex;
-	int m_numChildren;
-	Joint* m_aChildren;
+	
+	vector<Joint> children;
 };
 
 struct Skeleton
 {
 	int m_jointCount;
-	Joint* m_aJoints;
-
-	Skeleton(int jountCount)
-	{
-		m_jointCount = jountCount;
-		m_aJoints = new Joint[m_jointCount];
-	}
-	~Skeleton()
-	{
-		delete m_aJoints;
-	}
+	vector<Joint> m_joints;
 };
 
 struct JointPose
@@ -193,8 +183,9 @@ private:
 	
 	glm::mat4 glm_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 2.0f, 3.0f));
 	
-	aiMatrix4x4 myAssMatrix;
-	glm::mat4 matfromass;
+
+	Skeleton m_Skeleton;
+
 
 	const aiScene* m_pScene;
 	Assimp::Importer m_Importer;
