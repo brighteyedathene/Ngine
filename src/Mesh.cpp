@@ -6,12 +6,8 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture
 {
 	int ndiffuse = 0;
 	int nspecular = 0;
-	for (Texture t : textures)
-	{
-		std::cout << "texture type: " << t.type << std::endl;
-	}
 
-	std::cout << "creating mesh with " << vertices.size() << " vertices, " << indices.size() << " indices, " << textures.size() << " textures" << std::endl;
+	std::cout << "creating static mesh with " << vertices.size() << " vertices, " << indices.size() << " indices, " << textures.size() << " textures" << std::endl;
 	
 	
 	this->vertices = vertices;

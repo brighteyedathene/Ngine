@@ -1,7 +1,6 @@
 #include "Input.h"
 
 
-
 Input::Input()
 {
 	f_forward = 0;

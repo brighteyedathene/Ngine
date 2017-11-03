@@ -1,7 +1,7 @@
 #include "AnimatedModel.h"
 
 #include "AssortedUtils.h"
-
+#include <limits>
 
 #define POSITION_LOCATION    0
 #define TEX_COORD_LOCATION   1
@@ -9,21 +9,27 @@
 #define BONE_ID_LOCATION     3
 #define BONE_WEIGHT_LOCATION 4
 
+map<unsigned int, bool> bones_used;
 
 void AnimatedModel::VertexBoneData::AddBoneData(unsigned int BoneID, float Weight)
 {
+	unsigned int minIndex;
+	float minWeight = std::numeric_limits<float>::infinity();
+
 	for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(IDs); i++)
 	{
-		if (Weights[i] == 0.0)
+		if (Weights[i] < minWeight)
 		{
-			IDs[i] = BoneID;
-			Weights[i] = Weight;
-			return;
+			minIndex = i;
+			minWeight = Weights[i];
 		}
 	}
 
-	// more bones than we have space for (we shouldn't get here)
-	assert(0);
+	if (Weight > minWeight)
+	{
+		IDs[minIndex] = BoneID;
+		Weights[minIndex] = Weight;
+	}
 }
 
 AnimatedModel::AnimatedModel()
@@ -77,6 +83,37 @@ bool AnimatedModel::LoadMesh(const string& Filename)
 }
 
 
+string chop_before(aiString aiStr, char delimiter)
+{
+	string s = "";
+	for (int i = aiStr.length - 1; i >= 0; i--)
+	{
+		if (aiStr.data[i] == delimiter)
+		{
+			for (int j = 1; j < aiStr.length - i; j++)
+			{
+				s += aiStr.data[i + j];
+			}
+			return s;
+		}
+	}
+	return "couldn't find delimiter";
+}
+
+void recursive_print(aiNode* node, int depth)
+{
+	string tab = "- ";
+	for (int i = 0; i < depth; i++)
+		tab += "- ";
+
+	//string name = chop_before(node->mName, '_');
+	//std::cout << tab << name << std::endl;
+	std::cout << tab << node->mName.C_Str() << std::endl;
+
+	for (int i = 0; i < node->mNumChildren; i++)
+		recursive_print(node->mChildren[i], depth + 1);
+}
+
 bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 {
 	m_Entries.resize(pScene->mNumMeshes);
@@ -85,7 +122,7 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 	vector<glm::vec3> Positions;
 	vector<glm::vec3> Normals;
 	vector<glm::vec2> TexCoords;
-	vector<VertexBoneData> Bones;
+	vector<VertexBoneData> SkinWeights;
 	vector<unsigned int> Indices;
 
 	// TODO finish this function (ogldev_skinned_mesh.cpp)
@@ -110,21 +147,80 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 	TexCoords.reserve(NumVertices);
 	Indices.reserve(NumVertices);
 
-	Bones.resize(NumVertices); // Resize!!
+	SkinWeights.resize(NumVertices); // Resize!!
 
 	// Initialize the meshes in the scene one by one
 	for (unsigned int i = 0; i < m_Entries.size(); i++)
 	{
 		const aiMesh* paiMesh = pScene->mMeshes[i];
-		InitMesh(i, paiMesh, Positions, Normals, TexCoords, Bones, Indices);
+		InitMesh(i, paiMesh, Positions, Normals, TexCoords, SkinWeights, Indices);
 	}
 
 	if (!InitMaterials(pScene, Filename))
 	{
-		return false;
+		std::cout << "No materials for animated models yet!" << std::endl;
 	}
 
+	std::cout << "what do with these animations?" << std::endl;
 	// TODO finish this function
+
+	// here's some recon stuff
+
+	recursive_print(pScene->mRootNode, 0);
+
+	//for (int i = 0; i < pScene->mNumAnimations; i++)
+	//{
+	//	//aiAnimation* anim = &(pScene->mAnimations[i]);
+	//	for (int c = 0; c < pScene->mAnimations[i]->mNumChannels; c++)
+	//	{
+	//		std::cout << "channel: " << pScene->mAnimations[i]->mChannels[c]->mNodeName.C_Str() << std::endl;
+	//		for (int k = 0; k < pScene->mAnimations[i]->mChannels[c]->mNumPositionKeys; k++)
+	//		{
+	//			std::cout << "key: " << k << "               time " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mTime
+	//				<< std::endl << "pos:   "
+	//				<< "  x: " << pScene->mAnimations[i]->mChannels[c]->mPositionKeys[k].mValue.x
+	//				<< "  y: " << pScene->mAnimations[i]->mChannels[c]->mPositionKeys[k].mValue.y
+	//				<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mPositionKeys[k].mValue.z
+	//				<< std::endl << "rot:   "
+	//				<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.w
+	//				<< "  x: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.x
+	//				<< "  y: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.y
+	//				<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.z
+	//				<< std::endl << "scale: "
+	//				<< "  x: " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mValue.x
+	//				<< "  y: " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mValue.y
+	//				<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mValue.z
+	//				<< std::endl;
+	//		}
+	//	}
+	//}
+
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[POS_VB]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Positions[0]) * Positions.size(), &Positions[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(POSITION_LOCATION);
+	glVertexAttribPointer(POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[NORMAL_VB]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Normals[0]) * Normals.size(), &Normals[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(NORMAL_LOCATION);
+	glVertexAttribPointer(NORMAL_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[TEXCOORD_VB]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(TexCoords[0]) * TexCoords.size(), &TexCoords[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(TEX_COORD_LOCATION);
+	glVertexAttribPointer(TEX_COORD_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[BONE_VB]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(SkinWeights) * SkinWeights.size(), &SkinWeights[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(BONE_ID_LOCATION);
+	glVertexAttribPointer(BONE_ID_LOCATION, 4, GL_INT, GL_FALSE, sizeof(VertexBoneData), (void*)0);
+	glEnableVertexAttribArray(BONE_WEIGHT_LOCATION);
+	glVertexAttribPointer(BONE_WEIGHT_LOCATION, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (void*)16);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[INDEX_BUFFER]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices[0]) * Indices.size(), &Indices[0], GL_STATIC_DRAW);
 
 	return false;
 }
@@ -135,7 +231,7 @@ void AnimatedModel::InitMesh(unsigned int MeshIndex,
 	vector<glm::vec3>& Positions,
 	vector<glm::vec3>& Normals,
 	vector<glm::vec2>& TexCoords,
-	vector<VertexBoneData>& Bones,
+	vector<VertexBoneData>& SkinWeights,
 	vector<unsigned int>& Indices)
 {
 	const aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
@@ -152,7 +248,8 @@ void AnimatedModel::InitMesh(unsigned int MeshIndex,
 		TexCoords.push_back(glm::vec2(pTexCoord->x, pTexCoord->y));
 	}
 
-	LoadBones(MeshIndex, paiMesh, Bones);
+	LoadBones(MeshIndex, paiMesh, SkinWeights);
+	// TODO normalise SkinWeights
 
 	// Populate the index buffer
 	for (unsigned int i = 0; i < paiMesh->mNumFaces; i++)
@@ -163,10 +260,9 @@ void AnimatedModel::InitMesh(unsigned int MeshIndex,
 		Indices.push_back(Face.mIndices[1]);
 		Indices.push_back(Face.mIndices[2]);
 	}
-
 }
 
-void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vector<VertexBoneData>& Bones)
+void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vector<VertexBoneData>& SkinWeights)
 {
 	for (unsigned int i = 0; i < pMesh->mNumBones; i++)
 	{
@@ -188,16 +284,15 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 		else
 		{
 			BoneIndex = m_BoneMapping[BoneName];
+			std::cout << "a bone was loaded twice" << std::endl;
 		}
 
-		// might need to do something about the weights
-		// - make sure they add up to 1
+		// fucking dump all this bone's influences into the vertex-bone-weights blob
 		for (unsigned int j = 0; j < pMesh->mBones[i]->mNumWeights; j++)
 		{
 			unsigned int VertexID = m_Entries[MeshIndex].BaseVertex + pMesh->mBones[i]->mWeights[j].mVertexId;
 			float Weight = pMesh->mBones[i]->mWeights[j].mWeight;
-			Bones[VertexID].AddBoneData(BoneIndex, Weight);
-			std::cout << j << "   ";
+			SkinWeights[VertexID].AddBoneData(BoneIndex, Weight);
 		}
 	}
 }

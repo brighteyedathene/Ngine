@@ -2,9 +2,10 @@
 #include <iostream>
 #include <iomanip>
 #include <stdlib.h>
-#include <chrono>
+//#include <chrono>
 
 #include "EngineGlobals.h"
+#include "GameTime.h"
 
 #include "Display.h"
 #include "EventHandler.h"
@@ -203,6 +204,10 @@ int main(int argc, char* argv[])
 	cubeTransform.rotation.x = 90.0f;
 	cubeTransform.scale = glm::vec3(0.01f);
 	
+	Transform floor;
+	floor.scale = glm::vec3(20.0f, 0.001f, 20.0f);
+	floor.position.y = -1.0f;
+
 	Model bearModel(bearPath);
 	
 	Transform mymodelTransform;
@@ -265,7 +270,9 @@ int main(int argc, char* argv[])
 	float time = 0;
 
 	// Start the clock just before render loop
-	struct Clock clock;
+	//struct Clock clock;
+	gameclock.Init();
+
 
 	// render loop!
 	while (!display.IsClosed()) 
@@ -280,18 +287,19 @@ int main(int argc, char* argv[])
 
 		input.Tick();
 		events.Tick();
-		clock.Tick();
+		gameclock.Tick();
 
-		time = clock.time;
+
+		time = gameclock.time;
 		float blend = sin(time) / 2 + 0.5f;
 
 		if (spinning)
 		{
-			lightTransform.rotation.y += 360*clock.deltaTime;
+			lightTransform.rotation.y += 360* gameclock.deltaTime;
 			lightTransform.position.y = sin(spin)/2;
 			lightTransform.position.x = 1.5*sin(spin);
 			lightTransform.position.z = 1.5*cos(spin);
-			spin += clock.deltaTime;
+			spin += gameclock.deltaTime;
 		}
 		
 		// update game objects
@@ -336,10 +344,20 @@ int main(int argc, char* argv[])
 		
 		lightingTestShader.SetVec3("viewPos", mainCamera.transform.position);
 
+		// all materials are the same for now
 		lightingTestShader.SetVec3("material.ambient", 0.1f, 0.1f, 0.4f);
 		lightingTestShader.SetVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
 		lightingTestShader.SetVec3("material.specular", 0.5, 0.5f, 0.5f);
 		lightingTestShader.SetFloat("material.shininess", 60.0f);
+		
+		// floor
+		mvp = pv * floor.GetMatrix();
+		lightingTestShader.SetMat4("mvp", mvp);
+		lightingTestShader.SetMat4("model", floor.GetMatrix());
+		cube.Draw(lightingTestShader);
+
+
+		// rotating cube
 		mvp = pv * litCubeTransform.GetMatrix();
 		lightingTestShader.SetMat4("mvp", mvp);
 		lightingTestShader.SetMat4("model", litCubeTransform.GetMatrix());
@@ -355,7 +373,7 @@ int main(int argc, char* argv[])
 
 
 		shader.Use();
-		cubeTransform.rotation.y += 360 * clock.deltaTime;
+		cubeTransform.rotation.y += 360 * gameclock.deltaTime;
 		cubeTransform.position.y = 2.0f + sin(time)*0.5f;// * clock.deltaTime;
 		mvp = pv* cubeTransform.GetMatrix();
 		shader.SetMat4("mvp", mvp);

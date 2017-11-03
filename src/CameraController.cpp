@@ -32,8 +32,8 @@ void CameraController::Tick()
 		p_camera->transform.position -= p_camera->transform.Up() * SPEED;
 
 	// rotation
-	float xoffset = p_input->mouse_xrel * mouseSensitivity;
-	float yoffset = p_input->mouse_yrel * mouseSensitivity;
+	float xoffset = (float)p_input->mouse_xrel * mouseSensitivity;
+	float yoffset = (float)p_input->mouse_yrel * mouseSensitivity;
 
 	p_camera->transform.rotation.y += xoffset;
 	p_camera->transform.rotation.x -= yoffset;

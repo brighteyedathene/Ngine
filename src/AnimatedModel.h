@@ -6,8 +6,11 @@
 #include <cassert>
 
 #include <glad/glad.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -21,6 +24,63 @@
 #define ZERO_MEM(a) memset(a, 0, sizeof(a))
 
 using namespace std;
+
+struct Joint
+{
+	// (ModelSpaceParentBindPose * LocalBindPose).inverse()
+	glm::mat4 m_inverseBindTransform; // in model space
+	glm::mat4 m_localBindTransform; // not really needed
+	const char* m_name;
+	int m_index;
+	int m_parentIndex;
+	int m_numChildren;
+	Joint* m_aChildren;
+};
+
+struct Skeleton
+{
+	int m_jointCount;
+	Joint* m_aJoints;
+
+	Skeleton(int jountCount)
+	{
+		m_jointCount = jountCount;
+		m_aJoints = new Joint[m_jointCount];
+	}
+	~Skeleton()
+	{
+		delete m_aJoints;
+	}
+};
+
+struct JointPose
+{
+	glm::quat rotation;
+	glm::vec3 position;
+	glm::vec3 scale;
+
+	JointPose()
+	{
+		rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+		position = glm::vec3(0.0f);
+		scale = glm::vec3(1.0f);
+	}
+};
+
+struct SkeletonPose
+{
+	Skeleton* m_pSkeleton;
+	JointPose* m_aLocalPoses;
+	SkeletonPose(Skeleton* pSkeleton)
+	{
+		m_pSkeleton = pSkeleton;
+		m_aLocalPoses = new JointPose[m_pSkeleton->m_jointCount];
+	}
+	~SkeletonPose()
+	{
+		delete m_aLocalPoses;
+	}
+};
 
 class AnimatedModel
 {
@@ -85,9 +145,9 @@ private:
 		vector<glm::vec3>& Positions,
 		vector<glm::vec3>& Normals,
 		vector<glm::vec2>& TexCoords,
-		vector<VertexBoneData>& Bones,
+		vector<VertexBoneData>& SkinWeights,
 		vector<unsigned int>& Indices);
-	void LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vector<VertexBoneData>& Bones);
+	void LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vector<VertexBoneData>& SkinWeights);
 
 #define INVALID_MATERIAL 0xFFFFFFFF
 

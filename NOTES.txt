@@ -109,3 +109,18 @@ Wireframe only
 // to draw wire frame
 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+
+======================================================================================
+modern art in c++
+======================================================================================
+vector<Thing> things; // can be any iterable i think
+
+/// ...
+
+for (Thing thing : things)
+{
+	// do something with thing
+}
+
+
+

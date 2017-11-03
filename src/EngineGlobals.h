@@ -33,22 +33,7 @@ namespace ngine
 	//const char* modelPath = "./Models/nanosuit/nanosuit.obj";
 	//const char* modelPath = "./Models/ybot.fbx";
 
-	struct Clock
-	{
-
-		double deltaTime;
-		double time = 0;
-		Uint64 NOW = SDL_GetPerformanceCounter();
-		Uint64 LAST = SDL_GetPerformanceCounter();
-		
-		void Tick()
-		{
-			LAST = NOW;
-			NOW = SDL_GetPerformanceCounter();
-			deltaTime = (double)(NOW - LAST) / (double)SDL_GetPerformanceFrequency();
-			time += deltaTime;
-		}
-	};
+	
 }
 
 #endif
