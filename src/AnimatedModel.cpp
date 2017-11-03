@@ -297,6 +297,13 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 	}
 }
 
+void AnimatedModel::AssembleSkeleton(const aiNode* pRootNode, 
+									vector<VertexBoneData>& SkinWeights, 
+									Skeleton* m_skeleton)
+{
+
+}
+
 bool AnimatedModel::InitMaterials(const aiScene* pScene, const string& Filename)
 {
 	// TODO write this function

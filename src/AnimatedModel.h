@@ -148,7 +148,10 @@ private:
 		vector<VertexBoneData>& SkinWeights,
 		vector<unsigned int>& Indices);
 	void LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vector<VertexBoneData>& SkinWeights);
-
+	
+	void AssembleSkeleton(const aiNode* pRootNode,
+						  vector<VertexBoneData>& SkinWeights,
+						  Skeleton* m_skeleton);
 #define INVALID_MATERIAL 0xFFFFFFFF
 
 	enum VB_TYPES
