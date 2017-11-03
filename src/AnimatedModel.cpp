@@ -100,6 +100,38 @@ string chop_before(aiString aiStr, char delimiter)
 	return "couldn't find delimiter";
 }
 
+void print_animations(const aiScene* pScene)
+{
+	for (int i = 0; i < pScene->mNumAnimations; i++)
+	{
+		//aiAnimation* anim = &(pScene->mAnimations[i]);
+		for (int c = 0; c < pScene->mAnimations[i]->mNumChannels; c++)
+		{
+			std::cout << "channel: " << pScene->mAnimations[i]->mChannels[c]->mNodeName.C_Str() << std::endl;
+			aiNodeAnim* channel;
+			for (int k = 0; k < pScene->mAnimations[i]->mChannels[c]->mNumPositionKeys; k++)
+			{
+				channel = pScene->mAnimations[i]->mChannels[c];
+				std::cout << "key: " << k << "               time " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mTime
+					<< std::endl << "pos:   "
+					<< "  x: " << pScene->mAnimations[i]->mChannels[c]->mPositionKeys[k].mValue.x
+					<< "  y: " << pScene->mAnimations[i]->mChannels[c]->mPositionKeys[k].mValue.y
+					<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mPositionKeys[k].mValue.z
+					<< std::endl << "rot:   "
+					<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.w
+					<< "  x: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.x
+					<< "  y: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.y
+					<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.z
+					<< std::endl << "scale: "
+					<< "  x: " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mValue.x
+					<< "  y: " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mValue.y
+					<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mValue.z
+					<< std::endl;
+			}
+		}
+	}
+}
+
 void recursive_print(aiNode* node, int depth)
 {
 	string tab = "- ";
@@ -166,34 +198,9 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 
 	// here's some recon stuff
 
-	recursive_print(pScene->mRootNode, 0);
+	//recursive_print(pScene->mRootNode, 0);
+	print_animations(pScene);
 
-	//for (int i = 0; i < pScene->mNumAnimations; i++)
-	//{
-	//	//aiAnimation* anim = &(pScene->mAnimations[i]);
-	//	for (int c = 0; c < pScene->mAnimations[i]->mNumChannels; c++)
-	//	{
-	//		std::cout << "channel: " << pScene->mAnimations[i]->mChannels[c]->mNodeName.C_Str() << std::endl;
-	//		for (int k = 0; k < pScene->mAnimations[i]->mChannels[c]->mNumPositionKeys; k++)
-	//		{
-	//			std::cout << "key: " << k << "               time " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mTime
-	//				<< std::endl << "pos:   "
-	//				<< "  x: " << pScene->mAnimations[i]->mChannels[c]->mPositionKeys[k].mValue.x
-	//				<< "  y: " << pScene->mAnimations[i]->mChannels[c]->mPositionKeys[k].mValue.y
-	//				<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mPositionKeys[k].mValue.z
-	//				<< std::endl << "rot:   "
-	//				<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.w
-	//				<< "  x: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.x
-	//				<< "  y: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.y
-	//				<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.z
-	//				<< std::endl << "scale: "
-	//				<< "  x: " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mValue.x
-	//				<< "  y: " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mValue.y
-	//				<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mValue.z
-	//				<< std::endl;
-	//		}
-	//	}
-	//}
 
 
 
