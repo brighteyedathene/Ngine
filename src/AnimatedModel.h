@@ -29,9 +29,9 @@ using namespace std;
 struct Joint
 {
 	// (ModelSpaceParentBindPose * LocalBindPose).inverse()
-	glm::mat4 m_inverseBindTransform; // in model space
-	glm::mat4 m_localBindTransform; // not really needed
-	glm::mat4 m_modelBindTransform;
+	glm::mat4 m_inverseBindTransform; // sends a vertex from local space to model space
+	glm::mat4 m_localBindTransform; // transform relative to parent joint
+	glm::mat4 m_modelBindTransform; // sends a vertex from model space to local space
 	const char* m_name;
 	int m_index;
 	int m_parentIndex;

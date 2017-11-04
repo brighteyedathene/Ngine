@@ -309,10 +309,12 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			glm::mat4 bindTransform; 
 			AssToGlmMat4(aiBindTransform, bindTransform);
 
-			joint.m_localBindTransform = bindTransform;
+			glm::mat4 localTransform;
+			AssToGlmMat4(pNode->mTransformation, localTransform);
+			joint.m_localBindTransform = localTransform;
 
-			if (joint.m_parentIndex >= 0)
-				bindTransform = m_Skeleton.m_joints[joint.m_parentIndex].m_modelBindTransform * bindTransform;
+			//if (joint.m_parentIndex >= 0)
+			//	bindTransform = m_Skeleton.m_joints[joint.m_parentIndex].m_modelBindTransform * bindTransform;
 			
 			joint.m_modelBindTransform = bindTransform;
 

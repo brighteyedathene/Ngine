@@ -161,29 +161,16 @@ unsigned int CreateCubeVAO()
 using namespace ngine;
 
 
-
-void DrawSpinner(glm::mat4 pv, glm::mat4 parent, int depth, Shader shader, float time, Model mesh)
+glm::mat4 GetModelSpaceBindMatrix(Skeleton skel, int jointIndex)
 {
-	Transform t;
-	t.scale = glm::vec3(0.95f);
-	t.position.y = 25 * sin(time + (depth * 3.14 / 8));
-	t.position.x = 25 * cos(time + (depth * 3.14 / 8));
-	t.rotation.y = 10.0f;
-
-	float delta = (float)depth*0.2f * 3.14 / 3;
-
-	shader.SetVec3("material.ambient", sin(time + 2 * delta) *0.5f , sin(time + delta)*0.5f, sin(time)*0.5f);
-	shader.SetVec3("material.diffuse", sin(time + 2 * delta), sin(time + delta), sin(time));
-
-	glm::mat4 modelmat = parent * t.GetMatrix();
-	shader.SetMat4("mvp", pv * modelmat);
-	shader.SetMat4("model", modelmat);
-	mesh.Draw(shader);
-
-	if (--depth > 0)
+	glm::mat4 mod = skel.m_joints[jointIndex].m_localBindTransform;
+	while (skel.m_joints[jointIndex].m_parentIndex != -1)
 	{
-		DrawSpinner(pv, modelmat, depth, shader, time, mesh);
+		int parentIndex = skel.m_joints[jointIndex].m_parentIndex;
+		mod = skel.m_joints[parentIndex].m_localBindTransform * mod;
+		jointIndex = parentIndex;
 	}
+	return mod;
 }
 
 
@@ -253,18 +240,22 @@ int main(int argc, char* argv[])
 	
 
 
-	// lab shit
+	// Moveing the bear forwards
+	// Why are these 90.0f offsets necessary?
 
 	Transform octobeartran;
 	octobeartran.rotation.y = -90.0f;
+	//octobeartran.rotation.x = -90.0f;
 	octobeartran.scale = glm::vec3(0.1f);
 
 	input.CreateButtonMapping("b_Forward", SDL_SCANCODE_I);
 	input.CreateButtonMapping("b_Backward", SDL_SCANCODE_K);
 	input.CreateButtonMapping("b_Left", SDL_SCANCODE_J);
 	input.CreateButtonMapping("b_Right", SDL_SCANCODE_L);
+	input.CreateButtonMapping("b_Up", SDL_SCANCODE_Y);
+	input.CreateButtonMapping("b_Down", SDL_SCANCODE_H);
 
-	input.CreateButtonMapping("freeze", SDL_SCANCODE_F);
+	input.CreateButtonMapping("Freeze", SDL_SCANCODE_F);
 	bool freezecam = false;
 
 #pragma region camera_init
@@ -319,7 +310,7 @@ int main(int argc, char* argv[])
 	// render loop!
 	while (!display.IsClosed()) 
 	{
-		display.Clear(0.5f, 0.5f, 0.1f, 1.0f);
+		display.Clear(0.0f, 0.0f, 0.0f, 1.0f);
 
 		// logic
 		if (input.GetButtonDown("Escape"))
@@ -338,13 +329,17 @@ int main(int argc, char* argv[])
 		if (spinning)
 		{
 			lightTransform.rotation.y += 360* gameclock.deltaTime;
-			lightTransform.position.y = 5 + sin(spin)/2;
+			lightTransform.position.y = 1 + sin(spin)/2;
 			lightTransform.position.x = 1.5*sin(spin);
 			lightTransform.position.z = 1.5*cos(spin);
 			spin += gameclock.deltaTime;
 		}
 		
 		// update game objects
+		if (input.GetButtonDown("Freeze"))
+		{
+			freezecam = !freezecam;
+		}
 		if(!freezecam)
 			camController.Tick();
 
@@ -390,15 +385,15 @@ int main(int argc, char* argv[])
 		// all materials are the same for now
 		lightingTestShader.SetVec3("material.ambient", 0.1f, 0.1f, 0.4f);
 		lightingTestShader.SetVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-		lightingTestShader.SetVec3("material.specular", 0.5, 0.5f, 0.5f);
-		lightingTestShader.SetFloat("material.shininess", 60.0f);
+		lightingTestShader.SetVec3("material.specular", 0.3, 0.3f, 0.3f);
+		lightingTestShader.SetFloat("material.shininess", 10.0f);
 		
 		// floor
 		lightingTestShader.SetVec3("material.ambient", 0.3f, 0.3f, 0.3f);
 		mvp = pv * floor.GetMatrix();
 		lightingTestShader.SetMat4("mvp", mvp);
 		lightingTestShader.SetMat4("model", floor.GetMatrix());
-		cube.Draw(lightingTestShader);
+		//cube.Draw(lightingTestShader);
 
 		lightingTestShader.SetVec3("material.ambient", 0.1f, 0.1f, 0.4f);
 		// rotating cube
@@ -418,16 +413,23 @@ int main(int argc, char* argv[])
 		scaler.scale *= 0.01f;
 
 		// investigating skellies
-		//for (int i = 0; i < animModel.m_Skeleton.m_jointCount; i++)
-		//{
-		//	mvp = pv * animModel.m_Skeleton.m_joints[i].m_localBindTransform *  scaler.GetMatrix();
-		//	lightingTestShader.SetMat4("mvp", mvp);
-		//	lightingTestShader.SetMat4("model", animModel.m_Skeleton.m_joints[i].m_localBindTransform);
-		//	cube.Draw(lightingTestShader);
-		//}
+		lightingTestShader.SetVec3("material.ambient", 1, 1, 1);
+		lightingTestShader.SetVec3("material.diffuse", 1, 1, 1);
+		lightingTestShader.SetVec3("material.specular", 1, 1, 1);
 
-	
-		// LAB shit
+
+		for (int i = 0; i < animModel.m_Skeleton.m_jointCount; i++)
+		{
+			glm::mat4 modmat = GetModelSpaceBindMatrix(animModel.m_Skeleton, i);
+
+			
+
+			modmat = modmat * scaler.GetMatrix();
+			lightingTestShader.SetMat4("mvp", pv * modmat);
+			lightingTestShader.SetMat4("model", modmat);
+			cube.Draw(lightingTestShader);
+		}
+
 		
 		if (input.GetButton("b_Forward"))
 			octobeartran.position += octobeartran.Forward() * 0.01f;
@@ -437,11 +439,10 @@ int main(int argc, char* argv[])
 			octobeartran.rotation.y -= 5.0f;
 		if (input.GetButton("b_Right"))
 			octobeartran.rotation.y += 5.0f;
-
-		if (input.GetButtonDown("freeze"))
-		{
-			freezecam = !freezecam;
-		}
+		if (input.GetButton("b_Up"))
+			octobeartran.rotation.x -= 5.0f;
+		if (input.GetButton("b_Down"))
+			octobeartran.rotation.x += 5.0f;
 
 		Transform nin;
 		nin.position = octobeartran.position;
@@ -449,31 +450,14 @@ int main(int argc, char* argv[])
 		nin.scale = octobeartran.scale;
 		
 		nin.rotation.y = -octobeartran.rotation.y + 90.0f;
-		//nin.rotation.x = -octobeartran.rotation.x + 90.0f;
+		nin.rotation.x = -octobeartran.rotation.x;// +90.0f;
 
-		lightingTestShader.SetVec3("material.ambient", 1, 1, 1);
-		lightingTestShader.SetVec3("material.diffuse", 1, 1, 1);
-		lightingTestShader.SetVec3("material.specular", 1, 1, 1);
+
 		lightingTestShader.SetMat4("mvp", pv * nin.GetMatrix());
 		lightingTestShader.SetMat4("model", nin.GetMatrix());
 		bearModel.Draw(lightingTestShader);
 
-		//lightingTestShader.SetMat4("mvp", pv * octobeartran.GetMatrix() * nin.GetMatrix());
-		//lightingTestShader.SetMat4("model", octobeartran.GetMatrix() * nin.GetMatrix());
-		//bearModel.Draw(lightingTestShader);
 		
-		Transform t; //= octobeartran;
-		t.position = octobeartran.position + octobeartran.Up()*0.1f;// +octobeartran.Forward() * 1.0f;
-		t.rotation = nin.rotation;
-		t.rotation.x += 90.0f;
-		t.scale = glm::vec3(0.005f);
-		int numLegs = 4;
-		for (int i = 0; i < numLegs; i++)
-		{
-			t.rotation.y += i * (360/numLegs);
-			DrawSpinner(pv, t.GetMatrix(), 25, lightingTestShader, time, cube);
-		}
-
 		
 		// smiley cube
 		//shader.Use();
