@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -30,6 +31,7 @@ struct Joint
 	// (ModelSpaceParentBindPose * LocalBindPose).inverse()
 	glm::mat4 m_inverseBindTransform; // in model space
 	glm::mat4 m_localBindTransform; // not really needed
+	glm::mat4 m_modelBindTransform;
 	const char* m_name;
 	int m_index;
 	int m_parentIndex;
@@ -90,6 +92,10 @@ public:
 	void BoneTransform(float timeInSeconds, vector<glm::mat4>& transforms);
 
 	void Clear();
+	
+	
+	Skeleton m_Skeleton;
+
 
 private:
 
@@ -184,7 +190,7 @@ private:
 	glm::mat4 glm_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 2.0f, 3.0f));
 	
 
-	Skeleton m_Skeleton;
+
 
 
 	const aiScene* m_pScene;

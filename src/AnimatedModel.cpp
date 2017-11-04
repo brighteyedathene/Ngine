@@ -190,7 +190,7 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 	// here's some recon stuff
 
 	//recursive_print(pScene->mRootNode, 0);
-	print_animations(pScene);
+	//print_animations(pScene);
 
 
 
@@ -293,7 +293,7 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			{
 				std::cout << "This node was referenced as a parent bone without being mapped: " << parentName << std::endl;
 				std::cout << "----Assuming the following node is a root: " << BoneName.c_str() << std::endl;
-				joint.m_parentIndex = NULL;
+				joint.m_parentIndex = -1;
 			}
 			else
 			{
@@ -304,13 +304,28 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			// Set the joint ID
 			joint.m_index = m_NumBones;
 			//4.
-			// Set the local Bind transform (maybe)
-			glm::mat4 localBindTransform;
-			AssToGlmMat4(pMesh->mBones[i]->mOffsetMatrix, localBindTransform);
-			joint.m_localBindTransform = localBindTransform;
+			// Set the model-space Bind transform (maybe)
+			aiMatrix4x4 aiBindTransform = pMesh->mBones[i]->mOffsetMatrix;
+			glm::mat4 bindTransform; 
+			AssToGlmMat4(aiBindTransform, bindTransform);
+
+			joint.m_localBindTransform = bindTransform;
+
+			if (joint.m_parentIndex >= 0)
+				bindTransform = m_Skeleton.m_joints[joint.m_parentIndex].m_modelBindTransform * bindTransform;
+			
+			joint.m_modelBindTransform = bindTransform;
+
+			//5.
+			// Get the inverse Bind transform
+			joint.m_inverseBindTransform = glm::affineInverse(joint.m_modelBindTransform);
 
 
-			print_matrix(BoneName.c_str(), joint.m_localBindTransform);
+
+			//std::cout << BoneName.c_str() << std::endl;
+			//print_matrix(" model", joint.m_modelBindTransform);
+			//print_matrix(" inv", joint.m_inverseBindTransform);
+			//print_matrix("identity verification:", joint.m_inverseBindTransform * joint.m_modelBindTransform);
 
 			m_Skeleton.m_joints[joint.m_index] = joint;
 

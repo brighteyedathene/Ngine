@@ -161,6 +161,32 @@ unsigned int CreateCubeVAO()
 using namespace ngine;
 
 
+
+void DrawSpinner(glm::mat4 pv, glm::mat4 parent, int depth, Shader shader, float time, Model mesh)
+{
+	Transform t;
+	t.scale = glm::vec3(0.95f);
+	t.position.y = 25 * sin(time + (depth * 3.14 / 8));
+	t.position.x = 25 * cos(time + (depth * 3.14 / 8));
+	t.rotation.y = 10.0f;
+
+	float delta = (float)depth*0.2f * 3.14 / 3;
+
+	shader.SetVec3("material.ambient", sin(time + 2 * delta) *0.5f , sin(time + delta)*0.5f, sin(time)*0.5f);
+	shader.SetVec3("material.diffuse", sin(time + 2 * delta), sin(time + delta), sin(time));
+
+	glm::mat4 modelmat = parent * t.GetMatrix();
+	shader.SetMat4("mvp", pv * modelmat);
+	shader.SetMat4("model", modelmat);
+	mesh.Draw(shader);
+
+	if (--depth > 0)
+	{
+		DrawSpinner(pv, modelmat, depth, shader, time, mesh);
+	}
+}
+
+
 #undef main
 int main(int argc, char* argv[]) 
 {
@@ -220,10 +246,26 @@ int main(int argc, char* argv[])
 	Model bninjaModel(bninjaPath);
 	AnimatedModel animModel;
 	animModel.LoadMesh(bninjaPath);
+	
 
 	Transform litCubeTransform;
 	litCubeTransform.scale = glm::vec3(0.03f);
 	
+
+
+	// lab shit
+
+	Transform octobeartran;
+	octobeartran.rotation.y = -90.0f;
+	octobeartran.scale = glm::vec3(0.1f);
+
+	input.CreateButtonMapping("b_Forward", SDL_SCANCODE_I);
+	input.CreateButtonMapping("b_Backward", SDL_SCANCODE_K);
+	input.CreateButtonMapping("b_Left", SDL_SCANCODE_J);
+	input.CreateButtonMapping("b_Right", SDL_SCANCODE_L);
+
+	input.CreateButtonMapping("freeze", SDL_SCANCODE_F);
+	bool freezecam = false;
 
 #pragma region camera_init
 
@@ -296,14 +338,15 @@ int main(int argc, char* argv[])
 		if (spinning)
 		{
 			lightTransform.rotation.y += 360* gameclock.deltaTime;
-			lightTransform.position.y = sin(spin)/2;
+			lightTransform.position.y = 5 + sin(spin)/2;
 			lightTransform.position.x = 1.5*sin(spin);
 			lightTransform.position.z = 1.5*cos(spin);
 			spin += gameclock.deltaTime;
 		}
 		
 		// update game objects
-		camController.Tick();
+		if(!freezecam)
+			camController.Tick();
 
 		// rendering
 		eye.Bind(0);
@@ -351,33 +394,94 @@ int main(int argc, char* argv[])
 		lightingTestShader.SetFloat("material.shininess", 60.0f);
 		
 		// floor
+		lightingTestShader.SetVec3("material.ambient", 0.3f, 0.3f, 0.3f);
 		mvp = pv * floor.GetMatrix();
 		lightingTestShader.SetMat4("mvp", mvp);
 		lightingTestShader.SetMat4("model", floor.GetMatrix());
 		cube.Draw(lightingTestShader);
 
-
+		lightingTestShader.SetVec3("material.ambient", 0.1f, 0.1f, 0.4f);
 		// rotating cube
 		mvp = pv * litCubeTransform.GetMatrix();
 		lightingTestShader.SetMat4("mvp", mvp);
 		lightingTestShader.SetMat4("model", litCubeTransform.GetMatrix());
-		cube.Draw(lightingTestShader);
+		//cube.Draw(lightingTestShader);
 
 		// still drawing the other object so i don't forget how
 		//mymodelTransform.rotation.z = time*190;
 		mvp = pv * mymodelTransform.GetMatrix();
 		lightingTestShader.SetMat4("mvp", mvp);
 		lightingTestShader.SetMat4("model", mymodelTransform.GetMatrix());
-		bninjaModel.Draw(lightingTestShader);
+		//bninjaModel.Draw(lightingTestShader);
 
+		Transform scaler;
+		scaler.scale *= 0.01f;
 
+		// investigating skellies
+		//for (int i = 0; i < animModel.m_Skeleton.m_jointCount; i++)
+		//{
+		//	mvp = pv * animModel.m_Skeleton.m_joints[i].m_localBindTransform *  scaler.GetMatrix();
+		//	lightingTestShader.SetMat4("mvp", mvp);
+		//	lightingTestShader.SetMat4("model", animModel.m_Skeleton.m_joints[i].m_localBindTransform);
+		//	cube.Draw(lightingTestShader);
+		//}
 
-		shader.Use();
-		cubeTransform.rotation.y += 360 * gameclock.deltaTime;
-		cubeTransform.position.y = 2.0f + sin(time)*0.5f;// * clock.deltaTime;
-		mvp = pv* cubeTransform.GetMatrix();
-		shader.SetMat4("mvp", mvp);
-		cube.Draw(shader);
+	
+		// LAB shit
+		
+		if (input.GetButton("b_Forward"))
+			octobeartran.position += octobeartran.Forward() * 0.01f;
+		if (input.GetButton("b_Backward"))
+			octobeartran.position -= octobeartran.Forward() * 0.01f;
+		if (input.GetButton("b_Left"))
+			octobeartran.rotation.y -= 5.0f;
+		if (input.GetButton("b_Right"))
+			octobeartran.rotation.y += 5.0f;
+
+		if (input.GetButtonDown("freeze"))
+		{
+			freezecam = !freezecam;
+		}
+
+		Transform nin;
+		nin.position = octobeartran.position;
+		nin.rotation = octobeartran.rotation;
+		nin.scale = octobeartran.scale;
+		
+		nin.rotation.y = -octobeartran.rotation.y + 90.0f;
+		//nin.rotation.x = -octobeartran.rotation.x + 90.0f;
+
+		lightingTestShader.SetVec3("material.ambient", 1, 1, 1);
+		lightingTestShader.SetVec3("material.diffuse", 1, 1, 1);
+		lightingTestShader.SetVec3("material.specular", 1, 1, 1);
+		lightingTestShader.SetMat4("mvp", pv * nin.GetMatrix());
+		lightingTestShader.SetMat4("model", nin.GetMatrix());
+		bearModel.Draw(lightingTestShader);
+
+		//lightingTestShader.SetMat4("mvp", pv * octobeartran.GetMatrix() * nin.GetMatrix());
+		//lightingTestShader.SetMat4("model", octobeartran.GetMatrix() * nin.GetMatrix());
+		//bearModel.Draw(lightingTestShader);
+		
+		Transform t; //= octobeartran;
+		t.position = octobeartran.position + octobeartran.Up()*0.1f;// +octobeartran.Forward() * 1.0f;
+		t.rotation = nin.rotation;
+		t.rotation.x += 90.0f;
+		t.scale = glm::vec3(0.005f);
+		int numLegs = 4;
+		for (int i = 0; i < numLegs; i++)
+		{
+			t.rotation.y += i * (360/numLegs);
+			DrawSpinner(pv, t.GetMatrix(), 25, lightingTestShader, time, cube);
+		}
+
+		
+		// smiley cube
+		//shader.Use();
+		//cubeTransform.rotation.y += 360 * gameclock.deltaTime;
+		//cubeTransform.position.y = 2.0f + sin(time)*0.5f;// * clock.deltaTime;
+		//mvp = pv* cubeTransform.GetMatrix();
+		//shader.SetMat4("mvp", mvp);
+		//cube.Draw(shader);
 
 		// swap buffers, check IO events, unbind the vertex array
 		glBindVertexArray(0);

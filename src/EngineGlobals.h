@@ -27,6 +27,7 @@ namespace ngine
 	const GLchar* eyePath = "./Textures/eye.jpg";
 
 	const char* bearPath = "./Models/bear/bear.fbx";
+	//const char* bearPath = "./Models/bear/mayabear.obj";
 	const char* bninjaPath = "./Models/bninja/bnin_no-encodenames_no-relativepaths_67frames-for-real.dae";
 
 	const char* cubeModelPath = "./Models/cube/cube.obj";

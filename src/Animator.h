@@ -11,13 +11,13 @@
 struct AnimationSample
 {
 	float t;
-
+	vector<JointPose> jointPoses;
 };
 
 struct AnimationClip
 {
 	float duration;
-
+	vector<AnimationSample> samples;
 };
 
 
