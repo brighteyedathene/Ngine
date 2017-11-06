@@ -19,6 +19,7 @@
 #include "Model.h"
 
 #include "AnimatedModel.h"
+#include "Animator.h"
 
 // Macro for indexing vertex buffer (just forwards the value you give it)
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -161,18 +162,6 @@ unsigned int CreateCubeVAO()
 using namespace ngine;
 
 
-glm::mat4 GetModelSpaceBindMatrix(Skeleton skel, int jointIndex)
-{
-	glm::mat4 mod = skel.m_joints[jointIndex].m_localBindTransform;
-	while (skel.m_joints[jointIndex].m_parentIndex != -1)
-	{
-		int parentIndex = skel.m_joints[jointIndex].m_parentIndex;
-		mod = skel.m_joints[parentIndex].m_localBindTransform * mod;
-		jointIndex = parentIndex;
-	}
-	return mod;
-}
-
 
 #undef main
 int main(int argc, char* argv[]) 
@@ -233,7 +222,7 @@ int main(int argc, char* argv[])
 	Model bninjaModel(bninjaPath);
 	AnimatedModel animModel;
 	animModel.LoadMesh(bninjaPath);
-	
+	Animator animator(&animModel);
 
 	Transform litCubeTransform;
 	litCubeTransform.scale = glm::vec3(0.03f);
@@ -420,7 +409,7 @@ int main(int argc, char* argv[])
 
 		for (int i = 0; i < animModel.m_Skeleton.m_jointCount; i++)
 		{
-			glm::mat4 modmat = GetModelSpaceBindMatrix(animModel.m_Skeleton, i);
+			glm::mat4 modmat = animModel.m_Skeleton.GetModelSpaceBindMatrix(i);
 
 			
 

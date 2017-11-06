@@ -26,6 +26,8 @@
 
 using namespace std;
 
+struct Animation;
+
 struct Joint
 {
 	// (ModelSpaceParentBindPose * LocalBindPose).inverse()
@@ -43,6 +45,14 @@ struct Skeleton
 {
 	int m_jointCount;
 	vector<Joint> m_joints;
+	map<string, unsigned int> m_jointMap; // maps a joint name to its index
+
+	vector<Animation> m_animations;
+	map<string, unsigned int> m_animMap;
+
+	glm::mat4 GetModelSpaceBindMatrix(int jointIndex);
+	void AddAnimationsFromFile(const string& filename);
+	void AddAnimationsFromScene(const aiScene* pScene);
 };
 
 struct JointPose
@@ -59,19 +69,17 @@ struct JointPose
 	}
 };
 
-struct SkeletonPose
+struct Keyframe
 {
-	Skeleton* m_pSkeleton;
-	JointPose* m_aLocalPoses;
-	SkeletonPose(Skeleton* pSkeleton)
-	{
-		m_pSkeleton = pSkeleton;
-		m_aLocalPoses = new JointPose[m_pSkeleton->m_jointCount];
-	}
-	~SkeletonPose()
-	{
-		delete m_aLocalPoses;
-	}
+	vector<JointPose> jointPoses;
+	float timestamp;
+};
+
+struct Animation
+{
+	vector<Keyframe> keyframes;
+	float duration;
+	bool loop;
 };
 
 class AnimatedModel
@@ -187,10 +195,6 @@ private:
 	vector<BoneInfo> m_BoneInfo;
 	aiMatrix4x4 m_GlobalInverseTransform; // TODO something about this - it should be a glm::mat4
 	
-	glm::mat4 glm_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 2.0f, 3.0f));
-	
-
-
 
 
 	const aiScene* m_pScene;

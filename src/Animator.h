@@ -8,27 +8,22 @@
 #include "AnimatedModel.h"
 #include "GameTime.h"
 
-struct AnimationSample
-{
-	float t;
-	vector<JointPose> jointPoses;
-};
-
-struct AnimationClip
-{
-	float duration;
-	vector<AnimationSample> samples;
-};
-
 
 class Animator
 {
 public:
+	AnimatedModel* m_pModel;
+	map<std::string, int> m_animationMap;
 
-	AnimatedModel model;
-	map<std::string, int> animationMap;
-	vector<AnimationClip> animations;
+	vector<glm::mat4> m_currentMatrices;
 
-	Animator();
+	Animator(AnimatedModel* pModel);
 	~Animator();
+
+	void Tick(float deltaTime);
+
+private:
+	float m_currentTime;
+
+	void GetNextPose();
 };

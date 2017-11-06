@@ -9,7 +9,89 @@
 #define BONE_ID_LOCATION     3
 #define BONE_WEIGHT_LOCATION 4
 
-map<unsigned int, bool> bones_used;
+
+
+
+glm::mat4 Skeleton::GetModelSpaceBindMatrix( int jointIndex)
+{
+	glm::mat4 mod = m_joints[jointIndex].m_localBindTransform;
+	while (m_joints[jointIndex].m_parentIndex != -1)
+	{
+		int parentIndex = m_joints[jointIndex].m_parentIndex;
+		mod = m_joints[parentIndex].m_localBindTransform * mod;
+		jointIndex = parentIndex;
+	}
+	return mod;
+}
+
+void Skeleton::AddAnimationsFromFile(const string& filename)
+{
+	Assimp::Importer importer;
+	const aiScene* pScene;
+	pScene = importer.ReadFile(filename.c_str(), aiProcess_Triangulate | aiProcess_FlipUVs);
+	if (!pScene)
+	{
+		std::cout << "couldn't load scene from " << filename << std::endl;
+		return;
+	}
+	AddAnimationsFromScene(pScene);
+}
+
+void Skeleton::AddAnimationsFromScene(const aiScene* pScene)
+{
+	for (int i = 0; i < pScene->mNumAnimations; i++)
+	{
+		aiAnimation* anim = pScene->mAnimations[i];
+
+		Animation newAnim;
+		newAnim.duration = anim->mDuration;
+		newAnim.keyframes.resize(anim->mChannels[0]->mNumPositionKeys); // Not robust! just finds the number of positionkeys in first channel!
+		for (int k = 0; k < newAnim.keyframes.size(); k++)
+			newAnim.keyframes[k].jointPoses.resize(m_joints.size());
+
+
+		for (int c = 0; c < anim->mNumChannels; c++)
+		{
+			aiNodeAnim* channel;
+			channel = anim->mChannels[c];
+			std::cout << "channel: " << channel->mNodeName.C_Str() << std::endl;
+
+
+			if (m_jointMap.find(channel->mNodeName.C_Str()) == m_jointMap.end())
+			{
+				std::cout << "couldn't find this bone in mapping: " << channel->mNodeName.C_Str() << std::endl;
+			}
+			int jointIndex = m_jointMap[channel->mNodeName.C_Str()];
+			
+			glm::mat4 origTransform = m_joints[jointIndex].m_localBindTransform;
+			print_matrix("local bind transform", origTransform);
+
+
+			for (int k = 0; k < channel->mNumPositionKeys; k++)
+			{
+				glm::vec3 trans = glm::vec3(channel->mPositionKeys[k].mValue.x,
+											channel->mPositionKeys[k].mValue.y,
+											channel->mPositionKeys[k].mValue.z);
+				glm::quat rotation = glm::quat(channel->mRotationKeys[k].mValue.w,
+											   channel->mRotationKeys[k].mValue.x,
+											   channel->mRotationKeys[k].mValue.y,
+											   channel->mRotationKeys[k].mValue.z);
+				glm::vec3 scale = glm::vec3(channel->mScalingKeys[k].mValue.x,
+											channel->mScalingKeys[k].mValue.y,
+											channel->mScalingKeys[k].mValue.z);
+
+				newAnim.keyframes[k].jointPoses[jointIndex].position = trans;
+				newAnim.keyframes[k].jointPoses[jointIndex].rotation = rotation;
+				newAnim.keyframes[k].jointPoses[jointIndex].scale = scale;
+
+				// Not robust! if any channels have different times then this breaks everything
+				newAnim.keyframes[k].timestamp = channel->mPositionKeys[k].mTime; 
+			}
+		}
+		m_animations.push_back(newAnim);
+		m_animMap[anim->mName.C_Str()] = m_animations.size() - 1;
+	}
+}
 
 void AnimatedModel::VertexBoneData::AddBoneData(unsigned int BoneID, float Weight)
 {
@@ -44,6 +126,7 @@ AnimatedModel::AnimatedModel()
 AnimatedModel::~AnimatedModel()
 {
 }
+
 
 bool AnimatedModel::LoadMesh(const string& Filename)
 {
@@ -91,37 +174,6 @@ string chop_before(aiString aiStr, char delimiter)
 	return "couldn't find delimiter";
 }
 
-void print_animations(const aiScene* pScene)
-{
-	for (int i = 0; i < pScene->mNumAnimations; i++)
-	{
-		//aiAnimation* anim = &(pScene->mAnimations[i]);
-		for (int c = 0; c < pScene->mAnimations[i]->mNumChannels; c++)
-		{
-			std::cout << "channel: " << pScene->mAnimations[i]->mChannels[c]->mNodeName.C_Str() << std::endl;
-			aiNodeAnim* channel;
-			for (int k = 0; k < pScene->mAnimations[i]->mChannels[c]->mNumPositionKeys; k++)
-			{
-				channel = pScene->mAnimations[i]->mChannels[c];
-				std::cout << "key: " << k << "               time " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mTime
-					<< std::endl << "pos:   "
-					<< "  x: " << pScene->mAnimations[i]->mChannels[c]->mPositionKeys[k].mValue.x
-					<< "  y: " << pScene->mAnimations[i]->mChannels[c]->mPositionKeys[k].mValue.y
-					<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mPositionKeys[k].mValue.z
-					<< std::endl << "rot:   "
-					<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.w
-					<< "  x: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.x
-					<< "  y: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.y
-					<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mRotationKeys[k].mValue.z
-					<< std::endl << "scale: "
-					<< "  x: " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mValue.x
-					<< "  y: " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mValue.y
-					<< "  z: " << pScene->mAnimations[i]->mChannels[c]->mScalingKeys[k].mValue.z
-					<< std::endl;
-			}
-		}
-	}
-}
 
 void recursive_print(aiNode* node, int depth)
 {
@@ -190,8 +242,8 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 	// here's some recon stuff
 
 	//recursive_print(pScene->mRootNode, 0);
-	//print_animations(pScene);
-
+	//LoadAnimations(pScene);
+	m_Skeleton.AddAnimationsFromFile(Filename);
 
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[POS_VB]);
@@ -260,7 +312,7 @@ void AnimatedModel::InitMesh(unsigned int MeshIndex,
 	}
 }
 
-
+// TODO split this into LoadSkeleton and LoadSkin
 // assemeble skin and bones
 void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vector<VertexBoneData>& SkinWeights)
 {
@@ -273,7 +325,7 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 		unsigned int BoneIndex = 0;
 		string BoneName(pMesh->mBones[i]->mName.data);
 
-		if (m_BoneMapping.find(BoneName) == m_BoneMapping.end())
+		if (m_Skeleton.m_jointMap.find(BoneName) == m_Skeleton.m_jointMap.end())
 		{
 
 			// Joints
@@ -289,7 +341,7 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			// Now try to find the node's parent
 			// if it hasn't been mapped yet, assume this node is a root and give it no parent
 			string parentName(pNode->mParent->mName.data);
-			if (m_BoneMapping.find(parentName) == m_BoneMapping.end())
+			if (m_Skeleton.m_jointMap.find(parentName) == m_Skeleton.m_jointMap.end())
 			{
 				std::cout << "This node was referenced as a parent bone without being mapped: " << parentName << std::endl;
 				std::cout << "----Assuming the following node is a root: " << BoneName.c_str() << std::endl;
@@ -297,7 +349,7 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			}
 			else
 			{
-				joint.m_parentIndex = m_BoneMapping[parentName];
+				joint.m_parentIndex = m_Skeleton.m_jointMap[parentName];
 			}
 
 			// 3.
@@ -340,11 +392,11 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			aiMatrix4x4 offset = pMesh->mBones[i]->mOffsetMatrix;
 			AssToGlmMat4(pMesh->mBones[i]->mOffsetMatrix, m_BoneInfo[BoneIndex].BoneOffset);
 			//m_BoneInfo[BoneIndex].BoneOffset = pMesh->mBones[i]->mOffsetMatrix; // This was the original, un-glm'd line
-			m_BoneMapping[BoneName] = BoneIndex;
+			m_Skeleton.m_jointMap[BoneName] = BoneIndex;
 		}
 		else
 		{
-			BoneIndex = m_BoneMapping[BoneName];
+			BoneIndex = m_Skeleton.m_jointMap[BoneName];
 		}
 
 		// fucking dump all this bone's influences into the vertex-bone-weights blob

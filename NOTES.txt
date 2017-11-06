@@ -123,4 +123,18 @@ for (Thing thing : things)
 }
 
 
+======================================================================================
+Getting mat4 from JointPose
+======================================================================================
+// turning jointpose elements into mat4
+glm::mat4 transMat = glm::translate(glm::mat4(1.0f), trans);
+glm::mat4 rotationMat = glm::mat4_cast(rotation);
+glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), scale);
+glm::mat4 jointTransform = transMat * rotationMat * scaleMat;
+
+
+
+
+
+
 
