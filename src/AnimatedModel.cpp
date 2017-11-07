@@ -24,6 +24,22 @@ glm::mat4 Skeleton::GetModelSpaceBindMatrix( int jointIndex)
 	return mod;
 }
 
+void Animation::Initialize(int numJoints, int numKeyframes, float duration)
+{
+	this->duration = duration;
+
+	// set poses array length foreach keyframe so they can be quickly filled (...i think)
+	keyframes.resize(numKeyframes);
+	for (int i = 0; i < numKeyframes; i++)
+		keyframes[i].jointPoses.resize(numJoints);
+	
+	// initialize jointsUsed as all false
+	jointsUsed.resize(numJoints);
+	for (int i = 0; i < numJoints; i++)
+		jointsUsed[i] = false;
+	
+}
+
 void Skeleton::AddAnimationsFromFile(const string& filename)
 {
 	Assimp::Importer importer;
@@ -44,27 +60,30 @@ void Skeleton::AddAnimationsFromScene(const aiScene* pScene)
 		aiAnimation* anim = pScene->mAnimations[i];
 
 		Animation newAnim;
-		newAnim.duration = anim->mDuration;
-		newAnim.keyframes.resize(anim->mChannels[0]->mNumPositionKeys); // Not robust! just finds the number of positionkeys in first channel!
-		for (int k = 0; k < newAnim.keyframes.size(); k++)
-			newAnim.keyframes[k].jointPoses.resize(m_joints.size());
-
+		newAnim.Initialize(m_joints.size(), anim->mChannels[0]->mNumPositionKeys, anim->mDuration);
+		// TODO find a better way to get the number of keyframes!!!
 
 		for (int c = 0; c < anim->mNumChannels; c++)
 		{
 			aiNodeAnim* channel;
 			channel = anim->mChannels[c];
-			std::cout << "channel: " << channel->mNodeName.C_Str() << std::endl;
-
 
 			if (m_jointMap.find(channel->mNodeName.C_Str()) == m_jointMap.end())
 			{
-				std::cout << "couldn't find this bone in mapping: " << channel->mNodeName.C_Str() << std::endl;
+				std::cout << "X  " << c << "couldn't find this bone in mapping: " << channel->mNodeName.C_Str() << std::endl;
+				continue;
+			}
+			else
+			{
+				std::cout << c << ": " << channel->mNodeName.C_Str() << std::endl;
 			}
 			int jointIndex = m_jointMap[channel->mNodeName.C_Str()];
 			
-			glm::mat4 origTransform = m_joints[jointIndex].m_localBindTransform;
-			print_matrix("local bind transform", origTransform);
+			// Mark this joint as used - this means it will use transforms from this animation
+			newAnim.jointsUsed[jointIndex] = true;
+
+			//glm::mat4 origTransform = m_joints[jointIndex].m_localBindTransform;
+			//print_matrix("local bind transform", origTransform);
 
 
 			for (int k = 0; k < channel->mNumPositionKeys; k++)
@@ -114,6 +133,28 @@ void AnimatedModel::VertexBoneData::AddBoneData(unsigned int BoneID, float Weigh
 	}
 }
 
+void AnimatedModel::NormalizeSkinWeights(vector<VertexBoneData>& SkinWeights)
+{
+	for (unsigned int i = 0; i < SkinWeights.size(); i++)
+	{
+		float sum = 0;
+		for (int j = 0; j < NUM_BONES_PER_VEREX; j++)
+		{
+			sum += SkinWeights[i].Weights[j];
+		}
+		if (sum == 0)
+		{
+			std::cout << "\nBIG PROBLEM:\n sheeeit this vertex has no joints!" << std::endl;
+			continue;
+		}
+		float normalizer = 1 / sum;
+		for (int j = 0; j < NUM_BONES_PER_VEREX; j++)
+		{
+			SkinWeights[i].Weights[j] *= normalizer;
+		}
+	}
+}
+
 AnimatedModel::AnimatedModel()
 {
 	m_VAO = 0;
@@ -135,6 +176,7 @@ bool AnimatedModel::LoadMesh(const string& Filename)
 
 	// Create the VAO
 	glGenVertexArrays(1, &m_VAO);
+	glBindVertexArray(m_VAO);
 	glGenBuffers(ARRAY_SIZE_IN_ELEMENTS(m_Buffers), m_Buffers);
 
 	bool ret = false;
@@ -143,9 +185,10 @@ bool AnimatedModel::LoadMesh(const string& Filename)
 
 	if (m_pScene)
 	{
-		// TODO glm-ify this matrix
-		m_GlobalInverseTransform = m_pScene->mRootNode->mTransformation;
-		m_GlobalInverseTransform.Inverse();
+		aiMatrix4x4 globalInverseTransform = m_pScene->mRootNode->mTransformation;
+		globalInverseTransform.Inverse();
+		//m_GlobalInverseTransform = GetGlmMat4FromAssimp(globalInverseTransform);
+		m_Skeleton.m_globalInverseBindTransform = GetGlmMat4FromAssimp(globalInverseTransform);
 		ret = InitFromScene(m_pScene, Filename);
 	}
 	else
@@ -153,6 +196,7 @@ bool AnimatedModel::LoadMesh(const string& Filename)
 		printf("Error parsing '%s': '%s'\n", Filename.c_str(), m_Importer.GetErrorString());
 	}
 
+	glBindVertexArray(0);
 	return ret;
 }
 
@@ -200,7 +244,6 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 	vector<VertexBoneData> SkinWeights;
 	vector<unsigned int> Indices;
 
-	// TODO finish this function (ogldev_skinned_mesh.cpp)
 	unsigned int NumVertices = 0;
 	unsigned int NumIndices = 0;
 	
@@ -299,7 +342,7 @@ void AnimatedModel::InitMesh(unsigned int MeshIndex,
 
 
 	LoadBones(MeshIndex, paiMesh, SkinWeights);
-	// TODO normalise SkinWeights
+	NormalizeSkinWeights(SkinWeights);
 
 	// Populate the index buffer
 	for (unsigned int i = 0; i < paiMesh->mNumFaces; i++)
@@ -358,11 +401,9 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			//4.
 			// Set the model-space Bind transform (maybe)
 			aiMatrix4x4 aiBindTransform = pMesh->mBones[i]->mOffsetMatrix;
-			glm::mat4 bindTransform; 
-			AssToGlmMat4(aiBindTransform, bindTransform);
+			glm::mat4 bindTransform = GetGlmMat4FromAssimp(aiBindTransform);
 
-			glm::mat4 localTransform;
-			AssToGlmMat4(pNode->mTransformation, localTransform);
+			glm::mat4 localTransform = GetGlmMat4FromAssimp(pNode->mTransformation);
 			joint.m_localBindTransform = localTransform;
 
 			//if (joint.m_parentIndex >= 0)
@@ -387,11 +428,7 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			// Allocate an index for anew bone
 			BoneIndex = m_NumBones;
 			m_NumBones++;
-			BoneInfo bi;
-			m_BoneInfo.push_back(bi);
-			aiMatrix4x4 offset = pMesh->mBones[i]->mOffsetMatrix;
-			AssToGlmMat4(pMesh->mBones[i]->mOffsetMatrix, m_BoneInfo[BoneIndex].BoneOffset);
-			//m_BoneInfo[BoneIndex].BoneOffset = pMesh->mBones[i]->mOffsetMatrix; // This was the original, un-glm'd line
+	
 			m_Skeleton.m_jointMap[BoneName] = BoneIndex;
 		}
 		else
@@ -425,13 +462,14 @@ bool AnimatedModel::InitMaterials(const aiScene* pScene, const string& Filename)
 
 void AnimatedModel::Render()
 {
-	// TODO
+	for (MeshEntry mesh : m_Entries)
+	{
+		glBindVertexArray(m_VAO);
+		glDrawElements(GL_TRIANGLES, mesh.NumIndices, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+	}
 }
 
-void AnimatedModel::BoneTransform(float timeInSeconds, vector<glm::mat4>& transforms)
-{
-	// TODO
-}
 
 void AnimatedModel::Clear()
 {

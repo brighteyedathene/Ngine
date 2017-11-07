@@ -15,7 +15,8 @@ public:
 	AnimatedModel* m_pModel;
 	map<std::string, int> m_animationMap;
 
-	vector<glm::mat4> m_currentMatrices;
+	int m_jointCount;
+	glm::mat4* m_currentMatrices;
 
 	Animator(AnimatedModel* pModel);
 	~Animator();
@@ -24,6 +25,6 @@ public:
 
 private:
 	float m_currentTime;
-
+	glm::mat4* m_modelSpaceTransforms;
 	void GetNextPose();
 };

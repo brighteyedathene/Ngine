@@ -19,7 +19,7 @@ Camera::~Camera()
 }
 
 // premultiply model by this matrix
-glm::mat4 Camera::GetViewProjectionMatrix()
+glm::mat4 Camera::GetProjectionViewMatrix()
 {
 	glm::mat4 view = glm::lookAt(transform.position, transform.position + transform.Forward(), WORLD_UP);
 	glm::mat4 projection;

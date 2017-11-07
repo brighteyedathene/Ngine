@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\AssortedUtils.cpp" />
     <ClCompile Include="src\Animator.cpp" />
     <ClCompile Include="src\AnimatedModel.cpp" />
     <ClCompile Include="src\Model.cpp" />

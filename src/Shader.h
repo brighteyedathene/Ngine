@@ -80,6 +80,12 @@ public:
 	{
 		glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 	}
+
+	void SetMat4Array(const std::string &name, const glm::mat4 &mat, GLsizei count) const
+	{
+		glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), count, GL_FALSE, &mat[0][0]);
+	}
+
 #pragma endregion setter_functions
 
 };

@@ -6,6 +6,7 @@
 
 #include "EngineGlobals.h"
 #include "GameTime.h"
+#include "AssortedUtils.h"
 
 #include "Display.h"
 #include "EventHandler.h"
@@ -20,6 +21,7 @@
 
 #include "AnimatedModel.h"
 #include "Animator.h"
+
 
 // Macro for indexing vertex buffer (just forwards the value you give it)
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -174,6 +176,7 @@ int main(int argc, char* argv[])
 	Shader shader(vertexShaderPath, fragmentShaderPath);
 	Shader lightingTestShader(lightingTestVertexShaderPath, lightingTestFragmentShaderPath);
 	Shader lightShader(lightVertexShaderPath, lightFragmentShaderPath);
+	Shader animShader(animVertexShaderPath, lightingTestFragmentShaderPath);
 
 	SATexture otherTexture(otherTexturePath);
 	SATexture myTexture(texturePath);
@@ -250,19 +253,12 @@ int main(int argc, char* argv[])
 #pragma region camera_init
 
 	Camera mainCamera;
+	mainCamera.farClipDistance = 100000;
 	CameraController camController(&mainCamera, &input);
 
-	//mainCamera.orthographic = true;
-	//camController.constrainPitch = false;
-
-	Camera cam2;
-	cam2.orthographic = true;
-	Camera cam3;
-	cam3.fov = 120.0f;
 
 	Camera cam4;
 
-	cam2.orthographic = true;
 
 
 #pragma endregion camera_init
@@ -352,7 +348,7 @@ int main(int argc, char* argv[])
 
 		glPolygonMode(GL_FRONT, GL_FILL);
 
-		glm::mat4 pv = mainCamera.GetViewProjectionMatrix();
+		glm::mat4 pv = mainCamera.GetProjectionViewMatrix();
 
 		// Draw the light
 		lightShader.Use();
@@ -382,7 +378,7 @@ int main(int argc, char* argv[])
 		mvp = pv * floor.GetMatrix();
 		lightingTestShader.SetMat4("mvp", mvp);
 		lightingTestShader.SetMat4("model", floor.GetMatrix());
-		//cube.Draw(lightingTestShader);
+		cube.Draw(lightingTestShader);
 
 		lightingTestShader.SetVec3("material.ambient", 0.1f, 0.1f, 0.4f);
 		// rotating cube
@@ -399,25 +395,58 @@ int main(int argc, char* argv[])
 		//bninjaModel.Draw(lightingTestShader);
 
 		Transform scaler;
-		scaler.scale *= 0.01f;
+		scaler.scale *= 0.001f;
+		scaler.position = glm::vec3(0.2f, 0.0f, 0.0f);
+		// ANIMATION
 
-		// investigating skellies
-		lightingTestShader.SetVec3("material.ambient", 1, 1, 1);
-		lightingTestShader.SetVec3("material.diffuse", 1, 1, 1);
-		lightingTestShader.SetVec3("material.specular", 1, 1, 1);
+		animShader.Use();
+		animShader.SetVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+		animShader.SetVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
+		animShader.SetVec3("light.specular", 1.0f, 1.0f, 1.0f);
+		animShader.SetVec3("light.position", lightTransform.position);
+
+		animShader.SetVec3("viewPos", mainCamera.transform.position);
+
+		// all materials are the same for now
+		animShader.SetVec3("material.ambient", 1, 1, 1);
+		animShader.SetVec3("material.diffuse", 1, 1, 1);
+		animShader.SetVec3("material.specular", 1, 1, 1);
+		animShader.SetFloat("material.shininess", 10.0f);
 
 
-		for (int i = 0; i < animModel.m_Skeleton.m_jointCount; i++)
+
+
+		animator.Tick(0.05f);//gameclock.deltaTime);
+		//animShader.SetMat4Array("joints", animator.m_currentMatrices[0], (GLsizei)animator.m_currentMatrices.size());
+		for (int i = 0; i < animator.m_jointCount; i++)
 		{
-			glm::mat4 modmat = animModel.m_Skeleton.GetModelSpaceBindMatrix(i);
+			string uniformName = "joints[" + to_string(i) + "]";
+			int location = glGetUniformLocation(animShader.ID, uniformName.c_str());
+			glUniformMatrix4fv(location, 1, GL_FALSE, &animator.m_currentMatrices[i][0][0]);
 
-			
+			//print_matrix(to_string(i).c_str(), animator.m_currentMatrices[i]);
 
-			modmat = modmat * scaler.GetMatrix();
-			lightingTestShader.SetMat4("mvp", pv * modmat);
-			lightingTestShader.SetMat4("model", modmat);
-			cube.Draw(lightingTestShader);
 		}
+
+		animShader.SetMat4("projectionview", pv);
+		animShader.SetMat4("model", octobeartran.GetMatrix());
+		animModel.Render();
+
+		//for (int i = 0; i < animator.m_jointCount; i++)
+		//{
+		//	//glm::mat4 modmat = animModel.m_Skeleton.GetModelSpaceBindMatrix(i);
+		//	glm::mat4 modmat = animator.m_currentMatrices[i];
+		//
+		//	int parentIndex = animModel.m_Skeleton.m_joints[i].m_parentIndex;
+		//	if (parentIndex > -1)
+		//		modmat = animator.m_currentMatrices[parentIndex] * modmat;
+		//
+		//	animModel.m_Skeleton.m_globalInverseBindTransform;
+		//	modmat =  modmat *scaler.GetMatrix();
+		//	animShader.SetMat4("projectionview", pv);
+		//	animShader.SetMat4("model", modmat);
+		//	cube.Draw(animShader);
+		//}
 
 		
 		if (input.GetButton("b_Forward"))
@@ -441,10 +470,10 @@ int main(int argc, char* argv[])
 		nin.rotation.y = -octobeartran.rotation.y + 90.0f;
 		nin.rotation.x = -octobeartran.rotation.x;// +90.0f;
 
-
+		lightingTestShader.Use();
 		lightingTestShader.SetMat4("mvp", pv * nin.GetMatrix());
 		lightingTestShader.SetMat4("model", nin.GetMatrix());
-		bearModel.Draw(lightingTestShader);
+		//bearModel.Draw(lightingTestShader);
 
 		
 		
@@ -473,7 +502,7 @@ int main(int argc, char* argv[])
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // (or whatever buffer you want to clear)
 		//glDisable(GL_SCISSOR_TEST);
 
-		pv = cam4.GetViewProjectionMatrix();
+		pv = cam4.GetProjectionViewMatrix();
 		
 		Transform staticLight;
 		staticLight.position = glm::vec3(0, 0, 0);
@@ -501,7 +530,7 @@ int main(int argc, char* argv[])
 			mvp = pv * b.GetMatrix();
 			lightingTestShader.SetMat4("mvp", mvp);
 			lightingTestShader.SetMat4("model", b.GetMatrix());
-			bearModel.Draw(lightingTestShader);
+			//bearModel.Draw(lightingTestShader);
 
 		}
 

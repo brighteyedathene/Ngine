@@ -38,6 +38,6 @@ public:
 	Camera(bool orthographic = false);
 	~Camera();
 
-	glm::mat4 GetViewProjectionMatrix();
+	glm::mat4 GetProjectionViewMatrix();
 };
 

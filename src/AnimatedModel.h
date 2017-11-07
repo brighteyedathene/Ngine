@@ -47,8 +47,11 @@ struct Skeleton
 	vector<Joint> m_joints;
 	map<string, unsigned int> m_jointMap; // maps a joint name to its index
 
+	glm::mat4 m_globalInverseBindTransform;
+
 	vector<Animation> m_animations;
 	map<string, unsigned int> m_animMap;
+
 
 	glm::mat4 GetModelSpaceBindMatrix(int jointIndex);
 	void AddAnimationsFromFile(const string& filename);
@@ -78,8 +81,11 @@ struct Keyframe
 struct Animation
 {
 	vector<Keyframe> keyframes;
+	vector<bool> jointsUsed;
 	float duration;
 	bool loop;
+
+	void Initialize(int numJoints, int numKeyframes, float duration);
 };
 
 class AnimatedModel
@@ -89,18 +95,8 @@ public:
 	~AnimatedModel();
 
 	bool LoadMesh(const string& Filename);
-	
 	void Render();
-
-	unsigned int numBones() const
-	{
-		return m_NumBones;
-	}
-
-	void BoneTransform(float timeInSeconds, vector<glm::mat4>& transforms);
-
 	void Clear();
-	
 	
 	Skeleton m_Skeleton;
 
@@ -108,18 +104,6 @@ public:
 private:
 
 #define NUM_BONES_PER_VEREX 4
-
-	struct BoneInfo
-	{
-		glm::mat4 BoneOffset;
-		glm::mat4 FinalTransformation;
-
-		BoneInfo()
-		{
-			BoneOffset = glm::mat4(0.0f);
-			FinalTransformation = glm::mat4(0.0f);
-		}
-	};
 
 	struct VertexBoneData
 	{
@@ -139,8 +123,8 @@ private:
 
 		void AddBoneData(unsigned int BoneID, float Weight);
 	};
+	void NormalizeSkinWeights(vector<VertexBoneData>& SkinWeights);
 
-	//Calculate interpolations functions
 	//other animation functions...
 	bool InitFromScene(const aiScene* pScene, const string& Filename);
 	bool InitMaterials(const aiScene* pScene, const string& Filename);
@@ -192,10 +176,8 @@ private:
 
 	map<string, unsigned int> m_BoneMapping; // maps a bone name to its index
 	unsigned int m_NumBones;
-	vector<BoneInfo> m_BoneInfo;
-	aiMatrix4x4 m_GlobalInverseTransform; // TODO something about this - it should be a glm::mat4
 	
-
+	glm::mat4 m_GlobalInverseTransform;
 
 	const aiScene* m_pScene;
 	Assimp::Importer m_Importer;
