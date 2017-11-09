@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 	Shader shader(vertexShaderPath, fragmentShaderPath);
 	Shader lightingTestShader(lightingTestVertexShaderPath, lightingTestFragmentShaderPath);
 	Shader lightShader(lightVertexShaderPath, lightFragmentShaderPath);
-	Shader animShader(animVertexShaderPath, lightingTestFragmentShaderPath);
+	Shader animShader(animVertexShaderPath, animFragmentShaderPath);
 
 	SATexture otherTexture(otherTexturePath);
 	SATexture myTexture(texturePath);
@@ -246,6 +246,11 @@ int main(int argc, char* argv[])
 	input.CreateButtonMapping("b_Right", SDL_SCANCODE_L);
 	input.CreateButtonMapping("b_Up", SDL_SCANCODE_Y);
 	input.CreateButtonMapping("b_Down", SDL_SCANCODE_H);
+
+	input.CreateButtonMapping("calc0", SDL_SCANCODE_0);
+	input.CreateButtonMapping("calc1", SDL_SCANCODE_1);
+	input.CreateButtonMapping("calc2", SDL_SCANCODE_2);
+	input.CreateButtonMapping("calc3", SDL_SCANCODE_3);
 
 	input.CreateButtonMapping("Freeze", SDL_SCANCODE_F);
 	bool freezecam = false;
@@ -415,6 +420,14 @@ int main(int argc, char* argv[])
 
 
 
+		if (input.GetButtonDown("calc0"))
+			animator.DEBUG_MATRIX_CALC = 0;
+		if (input.GetButtonDown("calc1"))
+			animator.DEBUG_MATRIX_CALC = 1;
+		if (input.GetButtonDown("calc2"))
+			animator.DEBUG_MATRIX_CALC = 2;
+		if (input.GetButtonDown("calc3"))
+			animator.DEBUG_MATRIX_CALC = 3;
 
 		animator.Tick(0.05f);//gameclock.deltaTime);
 		//animShader.SetMat4Array("joints", animator.m_currentMatrices[0], (GLsizei)animator.m_currentMatrices.size());

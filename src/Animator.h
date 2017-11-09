@@ -23,6 +23,8 @@ public:
 
 	void Tick(float deltaTime);
 
+	int DEBUG_MATRIX_CALC = 0;
+
 private:
 	float m_currentTime;
 	glm::mat4* m_modelSpaceTransforms;

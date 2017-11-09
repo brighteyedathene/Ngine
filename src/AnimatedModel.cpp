@@ -75,7 +75,7 @@ void Skeleton::AddAnimationsFromScene(const aiScene* pScene)
 			}
 			else
 			{
-				std::cout << c << ": " << channel->mNodeName.C_Str() << std::endl;
+				std::cout << m_jointMap[channel->mNodeName.C_Str()] << ": " << channel->mNodeName.C_Str() << std::endl;
 			}
 			int jointIndex = m_jointMap[channel->mNodeName.C_Str()];
 			
@@ -130,6 +130,11 @@ void AnimatedModel::VertexBoneData::AddBoneData(unsigned int BoneID, float Weigh
 	{
 		IDs[minIndex] = BoneID;
 		Weights[minIndex] = Weight;
+
+		if (minWeight > 0)
+		{
+			std::cout << "replaced a non-zero skin weight for joint " << BoneID << std::endl;
+		}
 	}
 }
 
@@ -141,17 +146,37 @@ void AnimatedModel::NormalizeSkinWeights(vector<VertexBoneData>& SkinWeights)
 		for (int j = 0; j < NUM_BONES_PER_VEREX; j++)
 		{
 			sum += SkinWeights[i].Weights[j];
+			if (SkinWeights[i].Weights[j] == 0)
+			{
+				//std::cout << i << ": has zero weight for bone: " << SkinWeights[i].IDs[j] << std::endl;
+			}
 		}
 		if (sum == 0)
 		{
-			std::cout << "\nBIG PROBLEM:\n sheeeit this vertex has no joints!" << std::endl;
+			std::cout << "\nBIG PROBLEM: sheeeit this vertex has no joints!" << std::endl;
 			continue;
 		}
+		else if (sum == 1)
+		{
+			// everything is fine - weigths add up to one
+			continue;
+		}
+		std::cout << "before " << SkinWeights[i].IDs[0] << ": " << SkinWeights[i].Weights[0] << ", "
+			<< SkinWeights[i].IDs[1] << ": " << SkinWeights[i].Weights[1] << ", "
+			<< SkinWeights[i].IDs[2] << ": " << SkinWeights[i].Weights[2] << ", "
+			<< SkinWeights[i].IDs[3] << ": " << SkinWeights[i].Weights[3] << "     " << sum << std::endl;
+
 		float normalizer = 1 / sum;
+		float nusum = 0;
 		for (int j = 0; j < NUM_BONES_PER_VEREX; j++)
 		{
 			SkinWeights[i].Weights[j] *= normalizer;
+			nusum += SkinWeights[i].Weights[j];
 		}
+		std::cout << "after  " << SkinWeights[i].IDs[0] << ": " << SkinWeights[i].Weights[0] << ", "
+			<< SkinWeights[i].IDs[1] << ": " << SkinWeights[i].Weights[1] << ", "
+			<< SkinWeights[i].IDs[2] << ": " << SkinWeights[i].Weights[2] << ", "
+			<< SkinWeights[i].IDs[3] << ": " << SkinWeights[i].Weights[3] << "     " << nusum << std::endl;
 	}
 }
 
@@ -280,9 +305,8 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 	}
 
 	std::cout << "what do with these animations?" << std::endl;
-	// TODO finish this function
 
-	// here's some recon stuff
+
 
 	//recursive_print(pScene->mRootNode, 0);
 	//LoadAnimations(pScene);
@@ -294,15 +318,15 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 	glEnableVertexAttribArray(POSITION_LOCATION);
 	glVertexAttribPointer(POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	
-	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[NORMAL_VB]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Normals[0]) * Normals.size(), &Normals[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(NORMAL_LOCATION);
-	glVertexAttribPointer(NORMAL_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[TEXCOORD_VB]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(TexCoords[0]) * TexCoords.size(), &TexCoords[0], GL_STATIC_DRAW);
 	glEnableVertexAttribArray(TEX_COORD_LOCATION);
 	glVertexAttribPointer(TEX_COORD_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[NORMAL_VB]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Normals[0]) * Normals.size(), &Normals[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(NORMAL_LOCATION);
+	glVertexAttribPointer(NORMAL_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[BONE_VB]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(SkinWeights) * SkinWeights.size(), &SkinWeights[0], GL_STATIC_DRAW);
@@ -342,7 +366,7 @@ void AnimatedModel::InitMesh(unsigned int MeshIndex,
 
 
 	LoadBones(MeshIndex, paiMesh, SkinWeights);
-	NormalizeSkinWeights(SkinWeights);
+	//NormalizeSkinWeights(SkinWeights);
 
 	// Populate the index buffer
 	for (unsigned int i = 0; i < paiMesh->mNumFaces; i++)

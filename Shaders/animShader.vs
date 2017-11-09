@@ -1,14 +1,16 @@
 #version 450
 
 layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aNormal;
-layout (location = 2) in vec2 aTexCoord;
+layout (location = 1) in vec2 aTexCoord;
+layout (location = 2) in vec3 aNormal;
 layout (location = 3) in ivec4 aJointIDs;
 layout (location = 4) in vec4 aWeights;
 
 //out vec2 TexCoord0; // put this in later
 out vec3 Normal;
 out vec3 FragPos;
+
+smooth out float DEBUG_ZERO_WEIGHT;
 
 const int MAX_JOINTS = 50;
 
@@ -25,6 +27,8 @@ void main()
 
 	vec4 position = jointTransform * vec4(aPos, 1.0);
 	gl_Position = projectionview * model * position;
+	//gl_Position = projectionview * model * vec4(aPos, 1.0);
+
 	//TexCoord0 = aTexCoord;
 	vec4 norm = jointTransform * vec4(aNormal, 0.0);
 	
@@ -33,4 +37,14 @@ void main()
 
 	Normal = mat3(transpose(inverse(model))) * aNormal;
 	FragPos = vec3(model * vec4(aPos, 1.0f));
+
+	DEBUG_ZERO_WEIGHT = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		if (aWeights[i] == 0)
+		{
+			DEBUG_ZERO_WEIGHT = 1;
+		}
+	}
+
 }

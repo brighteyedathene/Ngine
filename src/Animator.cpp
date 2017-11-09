@@ -105,18 +105,41 @@ void Animator::GetNextPose()
 		else
 			parentMat = glm::mat4(1.0f);
 
-		m_modelSpaceTransforms[i] = parentMat * jointTransform;
+		//m_modelSpaceTransforms[i] = parentMat * jointTransform;
 
-		glm::mat4 finalTransform = m_pModel->m_Skeleton.m_globalInverseBindTransform 
-			* m_modelSpaceTransforms[i] 
-			* m_pModel->m_Skeleton.m_joints[i].m_modelBindTransform;
+		m_modelSpaceTransforms[i] = jointTransform;
 
+		glm::mat4 finalTransform;
+		
+		if (DEBUG_MATRIX_CALC == 0)
+		{
+			finalTransform = m_pModel->m_Skeleton.m_globalInverseBindTransform
+				* m_modelSpaceTransforms[i]
+				* m_pModel->m_Skeleton.m_joints[i].m_modelBindTransform;
+		}
+		else if (DEBUG_MATRIX_CALC == 1)
+		{
+			finalTransform = m_pModel->m_Skeleton.m_globalInverseBindTransform;
+		}
+		else if (DEBUG_MATRIX_CALC == 2)
+		{
+			finalTransform = jointTransform;
+		}
+		else
+		{
+			finalTransform = glm::mat4(1.0f);
+		}
 		//std::cout << "used: " << anim.jointsUsed[i] << "   ";
 		//print_matrix(to_string(i).c_str(), finalTransform);
 
 
 		m_currentMatrices[i] = finalTransform;
 	}
+
+	//for (int i = 0; i < m_jointCount; i++)
+		//print_matrix(to_string(i).c_str(), m_currentMatrices[i]);
+
+	
 
 	// draw something with the matrices
 }
