@@ -397,14 +397,14 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 		{
 			// Add a new Joint
 			Joint joint;
-			// 1.
+
 			// Attempt to find this bone's parent in the node hierarchy
 			aiNode* pNode = pRoot->aiNode::FindNode(BoneName.c_str());
 			if (!pNode)
 			{
 				std::cout << "Couldn't find a node with name: " << BoneName.c_str() << " in node hierarchy!" << std::endl;
 			}
-			//2.
+
 			// Now try to find the node's parent
 			// if it hasn't been mapped yet, assume this node is a root and give it no parent
 			string parentName(pNode->mParent->mName.data);
@@ -419,12 +419,11 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 				joint.m_parentIndex = m_Skeleton.m_jointMap[parentName];
 			}
 
-			// 3.
+
 			// Set the joint ID
 			joint.m_index = m_NumBones;
-			//4.
-			// Set the model-space Bind transform (maybe)
-			//aiMatrix4x4 aiOffset = pMesh->mBones[i]->mOffsetMatrix;
+
+			// Set the model-space and local-space transforms
 			glm::mat4 offsetTransform = GetGlmMat4FromAssimp(pMesh->mBones[i]->mOffsetMatrix);
 			glm::mat4 localTransform = GetGlmMat4FromAssimp(pNode->mTransformation);
 			
@@ -448,10 +447,11 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 		}
 		else
 		{
+			// Just use the existing joint
 			BoneIndex = m_Skeleton.m_jointMap[BoneName];
 		}
 
-		// fucking dump all this bone's influences into the vertex-bone-weights blob
+		// fucking dump all this bone's influences into the vertex-bone-weights blob for this mesh
 		for (unsigned int j = 0; j < pMesh->mBones[i]->mNumWeights; j++)
 		{
 			unsigned int VertexID = m_Entries[MeshIndex].BaseVertex + pMesh->mBones[i]->mWeights[j].mVertexId;
@@ -460,8 +460,10 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 		}
 	}
 
-	// This shrinks the vector to fit 
+	// This line shrinks the vector to fit 
 	// see https://stackoverflow.com/questions/253157/how-to-downsize-stdvector
+	// This can cause a reallocation if the meshes contian different bones
+	// - but i'd rather leave it here and forget about it
 	vector<Joint>(m_Skeleton.m_joints).swap(m_Skeleton.m_joints);
 }
 
