@@ -11,7 +11,6 @@
 
 
 
-
 glm::mat4 Skeleton::GetModelSpaceBindMatrix( int jointIndex)
 {
 	glm::mat4 mod = m_joints[jointIndex].m_localBindTransform;
@@ -112,6 +111,7 @@ void Skeleton::AddAnimationsFromScene(const aiScene* pScene)
 	}
 }
 
+
 void AnimatedModel::VertexBoneData::AddBoneData(unsigned int BoneID, float Weight)
 {
 	unsigned int minIndex;
@@ -137,6 +137,7 @@ void AnimatedModel::VertexBoneData::AddBoneData(unsigned int BoneID, float Weigh
 		}
 	}
 }
+
 
 void AnimatedModel::NormalizeSkinWeights(vector<VertexBoneData>& SkinWeights)
 {
@@ -331,9 +332,9 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[BONE_VB]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(SkinWeights) * SkinWeights.size(), &SkinWeights[0], GL_STATIC_DRAW);
 	glEnableVertexAttribArray(BONE_ID_LOCATION);
-	glVertexAttribPointer(BONE_ID_LOCATION, 4, GL_INT, GL_FALSE, sizeof(VertexBoneData), (void*)0);
+	glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, sizeof(VertexBoneData), (const GLvoid*)0);
 	glEnableVertexAttribArray(BONE_WEIGHT_LOCATION);
-	glVertexAttribPointer(BONE_WEIGHT_LOCATION, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (void*)16);
+	glVertexAttribPointer(BONE_WEIGHT_LOCATION, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (const GLvoid*)16);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[INDEX_BUFFER]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices[0]) * Indices.size(), &Indices[0], GL_STATIC_DRAW);
@@ -383,8 +384,8 @@ void AnimatedModel::InitMesh(unsigned int MeshIndex,
 // assemeble skin and bones
 void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vector<VertexBoneData>& SkinWeights)
 {
-	m_Skeleton.m_jointCount = pMesh->mNumBones;
-	m_Skeleton.m_joints.resize(m_Skeleton.m_jointCount);
+	//m_Skeleton.m_jointCount = pMesh->mNumBones;
+	//m_Skeleton.m_joints.resize(m_Skeleton.m_jointCount);
 	aiNode* pRoot = m_pScene->mRootNode;
 
 	for (unsigned int i = 0; i < pMesh->mNumBones; i++)
@@ -394,15 +395,14 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 
 		if (m_Skeleton.m_jointMap.find(BoneName) == m_Skeleton.m_jointMap.end())
 		{
-
-			// Joints
+			// Add a new Joint
 			Joint joint;
 			// 1.
 			// Attempt to find this bone's parent in the node hierarchy
 			aiNode* pNode = pRoot->aiNode::FindNode(BoneName.c_str());
 			if (!pNode)
 			{
-				std::cout << "Couldn't find a node with name: " << BoneName.c_str() << std::endl;
+				std::cout << "Couldn't find a node with name: " << BoneName.c_str() << " in node hierarchy!" << std::endl;
 			}
 			//2.
 			// Now try to find the node's parent
@@ -424,29 +424,19 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			joint.m_index = m_NumBones;
 			//4.
 			// Set the model-space Bind transform (maybe)
-			aiMatrix4x4 aiBindTransform = pMesh->mBones[i]->mOffsetMatrix;
-			glm::mat4 bindTransform = GetGlmMat4FromAssimp(aiBindTransform);
-
+			//aiMatrix4x4 aiOffset = pMesh->mBones[i]->mOffsetMatrix;
+			glm::mat4 offsetTransform = GetGlmMat4FromAssimp(pMesh->mBones[i]->mOffsetMatrix);
 			glm::mat4 localTransform = GetGlmMat4FromAssimp(pNode->mTransformation);
-			joint.m_localBindTransform = localTransform;
-
-			//if (joint.m_parentIndex >= 0)
-			//	bindTransform = m_Skeleton.m_joints[joint.m_parentIndex].m_modelBindTransform * bindTransform;
 			
-			joint.m_modelBindTransform = bindTransform;
+			joint.m_localBindTransform = localTransform;
+			joint.m_modelBindTransform = offsetTransform;
 
-			//5.
-			// Get the inverse Bind transform
-			joint.m_inverseBindTransform = glm::affineInverse(joint.m_modelBindTransform);
-
-
-
-			//std::cout << BoneName.c_str() << std::endl;
-			//print_matrix(" model", joint.m_modelBindTransform);
-			//print_matrix(" inv", joint.m_inverseBindTransform);
-			//print_matrix("identity verification:", joint.m_inverseBindTransform * joint.m_modelBindTransform);
-
-			m_Skeleton.m_joints[joint.m_index] = joint;
+			m_Skeleton.m_joints.push_back(joint);
+			if (joint.m_index != m_Skeleton.m_joints.size()-1)
+			{
+				std::cout << "jointid mismatch - m_numBones gave this joint the wrong id " << joint.m_name << std::endl;
+				std::cout << "---- m_numBones: " << joint.m_index << "   actual id:: " << m_Skeleton.m_joints.size() - 1 << std::endl;
+			}
 
 			// X. This is the old stuff
 			// Allocate an index for anew bone
@@ -454,6 +444,7 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			m_NumBones++;
 	
 			m_Skeleton.m_jointMap[BoneName] = BoneIndex;
+			m_Skeleton.m_idMap[BoneIndex] = BoneName;
 		}
 		else
 		{
@@ -468,14 +459,13 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			SkinWeights[VertexID].AddBoneData(BoneIndex, Weight);
 		}
 	}
+
+	// This shrinks the vector to fit 
+	// see https://stackoverflow.com/questions/253157/how-to-downsize-stdvector
+	vector<Joint>(m_Skeleton.m_joints).swap(m_Skeleton.m_joints);
 }
 
-void AnimatedModel::AssembleSkeleton(const aiNode* pRootNode, 
-									vector<VertexBoneData>& SkinWeights, 
-									Skeleton* m_skeleton)
-{
 
-}
 
 bool AnimatedModel::InitMaterials(const aiScene* pScene, const string& Filename)
 {
@@ -486,12 +476,18 @@ bool AnimatedModel::InitMaterials(const aiScene* pScene, const string& Filename)
 
 void AnimatedModel::Render()
 {
+	glBindVertexArray(m_VAO);
 	for (MeshEntry mesh : m_Entries)
 	{
-		glBindVertexArray(m_VAO);
-		glDrawElements(GL_TRIANGLES, mesh.NumIndices, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
+		//TODO bind materials
+
+		glDrawElementsBaseVertex(GL_TRIANGLES, 
+								 mesh.NumIndices,
+								 GL_UNSIGNED_INT, 
+								 (void*)(sizeof(unsigned int) * mesh.BaseIndex), 
+								 mesh.BaseVertex);
 	}
+	glBindVertexArray(0);
 }
 
 

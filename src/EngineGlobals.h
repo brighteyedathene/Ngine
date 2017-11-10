@@ -36,9 +36,8 @@ namespace ngine
 	const char* bninjaPath = "./Models/bninja/bnin_rebuiltSkel_4weightmax.dae";
 
 	const char* cubeModelPath = "./Models/cube/cube.obj";
-	//const char* modelPath = "./Models/nanosuit/nanosuit.obj";
-	//const char* modelPath = "./Models/ybot.fbx";
-
+	
+	const char* mixamoFBXPATH = "./Models/shit-for-testing/ybot_swagger_withmodel.fbx";
 	
 }
 

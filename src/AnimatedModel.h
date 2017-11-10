@@ -31,7 +31,6 @@ struct Animation;
 struct Joint
 {
 	// (ModelSpaceParentBindPose * LocalBindPose).inverse()
-	glm::mat4 m_inverseBindTransform; // sends a vertex from local space to model space
 	glm::mat4 m_localBindTransform; // transform relative to parent joint
 	glm::mat4 m_modelBindTransform; // sends a vertex from model space to local space
 	const char* m_name;
@@ -46,6 +45,8 @@ struct Skeleton
 	int m_jointCount;
 	vector<Joint> m_joints;
 	map<string, unsigned int> m_jointMap; // maps a joint name to its index
+
+	map<int, string> m_idMap;
 
 	glm::mat4 m_globalInverseBindTransform;
 
@@ -137,9 +138,7 @@ private:
 		vector<unsigned int>& Indices);
 	void LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vector<VertexBoneData>& SkinWeights);
 	
-	void AssembleSkeleton(const aiNode* pRootNode,
-						  vector<VertexBoneData>& SkinWeights,
-						  Skeleton* m_skeleton);
+
 #define INVALID_MATERIAL 0xFFFFFFFF
 
 	enum VB_TYPES
@@ -176,7 +175,7 @@ private:
 
 	map<string, unsigned int> m_BoneMapping; // maps a bone name to its index
 	unsigned int m_NumBones;
-	
+
 	glm::mat4 m_GlobalInverseTransform;
 
 	const aiScene* m_pScene;

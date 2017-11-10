@@ -26,7 +26,6 @@ uniform vec3 viewPos;
 in vec3 Normal;
 in vec3 FragPos;
 
-smooth in float DEBUG_ZERO_WEIGHT;
 
 void main()
 {
@@ -49,8 +48,6 @@ void main()
 
     vec3 result = ambient + diffuse + specular;
 
-    //if (DEBUG_ZERO_WEIGHT > 0.2)
+
     FragColor = vec4(result, 1.0);
-    //else
-    //FragColor = vec4(1.0, 0.8, 0.1, 1.0);
 }

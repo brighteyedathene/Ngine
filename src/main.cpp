@@ -163,7 +163,7 @@ unsigned int CreateCubeVAO()
 // From this point on, 'display' refers to the Display defined in EngineGlobals.h
 using namespace ngine;
 
-
+int DEBUG_jointIndex = 0;
 
 #undef main
 int main(int argc, char* argv[]) 
@@ -211,7 +211,6 @@ int main(int argc, char* argv[])
 	
 	Transform floor;
 	floor.scale = glm::vec3(20.0f, 0.001f, 20.0f);
-	floor.position.y = -1.0f;
 
 	Model bearModel(bearPath);
 	
@@ -224,7 +223,8 @@ int main(int argc, char* argv[])
 
 	Model bninjaModel(bninjaPath);
 	AnimatedModel animModel;
-	animModel.LoadMesh(bninjaPath);
+	//animModel.LoadMesh(bninjaPath);
+	animModel.LoadMesh(mixamoFBXPATH);
 	Animator animator(&animModel);
 
 	Transform litCubeTransform;
@@ -258,6 +258,7 @@ int main(int argc, char* argv[])
 #pragma region camera_init
 
 	Camera mainCamera;
+	mainCamera.transform.position.y = 3.0f;
 	mainCamera.farClipDistance = 100000;
 	CameraController camController(&mainCamera, &input);
 
@@ -419,49 +420,16 @@ int main(int argc, char* argv[])
 		animShader.SetFloat("material.shininess", 10.0f);
 
 
+		animator.Tick(gameclock.deltaTime*3);
 
-		if (input.GetButtonDown("calc0"))
-			animator.DEBUG_MATRIX_CALC = 0;
-		if (input.GetButtonDown("calc1"))
-			animator.DEBUG_MATRIX_CALC = 1;
-		if (input.GetButtonDown("calc2"))
-			animator.DEBUG_MATRIX_CALC = 2;
-		if (input.GetButtonDown("calc3"))
-			animator.DEBUG_MATRIX_CALC = 3;
-
-		animator.Tick(0.05f);//gameclock.deltaTime);
-		//animShader.SetMat4Array("joints", animator.m_currentMatrices[0], (GLsizei)animator.m_currentMatrices.size());
-		for (int i = 0; i < animator.m_jointCount; i++)
-		{
-			string uniformName = "joints[" + to_string(i) + "]";
-			int location = glGetUniformLocation(animShader.ID, uniformName.c_str());
-			glUniformMatrix4fv(location, 1, GL_FALSE, &animator.m_currentMatrices[i][0][0]);
-
-			//print_matrix(to_string(i).c_str(), animator.m_currentMatrices[i]);
-
-		}
+		animShader.SetMat4Array("joints", animator.m_currentMatrices, animator.m_jointCount);
 
 		animShader.SetMat4("projectionview", pv);
 		animShader.SetMat4("model", octobeartran.GetMatrix());
 		animModel.Render();
 
-		//for (int i = 0; i < animator.m_jointCount; i++)
-		//{
-		//	//glm::mat4 modmat = animModel.m_Skeleton.GetModelSpaceBindMatrix(i);
-		//	glm::mat4 modmat = animator.m_currentMatrices[i];
-		//
-		//	int parentIndex = animModel.m_Skeleton.m_joints[i].m_parentIndex;
-		//	if (parentIndex > -1)
-		//		modmat = animator.m_currentMatrices[parentIndex] * modmat;
-		//
-		//	animModel.m_Skeleton.m_globalInverseBindTransform;
-		//	modmat =  modmat *scaler.GetMatrix();
-		//	animShader.SetMat4("projectionview", pv);
-		//	animShader.SetMat4("model", modmat);
-		//	cube.Draw(animShader);
-		//}
 
-		
+
 		if (input.GetButton("b_Forward"))
 			octobeartran.position += octobeartran.Forward() * 0.01f;
 		if (input.GetButton("b_Backward"))

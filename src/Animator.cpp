@@ -75,7 +75,6 @@ void Animator::GetNextPose()
 		glm::mat4 jointTransform; // the local transform for this joint
 		if (anim.jointsUsed[i])
 		{
-
 			glm::vec3 interpos = anim.keyframes[prev].jointPoses[i].position * (1 - alpha)
 				+ anim.keyframes[next].jointPoses[i].position * alpha;
 
@@ -89,57 +88,27 @@ void Animator::GetNextPose()
 			glm::mat4 transMat = glm::translate(glm::mat4(1.0f), interpos);
 			glm::mat4 rotationMat = glm::mat4_cast(interrot);
 			glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), interscale);
-			
+
 			jointTransform = transMat * rotationMat * scaleMat;
 		}
-		else
+		else // this joint isn't included in the animation, so it's just in bind pose
 		{
-			// this joint isn't included in the animation, so it's just bind pose
 			jointTransform = m_pModel->m_Skeleton.m_joints[i].m_localBindTransform;
 		}
 
-		int parentIndex = m_pModel->m_Skeleton.m_joints[i].m_parentIndex;
 		glm::mat4 parentMat;
+		int parentIndex = m_pModel->m_Skeleton.m_joints[i].m_parentIndex;
 		if (parentIndex >= 0)
 			parentMat = m_modelSpaceTransforms[parentIndex];
 		else
 			parentMat = glm::mat4(1.0f);
 
-		//m_modelSpaceTransforms[i] = parentMat * jointTransform;
+		m_modelSpaceTransforms[i] = parentMat * jointTransform;
 
-		m_modelSpaceTransforms[i] = jointTransform;
-
-		glm::mat4 finalTransform;
-		
-		if (DEBUG_MATRIX_CALC == 0)
-		{
-			finalTransform = m_pModel->m_Skeleton.m_globalInverseBindTransform
-				* m_modelSpaceTransforms[i]
-				* m_pModel->m_Skeleton.m_joints[i].m_modelBindTransform;
-		}
-		else if (DEBUG_MATRIX_CALC == 1)
-		{
-			finalTransform = m_pModel->m_Skeleton.m_globalInverseBindTransform;
-		}
-		else if (DEBUG_MATRIX_CALC == 2)
-		{
-			finalTransform = jointTransform;
-		}
-		else
-		{
-			finalTransform = glm::mat4(1.0f);
-		}
-		//std::cout << "used: " << anim.jointsUsed[i] << "   ";
-		//print_matrix(to_string(i).c_str(), finalTransform);
-
+		glm::mat4 finalTransform = m_pModel->m_Skeleton.m_globalInverseBindTransform
+			* m_modelSpaceTransforms[i]
+			* m_pModel->m_Skeleton.m_joints[i].m_modelBindTransform;
 
 		m_currentMatrices[i] = finalTransform;
 	}
-
-	//for (int i = 0; i < m_jointCount; i++)
-		//print_matrix(to_string(i).c_str(), m_currentMatrices[i]);
-
-	
-
-	// draw something with the matrices
 }

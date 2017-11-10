@@ -8,6 +8,7 @@
 #include "AnimatedModel.h"
 #include "GameTime.h"
 
+const int MAX_JOINTS = 70;
 
 class Animator
 {
@@ -15,18 +16,16 @@ public:
 	AnimatedModel* m_pModel;
 	map<std::string, int> m_animationMap;
 
-	int m_jointCount;
 	glm::mat4* m_currentMatrices;
+	int m_jointCount;
 
 	Animator(AnimatedModel* pModel);
 	~Animator();
-
 	void Tick(float deltaTime);
-
-	int DEBUG_MATRIX_CALC = 0;
 
 private:
 	float m_currentTime;
 	glm::mat4* m_modelSpaceTransforms;
+
 	void GetNextPose();
 };
