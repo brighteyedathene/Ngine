@@ -24,14 +24,14 @@ void main()
 							+ (joints[aJointIDs[2]] * aWeights[2])
 							+ (joints[aJointIDs[3]] * aWeights[3]);
 
-	vec4 position = jointTransform * vec4(aPos, 1.0);
-	gl_Position = projectionview * model * position;
+	vec4 vertexPosition = jointTransform * vec4(aPos, 1.0);
+	gl_Position = projectionview * model * vertexPosition;
 
 	//TexCoord0 = aTexCoord;
 	vec4 norm = jointTransform * vec4(aNormal, 0.0);
 	
 	Normal = (model * norm).xyz;
-	FragPos = (model * position).xyz;
+	FragPos = (model * vertexPosition).xyz;
 
 	//Normal = mat3(transpose(inverse(model))) * aNormal;
 	//FragPos = vec3(model * vec4(aPos, 1.0f));

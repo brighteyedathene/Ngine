@@ -133,7 +133,18 @@ glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), scale);
 glm::mat4 jointTransform = transMat * rotationMat * scaleMat;
 
 
+======================================================================================
+Vector of Abstract Objects
+======================================================================================
+https://stackoverflow.com/questions/2160920/why-cant-we-declare-a-stdvectorabstractclass
 
+"You can't instantiate abstract classes, thus a vector of abstract classes can't work.
+
+You can however use a vector of pointers to abstract classes:
+
+	std::vector<IFunnyInterface*> ifVec;
+
+This also allows you to actually use polymorphic behaviour - even if the class wasn't abstract, storing by value would lead to the problem of object slicing."
 
 
 
