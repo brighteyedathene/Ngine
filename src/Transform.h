@@ -29,7 +29,9 @@ public:
 	glm::vec3 Up();
 
 	Transform();
+	Transform(const Transform &transform);
 	~Transform();
+
 
 	std::string ToString();
 

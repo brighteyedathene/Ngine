@@ -37,6 +37,10 @@ void EventHandler::Tick()
 
 		case SDL_MOUSEMOTION:
 			MouseMotionTick(e);
+			break;
+		
+		case SDL_MOUSEWHEEL:
+			MouseWheelTick(e);
 		}
 	}
 }
@@ -74,4 +78,9 @@ void EventHandler::MouseMotionTick(SDL_Event e)
 
 	//std::cout << "pos     " << e.motion.x << ", " << e.motion.y;
 	//std::cout << "       rel     " << e.motion.xrel << ", " << e.motion.yrel << std::endl;
+}
+
+void EventHandler::MouseWheelTick(SDL_Event e)
+{
+	p_input->mouse_wheel_y = e.wheel.y;
 }

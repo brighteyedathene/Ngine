@@ -476,8 +476,14 @@ bool AnimatedModel::InitMaterials(const aiScene* pScene, const string& Filename)
 }
 
 
-void AnimatedModel::Render()
+void AnimatedModel::Draw(Shader* pShader)
 {
+
+	pShader->SetVec3("material.ambient", 1, 1, 1);
+	pShader->SetVec3("material.diffuse", 1, 1, 1);
+	pShader->SetVec3("material.specular", 1, 1, 1);
+	pShader->SetFloat("material.shininess", 10.0f);
+
 	glBindVertexArray(m_VAO);
 	for (MeshEntry mesh : m_Entries)
 	{

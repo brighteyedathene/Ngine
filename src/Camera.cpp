@@ -6,6 +6,7 @@ Camera::Camera(bool orthographic)
 {
 	this->orthographic = orthographic;
 	fov = FOV;
+	orthoScale = ORTHOSCALE;
 	transform.position = glm::vec3(0.0f, 0.0f, -3.0f);
 	transform.rotation = glm::vec3(PITCH, YAW, 0.0f);
 
@@ -35,8 +36,11 @@ glm::mat4 Camera::GetProjectionViewMatrix()
 
 	if (orthographic)
 	{
-		//projection = glm::ortho((float)vp[0], (float)vp[2], (float)vp[1], (float)vp[3], -1.0f, 1.0f);
-		projection = glm::ortho(-1.0f, 2.0f, -1.0f, 2.0f, -10.0f, 10.0f);
+		//projection = glm::ortho(vp[0], vp[2], vp[1], vp[3], -10, 10);
+		//projection = glm::ortho(-1.0f, 2.0f, -1.0f, 2.0f, -10.0f, 10.0f);
+		float orthoWidth = (float)vp[2] * aspect / orthoScale;
+		float orthoHeight = (float)vp[3] * aspect / orthoScale;
+		projection = glm::ortho(-orthoWidth, orthoWidth, -orthoHeight, orthoHeight, -500.0f, 500.0f);
 	}
 	else
 	{

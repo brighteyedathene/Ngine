@@ -38,6 +38,9 @@ void Input::Tick()
 	mouse_xrel = 0;
 	mouse_yrel = 0;
 
+	// flatten mouse wheel
+	mouse_wheel_y = 0;
+
 	for (std::pair<SDL_Scancode, Button> pair : scancodeMap)
 	{
 		const char* keyName = SDL_GetKeyName(SDL_GetKeyFromScancode(pair.first));

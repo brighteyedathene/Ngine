@@ -47,5 +47,18 @@ void CameraController::Tick()
 	}
 
 
+	// Zoom
+	if (p_input->mouse_wheel_y != 0)
+	{
+		if (p_camera->orthographic)
+		{
+			p_camera->orthoScale = std::fmax(1.0f, p_camera->orthoScale + p_input->mouse_wheel_y * SCALESTEP);
+		}
+		else
+		{
+			p_camera->fov = std::fmax(1.0f, p_camera->fov - p_input->mouse_wheel_y * ZOOMSTEP);
+			std::cout << "fov" << p_camera->fov << std::endl;
+		}
+	}
 }
 

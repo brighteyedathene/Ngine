@@ -22,6 +22,7 @@
 #include "AnimatedModel.h"
 #include "Animator.h"
 
+#include "NaiveGameObject.h"
 
 // Macro for indexing vertex buffer (just forwards the value you give it)
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -222,15 +223,22 @@ int main(int argc, char* argv[])
 
 
 	Model bninjaModel(bninjaPath);
-	AnimatedModel animModel;
-	//animModel.LoadMesh(bninjaPath);
-	animModel.LoadMesh(mixamoFBXPATH);
-	Animator animator(&animModel);
+
+	AnimatedModel mixamoModel;
+	mixamoModel.LoadMesh(mixamoFBXPATH);
+
+	AnimatedModel ninjaModel;
+	ninjaModel.LoadMesh(bninjaPath);
+
+	Animator animator(&ninjaModel);
+
+	NaiveGameObject myCharacter;
+	myCharacter.m_pMesh = &ninjaModel;
+	myCharacter.transform.scale = glm::vec3(0.01f);
 
 	Transform litCubeTransform;
 	litCubeTransform.scale = glm::vec3(0.03f);
 	
-
 
 	// Moveing the bear forwards
 	// Why are these 90.0f offsets necessary?
@@ -253,6 +261,7 @@ int main(int argc, char* argv[])
 	input.CreateButtonMapping("calc3", SDL_SCANCODE_3);
 
 	input.CreateButtonMapping("Freeze", SDL_SCANCODE_F);
+	input.CreateButtonMapping("OrthoToggle", SDL_SCANCODE_O);
 	bool freezecam = false;
 
 #pragma region camera_init
@@ -327,12 +336,34 @@ int main(int argc, char* argv[])
 		}
 		
 		// update game objects
+
+		if (input.GetButton("b_Forward"))
+			myCharacter.transform.position += myCharacter.transform.Forward() * 0.05f;
+		if (input.GetButton("b_Backward"))
+			myCharacter.transform.position -= myCharacter.transform.Forward() * 0.05f;
+		if (input.GetButton("b_Left"))
+			myCharacter.transform.rotation.y -= 5.0f;
+		if (input.GetButton("b_Right"))
+			myCharacter.transform.rotation.y += 5.0f;
+		if (input.GetButton("b_Up"))
+			myCharacter.transform.rotation.x -= 5.0f;
+		if (input.GetButton("b_Down"))
+			myCharacter.transform.rotation.x += 5.0f;
+
+
+
 		if (input.GetButtonDown("Freeze"))
 		{
 			freezecam = !freezecam;
+			std::cout << "Camera position: " << mainCamera.transform.ToString() << std::endl;
 		}
 		if(!freezecam)
 			camController.Tick();
+
+		if (input.GetButtonDown("OrthoToggle"))
+		{
+			mainCamera.orthographic = !mainCamera.orthographic;
+		}
 
 		// rendering
 		eye.Bind(0);
@@ -372,6 +403,7 @@ int main(int argc, char* argv[])
 		lightingTestShader.SetVec3("light.position", lightTransform.position);
 		
 		lightingTestShader.SetVec3("viewPos", mainCamera.transform.position);
+		lightingTestShader.SetMat4("projectionview", pv);
 
 		// all materials are the same for now
 		lightingTestShader.SetVec3("material.ambient", 0.1f, 0.1f, 0.4f);
@@ -382,21 +414,18 @@ int main(int argc, char* argv[])
 		// floor
 		lightingTestShader.SetVec3("material.ambient", 0.3f, 0.3f, 0.3f);
 		mvp = pv * floor.GetMatrix();
-		lightingTestShader.SetMat4("mvp", mvp);
 		lightingTestShader.SetMat4("model", floor.GetMatrix());
 		cube.Draw(lightingTestShader);
 
 		lightingTestShader.SetVec3("material.ambient", 0.1f, 0.1f, 0.4f);
 		// rotating cube
 		mvp = pv * litCubeTransform.GetMatrix();
-		lightingTestShader.SetMat4("mvp", mvp);
 		lightingTestShader.SetMat4("model", litCubeTransform.GetMatrix());
 		//cube.Draw(lightingTestShader);
 
 		// still drawing the other object so i don't forget how
 		//mymodelTransform.rotation.z = time*190;
 		mvp = pv * mymodelTransform.GetMatrix();
-		lightingTestShader.SetMat4("mvp", mvp);
 		lightingTestShader.SetMat4("model", mymodelTransform.GetMatrix());
 		//bninjaModel.Draw(lightingTestShader);
 
@@ -406,68 +435,24 @@ int main(int argc, char* argv[])
 		// ANIMATION
 
 		animShader.Use();
+		animShader.SetMat4("projectionview", pv);
+		animShader.SetVec3("viewPos", mainCamera.transform.position);
+
+		animShader.SetVec3("light.position", lightTransform.position);
 		animShader.SetVec3("light.ambient", 0.2f, 0.2f, 0.2f);
 		animShader.SetVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
 		animShader.SetVec3("light.specular", 1.0f, 1.0f, 1.0f);
-		animShader.SetVec3("light.position", lightTransform.position);
-
-		animShader.SetVec3("viewPos", mainCamera.transform.position);
-
-		// all materials are the same for now
-		animShader.SetVec3("material.ambient", 1, 1, 1);
-		animShader.SetVec3("material.diffuse", 1, 1, 1);
-		animShader.SetVec3("material.specular", 1, 1, 1);
-		animShader.SetFloat("material.shininess", 10.0f);
 
 
-		animator.Tick(gameclock.deltaTime*3);
-
+		animator.Tick(gameclock.deltaTime);
 		animShader.SetMat4Array("joints", animator.m_currentMatrices, animator.m_jointCount);
+		myCharacter.Draw(&animShader);
 
-		animShader.SetMat4("projectionview", pv);
-		animShader.SetMat4("model", octobeartran.GetMatrix());
-		animModel.Render();
+		//animShader.SetMat4("model", octobeartran.GetMatrix());
+		//ninjaModel.Draw(&animShader);
 
 
 
-		if (input.GetButton("b_Forward"))
-			octobeartran.position += octobeartran.Forward() * 0.01f;
-		if (input.GetButton("b_Backward"))
-			octobeartran.position -= octobeartran.Forward() * 0.01f;
-		if (input.GetButton("b_Left"))
-			octobeartran.rotation.y -= 5.0f;
-		if (input.GetButton("b_Right"))
-			octobeartran.rotation.y += 5.0f;
-		if (input.GetButton("b_Up"))
-			octobeartran.rotation.x -= 5.0f;
-		if (input.GetButton("b_Down"))
-			octobeartran.rotation.x += 5.0f;
-
-		Transform nin;
-		nin.position = octobeartran.position;
-		nin.rotation = octobeartran.rotation;
-		nin.scale = octobeartran.scale;
-		
-		nin.rotation.y = -octobeartran.rotation.y + 90.0f;
-		nin.rotation.x = -octobeartran.rotation.x;// +90.0f;
-
-		lightingTestShader.Use();
-		lightingTestShader.SetMat4("mvp", pv * nin.GetMatrix());
-		lightingTestShader.SetMat4("model", nin.GetMatrix());
-		//bearModel.Draw(lightingTestShader);
-
-		
-		
-		// smiley cube
-		//shader.Use();
-		//cubeTransform.rotation.y += 360 * gameclock.deltaTime;
-		//cubeTransform.position.y = 2.0f + sin(time)*0.5f;// * clock.deltaTime;
-		//mvp = pv* cubeTransform.GetMatrix();
-		//shader.SetMat4("mvp", mvp);
-		//cube.Draw(shader);
-
-		// swap buffers, check IO events, unbind the vertex array
-		glBindVertexArray(0);
 		
 
 
@@ -475,46 +460,40 @@ int main(int argc, char* argv[])
 		/*-------------------------------------------------------------------*/
 		/*---------------------- CAMERA 4 -----------------------------------*/
 		/*-------------------------------------------------------------------*/
-		glViewport(7 * d_width / 8, 0, d_width, d_height / 8);
-		cam4.transform.position = glm::vec3(-2.0f, 0.0f, -3.0f);
-		cam4.fov = 100;
-		//glScissor( d_width / 2, 0, d_width, d_height / 2);
-		//glEnable(GL_SCISSOR_TEST);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // (or whatever buffer you want to clear)
-		//glDisable(GL_SCISSOR_TEST);
+		//glViewport(3 * d_width / 4, 0, d_width, d_height / 4);
+		glViewport(3 * d_width / 4, 0, d_width / 4, d_height / 4);
+		cam4.transform.position = glm::vec3(0.0f, 20.0f, 0.0f);
+		cam4.transform.rotation.x = -90.0f;
+		cam4.orthoScale = 90;
+		glScissor(3 * d_width / 4, 0, d_width / 4, d_height / 4);
+		glEnable(GL_SCISSOR_TEST);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // (or whatever buffer you want to clear)
+		glDisable(GL_SCISSOR_TEST);
 
 		pv = cam4.GetProjectionViewMatrix();
-		
-		Transform staticLight;
-		staticLight.position = glm::vec3(0, 0, 0);
+		animShader.SetMat4("projectionview", pv);
+		animShader.SetVec3("viewPos", cam4.transform.position);
+
+		myCharacter.Draw(&animShader);
+
+		// Draw floor
+		lightingTestShader.Use();
+		lightingTestShader.SetVec3("viewPos", cam4.transform.position);
+		lightingTestShader.SetMat4("projectionview", pv);
+		lightingTestShader.SetMat4("model", floor.GetMatrix());
+		cube.Draw(lightingTestShader);
+
+
 		// Draw the light
 		lightShader.Use();
 		glBindVertexArray(pyrVAO);
-		mvp = pv * staticLight.GetMatrix();
+		mvp = pv * lightTransform.GetMatrix();
 		lightShader.SetMat4("mvp", mvp);
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
-		
-		lightingTestShader.Use();
-		lightingTestShader.SetVec3("viewPos", cam4.transform.position);
-		lightingTestShader.SetVec3("light.position", staticLight.position);
-		// draw bears
-		for (int i = 0; i < 10; i++)
-		{
-			Transform b;
-			b.scale *= 0.1f;
-			b.position.y = sin((time + i*2) * 2);
-			b.position.x = cos((time + i*2) * 2);
-			
-			b.rotation.y = 180.0f;
-			b.rotation.z = i * 360 / 10;
 
-			mvp = pv * b.GetMatrix();
-			lightingTestShader.SetMat4("mvp", mvp);
-			lightingTestShader.SetMat4("model", b.GetMatrix());
-			//bearModel.Draw(lightingTestShader);
 
-		}
 
+		glBindVertexArray(0);
 		display.Update();
 	}
 

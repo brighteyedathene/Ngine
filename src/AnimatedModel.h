@@ -17,6 +17,8 @@
 #include <assimp/postprocess.h>
 
 #include "SATexture.h"
+#include "IDrawable.h"
+#include "Shader.h" // to conform to IDrawable class :( what am i doing?!
 
 
 // some handy shit from ogldev's thing
@@ -89,14 +91,14 @@ struct Animation
 	void Initialize(int numJoints, int numKeyframes, float duration);
 };
 
-class AnimatedModel
+class AnimatedModel : public IDrawable
 {
 public:
 	AnimatedModel();
 	~AnimatedModel();
 
 	bool LoadMesh(const string& Filename);
-	void Render();
+	void Draw(Shader* pShader);
 	void Clear();
 	
 	Skeleton m_Skeleton;

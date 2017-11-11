@@ -7,6 +7,9 @@
 // Defaults
 const float DEFAULT_MOUSE_SENSITIVITY = 0.5f;
 
+const float ZOOMSTEP = 1;
+const float SCALESTEP = 10;
+
 class CameraController
 {
 public:

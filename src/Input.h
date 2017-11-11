@@ -30,7 +30,8 @@ public:
 	int mouse_x, mouse_y;
 	// movement of mouse this frame
 	int mouse_xrel, mouse_yrel;
-
+	// mouse wheel scrolled this frame (y-axis only for now)
+	int mouse_wheel_y;
 
 	float f_forward;
 	float f_up;

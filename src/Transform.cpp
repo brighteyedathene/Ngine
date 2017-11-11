@@ -8,6 +8,12 @@ Transform::Transform()
 	rotation = glm::vec3(0.0f);
 }
 
+Transform::Transform(const Transform &transform)
+{
+	position = transform.position;
+	rotation = transform.rotation;
+	scale = transform.scale;
+}
 
 Transform::~Transform()
 {

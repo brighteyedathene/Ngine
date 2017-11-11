@@ -24,12 +24,14 @@ const float PITCH = 0.0f;
 const float SPEED = 0.05f;
 const float SENSITIVTY = 2.5f;
 const float FOV = 45.0f;
+const float ORTHOSCALE = 1.0f;
 
 class Camera
 {
 public:
 	bool orthographic;
 	float fov;
+	float orthoScale;
 
 	float nearClipDistance;
 	float farClipDistance;
