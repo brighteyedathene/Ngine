@@ -36,7 +36,7 @@ void Animator::GetNextPose()
 	m_currentTime = fmodf(m_currentTime, anim.duration);
 
 	// Get closest 2 keyframes from animation
-
+	// TODO improve this mess
 	int prev = 0;
 	int next = 1;
 	if (anim.keyframes.size() < 2)
@@ -58,12 +58,6 @@ void Animator::GetNextPose()
 			next = next % anim.keyframes.size();
 		
 	}
-	//if (next > anim.keyframes.size())
-	//{
-	//	// animation is complete
-	//	next = anim.keyframes.size() - 1;
-	//	prev = anim.keyframes.size() - 1; // this is wrong i think
-	//}
 
 	// Interploate between 2 keyframes across all joint poses
 	float difference = anim.keyframes[next].timestamp - anim.keyframes[prev].timestamp;
@@ -76,10 +70,10 @@ void Animator::GetNextPose()
 		if (anim.jointsUsed[i])
 		{
 			glm::vec3 interpos = anim.keyframes[prev].jointPoses[i].position * (1 - alpha)
-				+ anim.keyframes[next].jointPoses[i].position * alpha;
+								 + anim.keyframes[next].jointPoses[i].position * alpha;
 
 			glm::vec3 interscale = anim.keyframes[prev].jointPoses[i].scale * (1 - alpha)
-				+ anim.keyframes[next].jointPoses[i].scale * alpha;
+								   + anim.keyframes[next].jointPoses[i].scale * alpha;
 
 			glm::quat interrot = glm::lerp(anim.keyframes[prev].jointPoses[i].rotation,
 										   anim.keyframes[next].jointPoses[i].rotation,

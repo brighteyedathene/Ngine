@@ -75,9 +75,6 @@ void EventHandler::MouseMotionTick(SDL_Event e)
 	p_input->mouse_y = e.motion.y;
 	p_input->mouse_xrel = e.motion.xrel;
 	p_input->mouse_yrel = e.motion.yrel;
-
-	//std::cout << "pos     " << e.motion.x << ", " << e.motion.y;
-	//std::cout << "       rel     " << e.motion.xrel << ", " << e.motion.yrel << std::endl;
 }
 
 void EventHandler::MouseWheelTick(SDL_Event e)

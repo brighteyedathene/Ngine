@@ -161,7 +161,7 @@ unsigned int CreateCubeVAO()
 #pragma endregion VAO_creation
 
 
-// From this point on, 'display' refers to the Display defined in EngineGlobals.h
+// namespace ngine contains all the paths for assets and some default values for the window
 using namespace ngine;
 
 int DEBUG_jointIndex = 0;
@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
 	EventHandler events(&display, &input);
 
 	// create shader program
-	Shader shader(vertexShaderPath, fragmentShaderPath);
+	Shader unlitTextureShader(vertexShaderPath, fragmentShaderPath);
 	Shader lightingTestShader(lightingTestVertexShaderPath, lightingTestFragmentShaderPath);
 	Shader lightShader(lightVertexShaderPath, lightFragmentShaderPath);
 	Shader animShader(animVertexShaderPath, animFragmentShaderPath);
@@ -184,15 +184,8 @@ int main(int argc, char* argv[])
 	SATexture eye(eyePath);
 
 	// Tell shader where its textures are
-	shader.SetInt("texture1", 0); // OR...
-	glUniform1i(glGetUniformLocation(shader.ID, "texture2"), 1);
-	
-
-	// create meshes (garbage section)
-	// TODO this but better using member variables and shi
-
-	//unsigned int cubeVAO = CreateCubeVAO();
-	//int cubeCount = 36;
+	unlitTextureShader.SetInt("texture1", 0); // OR...
+	glUniform1i(glGetUniformLocation(unlitTextureShader.ID, "texture2"), 1);
 	
 
 	// this will be the light
@@ -221,9 +214,6 @@ int main(int argc, char* argv[])
 	mymodelTransform.scale *= 0.5f;
 
 
-
-	Model bninjaModel(bninjaPath);
-
 	AnimatedModel mixamoModel;
 	mixamoModel.LoadMesh(mixamoFBXPATH);
 
@@ -234,55 +224,36 @@ int main(int argc, char* argv[])
 
 	NaiveGameObject myCharacter;
 	myCharacter.m_pMesh = &ninjaModel;
+	//myCharacter.m_pMesh = &mixamoModel;
 	myCharacter.transform.scale = glm::vec3(0.01f);
 
-	Transform litCubeTransform;
-	litCubeTransform.scale = glm::vec3(0.03f);
+	Transform unlitTexturedCubeTransform;
+	unlitTexturedCubeTransform.scale = glm::vec3(0.03f);
+	unlitTexturedCubeTransform.position = glm::vec3(0.0f, 4.0f, 0.0f);
+	unlitTexturedCubeTransform.rotation = glm::vec3(0.0f, 180.0f, 90.0f);
 	
-
-	// Moveing the bear forwards
-	// Why are these 90.0f offsets necessary?
-
-	Transform octobeartran;
-	octobeartran.rotation.y = -90.0f;
-	//octobeartran.rotation.x = -90.0f;
-	octobeartran.scale = glm::vec3(0.1f);
-
-	input.CreateButtonMapping("b_Forward", SDL_SCANCODE_I);
-	input.CreateButtonMapping("b_Backward", SDL_SCANCODE_K);
-	input.CreateButtonMapping("b_Left", SDL_SCANCODE_J);
-	input.CreateButtonMapping("b_Right", SDL_SCANCODE_L);
-	input.CreateButtonMapping("b_Up", SDL_SCANCODE_Y);
-	input.CreateButtonMapping("b_Down", SDL_SCANCODE_H);
-
-	input.CreateButtonMapping("calc0", SDL_SCANCODE_0);
-	input.CreateButtonMapping("calc1", SDL_SCANCODE_1);
-	input.CreateButtonMapping("calc2", SDL_SCANCODE_2);
-	input.CreateButtonMapping("calc3", SDL_SCANCODE_3);
-
-	input.CreateButtonMapping("Freeze", SDL_SCANCODE_F);
-	input.CreateButtonMapping("OrthoToggle", SDL_SCANCODE_O);
-	bool freezecam = false;
 
 #pragma region camera_init
 
 	Camera mainCamera;
-	mainCamera.transform.position.y = 3.0f;
-	mainCamera.farClipDistance = 100000;
+	mainCamera.transform.position.y = 4.0f;
+	mainCamera.farClipDistance = 1000;
 	CameraController camController(&mainCamera, &input);
+	bool freezecam = false; // TODO move this to camera class and stop SDL from grabbing the mouse
 
-
-	Camera cam4;
-
-
+	Camera topDownCam;
+	topDownCam.orthographic = true;
+	topDownCam.transform.position = glm::vec3(0.0f, 20.0f, 0.0f);
+	topDownCam.transform.rotation.x = -90.0f;
+	topDownCam.orthoScale = 100;
 
 #pragma endregion camera_init
 
 #pragma region button_mapping
 
-	input.CreateButtonMapping("IncreaseSleepTime", SDL_SCANCODE_H);
-	input.CreateButtonMapping("DecreaseSleepTime", SDL_SCANCODE_L);
+	input.CreateButtonMapping("Escape", SDL_SCANCODE_ESCAPE);
 
+	// Camera controls
 	input.CreateButtonMapping("Forward", SDL_SCANCODE_W);
 	input.CreateButtonMapping("Backward", SDL_SCANCODE_S);
 	input.CreateButtonMapping("Left", SDL_SCANCODE_A);
@@ -290,16 +261,31 @@ int main(int argc, char* argv[])
 	input.CreateButtonMapping("Up", SDL_SCANCODE_Z);
 	input.CreateButtonMapping("Down", SDL_SCANCODE_X);
 
-	input.CreateButtonMapping("Escape", SDL_SCANCODE_ESCAPE);
+	input.CreateButtonMapping("Freeze", SDL_SCANCODE_F);
+	input.CreateButtonMapping("OrthoToggle", SDL_SCANCODE_O);
+
+
+	// Controls for moving the model
+	input.CreateButtonMapping("b_Forward", SDL_SCANCODE_I);
+	input.CreateButtonMapping("b_Backward", SDL_SCANCODE_K);
+	input.CreateButtonMapping("b_Left", SDL_SCANCODE_J);
+	input.CreateButtonMapping("b_Right", SDL_SCANCODE_L);
+	input.CreateButtonMapping("b_Up", SDL_SCANCODE_Y);
+	input.CreateButtonMapping("b_Down", SDL_SCANCODE_H);
+
+
+	// Numbers (for debugging mostly)
+	input.CreateButtonMapping("calc0", SDL_SCANCODE_0);
+	input.CreateButtonMapping("calc1", SDL_SCANCODE_1);
+	input.CreateButtonMapping("calc2", SDL_SCANCODE_2);
+	input.CreateButtonMapping("calc3", SDL_SCANCODE_3);
+
 
 	// putting controls stuff here too - maybe move this later
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 #pragma endregion button_mapping
 
-
-
-	float spin = 0;
 	float time = 0;
 
 	// Start the clock just before render loop
@@ -324,19 +310,17 @@ int main(int argc, char* argv[])
 
 
 		time = gameclock.time;
-		float blend = sin(time) / 2 + 0.5f;
 
-		if (spinning)
-		{
-			lightTransform.rotation.y += 360* gameclock.deltaTime;
-			lightTransform.position.y = 1 + sin(spin)/2;
-			lightTransform.position.x = 1.5*sin(spin);
-			lightTransform.position.z = 1.5*cos(spin);
-			spin += gameclock.deltaTime;
-		}
+		// Move the light pyramid around
+		lightTransform.rotation.y += 360* gameclock.deltaTime;
+		lightTransform.position.y = 1 + sin(time)/2;
+		lightTransform.position.x = 1.5*sin(time);
+		lightTransform.position.z = 1.5*cos(time);
 		
-		// update game objects
+		// Spin the textured cube
+		unlitTexturedCubeTransform.rotation.x += gameclock.deltaTime * 90.0f;
 
+		// for now, character movement is handled here...
 		if (input.GetButton("b_Forward"))
 			myCharacter.transform.position += myCharacter.transform.Forward() * 0.05f;
 		if (input.GetButton("b_Backward"))
@@ -351,7 +335,7 @@ int main(int argc, char* argv[])
 			myCharacter.transform.rotation.x += 5.0f;
 
 
-
+		// Handle Camera controls // TODO move this to the camera controller
 		if (input.GetButtonDown("Freeze"))
 		{
 			freezecam = !freezecam;
@@ -379,13 +363,19 @@ int main(int argc, char* argv[])
 		int d_width, d_height;
 		display.GetWindowSize(&d_width, &d_height);
 		/*-------------------------------------------------------------------*/
-		/*---------------------- CAMERA 1 -----------------------------------*/
+		/*-------------------------- MAIN CAMERA ----------------------------*/
 		/*-------------------------------------------------------------------*/
 		glViewport(0, 0, d_width, d_height);
 
 		glPolygonMode(GL_FRONT, GL_FILL);
 
 		glm::mat4 pv = mainCamera.GetProjectionViewMatrix();
+
+		// Draw the textured cube
+		unlitTextureShader.Use();
+		unlitTextureShader.SetMat4("mvp", pv * unlitTexturedCubeTransform.GetMatrix());
+		cube.Draw(unlitTextureShader);
+
 
 		// Draw the light
 		lightShader.Use();
@@ -405,7 +395,7 @@ int main(int argc, char* argv[])
 		lightingTestShader.SetVec3("viewPos", mainCamera.transform.position);
 		lightingTestShader.SetMat4("projectionview", pv);
 
-		// all materials are the same for now
+		// all lit materials are set here for now
 		lightingTestShader.SetVec3("material.ambient", 0.1f, 0.1f, 0.4f);
 		lightingTestShader.SetVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
 		lightingTestShader.SetVec3("material.specular", 0.3, 0.3f, 0.3f);
@@ -417,21 +407,7 @@ int main(int argc, char* argv[])
 		lightingTestShader.SetMat4("model", floor.GetMatrix());
 		cube.Draw(lightingTestShader);
 
-		lightingTestShader.SetVec3("material.ambient", 0.1f, 0.1f, 0.4f);
-		// rotating cube
-		mvp = pv * litCubeTransform.GetMatrix();
-		lightingTestShader.SetMat4("model", litCubeTransform.GetMatrix());
-		//cube.Draw(lightingTestShader);
 
-		// still drawing the other object so i don't forget how
-		//mymodelTransform.rotation.z = time*190;
-		mvp = pv * mymodelTransform.GetMatrix();
-		lightingTestShader.SetMat4("model", mymodelTransform.GetMatrix());
-		//bninjaModel.Draw(lightingTestShader);
-
-		Transform scaler;
-		scaler.scale *= 0.001f;
-		scaler.position = glm::vec3(0.2f, 0.0f, 0.0f);
 		// ANIMATION
 
 		animShader.Use();
@@ -448,37 +424,28 @@ int main(int argc, char* argv[])
 		animShader.SetMat4Array("joints", animator.m_currentMatrices, animator.m_jointCount);
 		myCharacter.Draw(&animShader);
 
-		//animShader.SetMat4("model", octobeartran.GetMatrix());
-		//ninjaModel.Draw(&animShader);
-
-
-
-		
-
 
 
 		/*-------------------------------------------------------------------*/
-		/*---------------------- CAMERA 4 -----------------------------------*/
+		/*---------------------- TOP DOWN CAMERA ----------------------------*/
 		/*-------------------------------------------------------------------*/
-		//glViewport(3 * d_width / 4, 0, d_width, d_height / 4);
 		glViewport(3 * d_width / 4, 0, d_width / 4, d_height / 4);
-		cam4.transform.position = glm::vec3(0.0f, 20.0f, 0.0f);
-		cam4.transform.rotation.x = -90.0f;
-		cam4.orthoScale = 90;
+		
 		glScissor(3 * d_width / 4, 0, d_width / 4, d_height / 4);
 		glEnable(GL_SCISSOR_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // (or whatever buffer you want to clear)
 		glDisable(GL_SCISSOR_TEST);
 
-		pv = cam4.GetProjectionViewMatrix();
+		pv = topDownCam.GetProjectionViewMatrix();
 		animShader.SetMat4("projectionview", pv);
-		animShader.SetVec3("viewPos", cam4.transform.position);
+		animShader.SetVec3("viewPos", topDownCam.transform.position);
 
+		// Draw the animated model (shader is still in use)
 		myCharacter.Draw(&animShader);
 
 		// Draw floor
 		lightingTestShader.Use();
-		lightingTestShader.SetVec3("viewPos", cam4.transform.position);
+		lightingTestShader.SetVec3("viewPos", topDownCam.transform.position);
 		lightingTestShader.SetMat4("projectionview", pv);
 		lightingTestShader.SetMat4("model", floor.GetMatrix());
 		cube.Draw(lightingTestShader);

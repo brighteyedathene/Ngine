@@ -72,18 +72,10 @@ void Skeleton::AddAnimationsFromScene(const aiScene* pScene)
 				std::cout << "X  " << c << "couldn't find this bone in mapping: " << channel->mNodeName.C_Str() << std::endl;
 				continue;
 			}
-			else
-			{
-				std::cout << m_jointMap[channel->mNodeName.C_Str()] << ": " << channel->mNodeName.C_Str() << std::endl;
-			}
 			int jointIndex = m_jointMap[channel->mNodeName.C_Str()];
 			
 			// Mark this joint as used - this means it will use transforms from this animation
 			newAnim.jointsUsed[jointIndex] = true;
-
-			//glm::mat4 origTransform = m_joints[jointIndex].m_localBindTransform;
-			//print_matrix("local bind transform", origTransform);
-
 
 			for (int k = 0; k < channel->mNumPositionKeys; k++)
 			{
@@ -147,14 +139,10 @@ void AnimatedModel::NormalizeSkinWeights(vector<VertexBoneData>& SkinWeights)
 		for (int j = 0; j < NUM_BONES_PER_VEREX; j++)
 		{
 			sum += SkinWeights[i].Weights[j];
-			if (SkinWeights[i].Weights[j] == 0)
-			{
-				//std::cout << i << ": has zero weight for bone: " << SkinWeights[i].IDs[j] << std::endl;
-			}
 		}
 		if (sum == 0)
 		{
-			std::cout << "\nBIG PROBLEM: sheeeit this vertex has no joints!" << std::endl;
+			std::cout << "PROBLEM: a supposedly animated vertex has no joints!" << std::endl;
 			continue;
 		}
 		else if (sum == 1)
@@ -162,10 +150,10 @@ void AnimatedModel::NormalizeSkinWeights(vector<VertexBoneData>& SkinWeights)
 			// everything is fine - weigths add up to one
 			continue;
 		}
-		std::cout << "before " << SkinWeights[i].IDs[0] << ": " << SkinWeights[i].Weights[0] << ", "
-			<< SkinWeights[i].IDs[1] << ": " << SkinWeights[i].Weights[1] << ", "
-			<< SkinWeights[i].IDs[2] << ": " << SkinWeights[i].Weights[2] << ", "
-			<< SkinWeights[i].IDs[3] << ": " << SkinWeights[i].Weights[3] << "     " << sum << std::endl;
+		//std::cout << "before " << SkinWeights[i].IDs[0] << ": " << SkinWeights[i].Weights[0] << ", "
+		//	<< SkinWeights[i].IDs[1] << ": " << SkinWeights[i].Weights[1] << ", "
+		//	<< SkinWeights[i].IDs[2] << ": " << SkinWeights[i].Weights[2] << ", "
+		//	<< SkinWeights[i].IDs[3] << ": " << SkinWeights[i].Weights[3] << "     " << sum << std::endl;
 
 		float normalizer = 1 / sum;
 		float nusum = 0;
@@ -174,10 +162,10 @@ void AnimatedModel::NormalizeSkinWeights(vector<VertexBoneData>& SkinWeights)
 			SkinWeights[i].Weights[j] *= normalizer;
 			nusum += SkinWeights[i].Weights[j];
 		}
-		std::cout << "after  " << SkinWeights[i].IDs[0] << ": " << SkinWeights[i].Weights[0] << ", "
-			<< SkinWeights[i].IDs[1] << ": " << SkinWeights[i].Weights[1] << ", "
-			<< SkinWeights[i].IDs[2] << ": " << SkinWeights[i].Weights[2] << ", "
-			<< SkinWeights[i].IDs[3] << ": " << SkinWeights[i].Weights[3] << "     " << nusum << std::endl;
+		//std::cout << "after  " << SkinWeights[i].IDs[0] << ": " << SkinWeights[i].Weights[0] << ", "
+		//	<< SkinWeights[i].IDs[1] << ": " << SkinWeights[i].Weights[1] << ", "
+		//	<< SkinWeights[i].IDs[2] << ": " << SkinWeights[i].Weights[2] << ", "
+		//	<< SkinWeights[i].IDs[3] << ": " << SkinWeights[i].Weights[3] << "     " << nusum << std::endl;
 	}
 }
 
@@ -300,6 +288,8 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 		InitMesh(i, paiMesh, Positions, Normals, TexCoords, SkinWeights, Indices);
 	}
 
+	//NormalizeSkinWeights(SkinWeights);
+
 	if (!InitMaterials(pScene, Filename))
 	{
 		std::cout << "No materials for animated models yet!" << std::endl;
@@ -367,7 +357,6 @@ void AnimatedModel::InitMesh(unsigned int MeshIndex,
 
 
 	LoadBones(MeshIndex, paiMesh, SkinWeights);
-	//NormalizeSkinWeights(SkinWeights);
 
 	// Populate the index buffer
 	for (unsigned int i = 0; i < paiMesh->mNumFaces; i++)
@@ -384,8 +373,6 @@ void AnimatedModel::InitMesh(unsigned int MeshIndex,
 // assemeble skin and bones
 void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vector<VertexBoneData>& SkinWeights)
 {
-	//m_Skeleton.m_jointCount = pMesh->mNumBones;
-	//m_Skeleton.m_joints.resize(m_Skeleton.m_jointCount);
 	aiNode* pRoot = m_pScene->mRootNode;
 
 	for (unsigned int i = 0; i < pMesh->mNumBones; i++)
@@ -418,7 +405,6 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 			{
 				joint.m_parentIndex = m_Skeleton.m_jointMap[parentName];
 			}
-
 
 			// Set the joint ID
 			joint.m_index = m_NumBones;
@@ -479,6 +465,7 @@ bool AnimatedModel::InitMaterials(const aiScene* pScene, const string& Filename)
 void AnimatedModel::Draw(Shader* pShader)
 {
 
+	// TODO set the mesh's materials here
 	pShader->SetVec3("material.ambient", 1, 1, 1);
 	pShader->SetVec3("material.diffuse", 1, 1, 1);
 	pShader->SetVec3("material.specular", 1, 1, 1);

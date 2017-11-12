@@ -30,14 +30,9 @@ glm::mat4 Camera::GetProjectionViewMatrix()
 	glGetIntegerv(GL_VIEWPORT, vp);
 	float aspect = (float)vp[2] / vp[3];
 
-	//std::cout << "0:" << vp[0] << "  1: "<< vp[1] << "  2: " << vp[2] << "  3:" << vp[3] << std::endl;
-	//char c;
-	//std::cin >> c;
 
 	if (orthographic)
 	{
-		//projection = glm::ortho(vp[0], vp[2], vp[1], vp[3], -10, 10);
-		//projection = glm::ortho(-1.0f, 2.0f, -1.0f, 2.0f, -10.0f, 10.0f);
 		float orthoWidth = (float)vp[2] * aspect / orthoScale;
 		float orthoHeight = (float)vp[3] * aspect / orthoScale;
 		projection = glm::ortho(-orthoWidth, orthoWidth, -orthoHeight, orthoHeight, -500.0f, 500.0f);

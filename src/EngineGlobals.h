@@ -10,8 +10,8 @@
 
 namespace ngine
 {
-	int WINDOW_WIDTH = 900; // initial width
-	int WINDOW_HEIGHT = 600; // initial height
+	int WINDOW_WIDTH = 1280; // initial width
+	int WINDOW_HEIGHT = 720; // initial height
 
 	const GLchar* vertexShaderPath = "./Shaders/shader.vs";
 	const GLchar* fragmentShaderPath = "./Shaders/shader.fs";
@@ -33,7 +33,7 @@ namespace ngine
 
 	const char* bearPath = "./Models/bear/bear.fbx";
 	//const char* bearPath = "./Models/bear/mayabear.obj";
-	const char* bninjaPath = "./Models/bninja/bnin_Idle.dae";
+	const char* bninjaPath = "./Models/bninja/bnin_Wave.dae";
 
 	const char* cubeModelPath = "./Models/cube/cube.obj";
 	
