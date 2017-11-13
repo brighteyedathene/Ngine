@@ -19,7 +19,8 @@
 #include "SATexture.h"
 #include "IDrawable.h"
 #include "Shader.h" // to conform to IDrawable class :( what am i doing?!
-
+#include "Skeleton.h"
+#include "Animation.h"
 
 // some handy shit from ogldev's thing
 #define SAFE_DELETE(p) if (p) { delete p; p = NULL; }
@@ -28,68 +29,7 @@
 
 using namespace std;
 
-struct Animation;
 
-struct Joint
-{
-	// (ModelSpaceParentBindPose * LocalBindPose).inverse()
-	glm::mat4 m_localBindTransform; // transform relative to parent joint
-	glm::mat4 m_modelBindTransform; // sends a vertex from model space to local space
-	const char* m_name;
-	int m_index;
-	int m_parentIndex;
-	
-	vector<Joint> children;
-};
-
-struct Skeleton
-{
-	int m_jointCount;
-	vector<Joint> m_joints;
-	map<string, unsigned int> m_jointMap; // maps a joint name to its index
-
-	map<int, string> m_idMap;
-
-	glm::mat4 m_globalInverseBindTransform;
-
-	vector<Animation> m_animations;
-	map<string, unsigned int> m_animMap;
-
-
-	glm::mat4 GetModelSpaceBindMatrix(int jointIndex);
-	void AddAnimationsFromFile(const string& filename);
-	void AddAnimationsFromScene(const aiScene* pScene);
-};
-
-struct JointPose
-{
-	glm::quat rotation;
-	glm::vec3 position;
-	glm::vec3 scale;
-
-	JointPose()
-	{
-		rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-		position = glm::vec3(0.0f);
-		scale = glm::vec3(1.0f);
-	}
-};
-
-struct Keyframe
-{
-	vector<JointPose> jointPoses;
-	float timestamp;
-};
-
-struct Animation
-{
-	vector<Keyframe> keyframes;
-	vector<bool> jointsUsed;
-	float duration;
-	bool loop;
-
-	void Initialize(int numJoints, int numKeyframes, float duration);
-};
 
 class AnimatedModel : public IDrawable
 {

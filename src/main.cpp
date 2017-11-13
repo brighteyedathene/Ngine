@@ -220,11 +220,12 @@ int main(int argc, char* argv[])
 	AnimatedModel ninjaModel;
 	ninjaModel.LoadMesh(bninjaPath);
 
-	Animator animator(&ninjaModel);
+	//Animator animator(&ninjaModel);
+	Animator animator(&mixamoModel);
 
 	NaiveGameObject myCharacter;
-	myCharacter.m_pMesh = &ninjaModel;
-	//myCharacter.m_pMesh = &mixamoModel;
+	//myCharacter.m_pMesh = &ninjaModel;
+	myCharacter.m_pMesh = &mixamoModel;
 	myCharacter.transform.scale = glm::vec3(0.01f);
 
 	Transform unlitTexturedCubeTransform;
@@ -403,6 +404,7 @@ int main(int argc, char* argv[])
 		
 		// floor
 		lightingTestShader.SetVec3("material.ambient", 0.3f, 0.3f, 0.3f);
+		lightingTestShader.SetVec3("material.specular", 0.0, 0.0f, 0.0f);
 		mvp = pv * floor.GetMatrix();
 		lightingTestShader.SetMat4("model", floor.GetMatrix());
 		cube.Draw(lightingTestShader);

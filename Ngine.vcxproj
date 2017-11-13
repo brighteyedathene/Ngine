@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\NaiveGameObject.cpp" />
     <ClCompile Include="src\AssortedUtils.cpp" />
     <ClCompile Include="src\Animator.cpp" />
@@ -168,9 +169,11 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\SATexture.cpp" />
+    <ClCompile Include="src\Skeleton.cpp" />
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\IDrawable.h" />
     <ClInclude Include="src\NaiveGameObject.h" />
     <ClInclude Include="src\Animator.h" />
@@ -186,6 +189,7 @@
     <ClInclude Include="src\EventHandler.h" />
     <ClInclude Include="src\Input.h" />
     <ClInclude Include="src\Shader.h" />
+    <ClInclude Include="src\Skeleton.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\SATexture.h" />
     <ClInclude Include="src\Transform.h" />
