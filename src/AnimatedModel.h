@@ -16,7 +16,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "SATexture.h"
+#include "Texture.h"
 #include "IDrawable.h"
 #include "Shader.h" // to conform to IDrawable class :( what am i doing?!
 #include "Skeleton.h"
@@ -47,6 +47,7 @@ public:
 private:
 
 #define NUM_BONES_PER_VEREX 4
+#define INVALID_MATERIAL 0xFFFFFFFF
 
 	struct VertexBoneData
 	{
@@ -79,9 +80,6 @@ private:
 		vector<VertexBoneData>& SkinWeights,
 		vector<unsigned int>& Indices);
 	void LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vector<VertexBoneData>& SkinWeights);
-	
-
-#define INVALID_MATERIAL 0xFFFFFFFF
 
 	enum VB_TYPES
 	{
@@ -113,7 +111,7 @@ private:
 	};
 
 	vector<MeshEntry> m_Entries;
-	vector<SATexture*> m_Textures;
+	vector<Texture*> m_Textures; // find the right texture for a MeshEntry using MaterialIndex
 
 	map<string, unsigned int> m_BoneMapping; // maps a bone name to its index
 	unsigned int m_NumBones;

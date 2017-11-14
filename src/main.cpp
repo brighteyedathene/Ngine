@@ -220,12 +220,12 @@ int main(int argc, char* argv[])
 	AnimatedModel ninjaModel;
 	ninjaModel.LoadMesh(bninjaPath);
 
-	//Animator animator(&ninjaModel);
-	Animator animator(&mixamoModel);
+	Animator animator(&ninjaModel);
+	//Animator animator(&mixamoModel);
 
 	NaiveGameObject myCharacter;
-	//myCharacter.m_pMesh = &ninjaModel;
-	myCharacter.m_pMesh = &mixamoModel;
+	myCharacter.m_pMesh = &ninjaModel;
+	//myCharacter.m_pMesh = &mixamoModel;
 	myCharacter.transform.scale = glm::vec3(0.01f);
 
 	Transform unlitTexturedCubeTransform;

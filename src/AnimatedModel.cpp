@@ -195,6 +195,7 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 	{
 		const aiMesh* paiMesh = pScene->mMeshes[i];
 		InitMesh(i, paiMesh, Positions, Normals, TexCoords, SkinWeights, Indices);
+
 	}
 
 	//NormalizeSkinWeights(SkinWeights);
@@ -366,8 +367,59 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 
 bool AnimatedModel::InitMaterials(const aiScene* pScene, const string& Filename)
 {
-	// TODO write this function
-	return false;
+	// Extract the directory part from the file name
+	string::size_type SlashIndex = Filename.find_last_of("/");
+	string dir;
+
+
+	if (SlashIndex == string::npos)
+		dir = ".";
+	else if (SlashIndex == 0)
+		dir = "/";
+	else
+		dir = Filename.substr(0, SlashIndex);
+
+	bool success = true;
+
+	for (unsigned int i = 0; i < pScene->mNumMaterials; i++)
+	{
+		const aiMaterial* pMaterial = pScene->mMaterials[i];
+		m_Textures[i] = NULL;
+
+		cout << dir << ":" << endl;
+		for (int j = 0; j < pMaterial->mNumProperties; j++)
+		{
+			cout << pMaterial->mProperties[j]->mType << " " << pMaterial->mProperties[j]->mKey.C_Str() << endl;
+		}
+
+		if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0)
+		{
+			aiString path;
+
+			if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS)
+			{
+				string p(path.data);
+
+				if (p.substr(0, 2) == ".\\") // Don't know what's happening here really
+					p = p.substr(2, p.size() - 2);
+
+				m_Textures[i] = new Texture;
+				if (m_Textures[i]->LoadFromFile(p.c_str(), dir) == false)
+					success = false;
+
+			}
+		}
+		else
+		{
+			cout << "no diffuse textures found for material #" << i << endl;
+		}
+		if (pMaterial->GetTextureCount(aiTextureType_UNKNOWN) > 0)
+		{
+			cout << "unknown texture type detected!" << endl;
+		}
+		
+	}
+	return success;
 }
 
 
@@ -375,15 +427,21 @@ void AnimatedModel::Draw(Shader* pShader)
 {
 
 	// TODO set the mesh's materials here
-	pShader->SetVec3("material.ambient", 1, 1, 1);
-	pShader->SetVec3("material.diffuse", 0.6, 0.6, 0.6);
-	pShader->SetVec3("material.specular", 1, 1, 1);
-	pShader->SetFloat("material.shininess", 2.0f);
+	//pShader->SetVec3("material.ambient", 1, 1, 1);
+	//pShader->SetVec3("material.diffuse", 0.6, 0.6, 0.6);
+	//pShader->SetVec3("material.specular", 1, 1, 1);
+	//pShader->SetFloat("material.shininess", 2.0f);
 
 	glBindVertexArray(m_VAO);
 	for (MeshEntry mesh : m_Entries)
 	{
 		//TODO bind materials
+		if (m_Textures[mesh.MaterialIndex])
+		{
+			pShader->SetInt("material.diffuse", 0);
+			m_Textures[mesh.MaterialIndex]->Bind(GL_TEXTURE0);
+		}
+		
 
 		glDrawElementsBaseVertex(GL_TRIANGLES, 
 								 mesh.NumIndices,

@@ -6,9 +6,9 @@ layout (location = 2) in vec3 aNormal;
 layout (location = 3) in ivec4 aJointIDs;
 layout (location = 4) in vec4 aWeights;
 
-//out vec2 TexCoord0; // put this in later
 out vec3 Normal;
 out vec3 FragPos;
+out vec2 TexCoords;
 
 const int MAX_JOINTS = 70;
 
@@ -27,7 +27,7 @@ void main()
 	vec4 vertexPosition = jointTransform * vec4(aPos, 1.0);
 	gl_Position = projectionview * model * vertexPosition;
 
-	//TexCoord0 = aTexCoord;
+	TexCoords = aTexCoord;
 	vec4 norm = jointTransform * vec4(aNormal, 0.0);
 	
 	Normal = (model * norm).xyz;

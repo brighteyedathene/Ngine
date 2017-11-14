@@ -33,7 +33,7 @@ namespace ngine
 
 	const char* bearPath = "./Models/bear/bear.fbx";
 	//const char* bearPath = "./Models/bear/mayabear.obj";
-	const char* bninjaPath = "./Models/bninja/bnin_Wave.dae";
+	const char* bninjaPath = "./Models/bninja/bnin_Idle_Textured.dae";
 
 	const char* cubeModelPath = "./Models/cube/cube.obj";
 	

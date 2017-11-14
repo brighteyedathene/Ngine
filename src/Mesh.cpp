@@ -53,7 +53,7 @@ void Mesh::SetupMesh()
 void Mesh::Draw(Shader shader)
 {
 	/*
-	This is a way to get multiple 
+	This is a way to get multiple textures into the shader
 	*/
 	unsigned int diffuseNr = 1;
 	unsigned int specularNr = 1;

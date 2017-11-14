@@ -6,7 +6,9 @@
 #include <glad/glad.h>
 #include <assimp/Importer.hpp>
 
+#include "Texture.h"
 #include "Shader.h"
+
 
 using namespace std;
 
@@ -16,14 +18,6 @@ struct Vertex
 	glm::vec3 Normal;
 	glm::vec2 TexCoords;
 };
-
-struct Texture
-{
-	unsigned int id;
-	std::string type;
-	aiString path;
-};
-
 
 class Mesh
 {

@@ -170,6 +170,7 @@
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\SATexture.cpp" />
     <ClCompile Include="src\Skeleton.cpp" />
+    <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -192,6 +193,7 @@
     <ClInclude Include="src\Skeleton.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\SATexture.h" />
+    <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\Transform.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
