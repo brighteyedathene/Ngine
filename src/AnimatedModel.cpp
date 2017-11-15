@@ -431,6 +431,7 @@ void AnimatedModel::Draw(Shader* pShader)
 	//pShader->SetVec3("material.diffuse", 0.6, 0.6, 0.6);
 	//pShader->SetVec3("material.specular", 1, 1, 1);
 	//pShader->SetFloat("material.shininess", 2.0f);
+	pShader->SetFloat("material.shininess", 10.0f);
 
 	glBindVertexArray(m_VAO);
 	for (MeshEntry mesh : m_Entries)

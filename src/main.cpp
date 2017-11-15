@@ -18,6 +18,7 @@
 #include "CameraController.h"
 #include "Mesh.h"
 #include "Model.h"
+#include "Light.h"
 
 #include "AnimatedModel.h"
 #include "Animator.h"
@@ -191,11 +192,11 @@ int main(int argc, char* argv[])
 	// this will be the light
 	unsigned int pyrVAO = CreatePyramidVAO();
 	int pyrCount = 18;
-	Transform lightTransform;
-	lightTransform.position.x = 0.6f;
-	lightTransform.position.z = 0.1f;
-	lightTransform.position.y = 0.0f;
-	lightTransform.scale = glm::vec3(1.0f) * 0.1f;
+	Light lightPyramid;
+	lightPyramid.ambient = glm::vec3(0.1f, 0.1f, 0.2f);
+	lightPyramid.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+	lightPyramid.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+	lightPyramid.transform.scale *= 0.1f;
 
 	Model cube(cubeModelPath);
 	Transform cubeTransform;
@@ -232,7 +233,7 @@ int main(int argc, char* argv[])
 	unlitTexturedCubeTransform.scale = glm::vec3(0.03f);
 	unlitTexturedCubeTransform.position = glm::vec3(0.0f, 4.0f, 0.0f);
 	unlitTexturedCubeTransform.rotation = glm::vec3(0.0f, 180.0f, 90.0f);
-	
+
 
 #pragma region camera_init
 
@@ -249,6 +250,8 @@ int main(int argc, char* argv[])
 	topDownCam.orthoScale = 100;
 
 #pragma endregion camera_init
+
+
 
 #pragma region button_mapping
 
@@ -313,10 +316,10 @@ int main(int argc, char* argv[])
 		time = gameclock.time;
 
 		// Move the light pyramid around
-		lightTransform.rotation.y += 360* gameclock.deltaTime;
-		lightTransform.position.y = 1 + sin(time)/2;
-		lightTransform.position.x = 1.5*sin(time);
-		lightTransform.position.z = 1.5*cos(time);
+		lightPyramid.transform.rotation.y += 360* gameclock.deltaTime;
+		lightPyramid.transform.position.y = 1 + sin(time)/2;
+		lightPyramid.transform.position.x = 1.5*sin(time);
+		lightPyramid.transform.position.z = 1.5*cos(time);
 		
 		// Spin the textured cube
 		unlitTexturedCubeTransform.rotation.x += gameclock.deltaTime * 90.0f;
@@ -381,17 +384,18 @@ int main(int argc, char* argv[])
 		// Draw the light
 		lightShader.Use();
 		glBindVertexArray(pyrVAO);
-		mvp = pv * lightTransform.GetMatrix();
+		mvp = pv * lightPyramid.transform.GetMatrix();
 		lightShader.SetMat4("mvp", mvp);
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 
 
 		// Now draw the lit objects
 		lightingTestShader.Use();
-		lightingTestShader.SetVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-		lightingTestShader.SetVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
-		lightingTestShader.SetVec3("light.specular", 1.0f, 1.0f, 1.0f);
-		lightingTestShader.SetVec3("light.position", lightTransform.position);
+
+		lightingTestShader.SetVec3("light.position", lightPyramid.transform.position);
+		lightingTestShader.SetVec3("light.ambient",  lightPyramid.ambient);
+		lightingTestShader.SetVec3("light.diffuse",  lightPyramid.diffuse); 
+		lightingTestShader.SetVec3("light.specular", lightPyramid.specular);
 		
 		lightingTestShader.SetVec3("viewPos", mainCamera.transform.position);
 		lightingTestShader.SetMat4("projectionview", pv);
@@ -400,7 +404,7 @@ int main(int argc, char* argv[])
 		lightingTestShader.SetVec3("material.ambient", 0.1f, 0.1f, 0.4f);
 		lightingTestShader.SetVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
 		lightingTestShader.SetVec3("material.specular", 0.3, 0.3f, 0.3f);
-		lightingTestShader.SetFloat("material.shininess", 10.0f);
+		lightingTestShader.SetFloat("material.shininess", 30.0f);
 		
 		// floor
 		lightingTestShader.SetVec3("material.ambient", 0.3f, 0.3f, 0.3f);
@@ -416,11 +420,10 @@ int main(int argc, char* argv[])
 		animShader.SetMat4("projectionview", pv);
 		animShader.SetVec3("viewPos", mainCamera.transform.position);
 
-		animShader.SetVec3("light.position", lightTransform.position);
-		animShader.SetVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-		animShader.SetVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
-		animShader.SetVec3("light.specular", 1.0f, 1.0f, 1.0f);
-
+		animShader.SetVec3("light.position", lightPyramid.transform.position);
+		animShader.SetVec3("light.ambient", lightPyramid.ambient);
+		animShader.SetVec3("light.diffuse", lightPyramid.diffuse);
+		animShader.SetVec3("light.specular", lightPyramid.specular);
 
 		animator.Tick(gameclock.deltaTime);
 		animShader.SetMat4Array("joints", animator.m_currentMatrices, animator.m_jointCount);
@@ -456,7 +459,7 @@ int main(int argc, char* argv[])
 		// Draw the light
 		lightShader.Use();
 		glBindVertexArray(pyrVAO);
-		mvp = pv * lightTransform.GetMatrix();
+		mvp = pv * lightPyramid.transform.GetMatrix();
 		lightShader.SetMat4("mvp", mvp);
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 
