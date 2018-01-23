@@ -22,6 +22,9 @@ namespace ngine
 	const GLchar* animVertexShaderPath = "./Shaders/animShader.vs";
 	const GLchar* animFragmentShaderPath = "./Shaders/animShader.fs";
 
+	const GLchar* flatShaderVertexPath = "./Shaders/flatShader.vs";
+	const GLchar* flatShaderFragmentPath = "./Shaders/flatShader.fs";
+
 	// anim fragment shader is just lightingTestFShader for now
 
 	const GLchar* lightVertexShaderPath = "./Shaders/lightShader.vs";
@@ -33,6 +36,7 @@ namespace ngine
 
 	const char* bearPath = "./Models/bear/bear.fbx";
 	//const char* bearPath = "./Models/bear/mayabear.obj";
+	const char* missilePath = "./Models/missile/missile.obj";
 	const char* bninjaPath = "./Models/bninja/bnin_Idle_Textured.dae";
 
 	const char* cubeModelPath = "./Models/cube/cube.obj";

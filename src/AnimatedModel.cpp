@@ -4,8 +4,8 @@
 #include <limits>
 
 #define POSITION_LOCATION    0
-#define TEX_COORD_LOCATION   1
-#define NORMAL_LOCATION      2
+#define NORMAL_LOCATION      1
+#define TEX_COORD_LOCATION   2
 #define BONE_ID_LOCATION     3
 #define BONE_WEIGHT_LOCATION 4
 
@@ -218,16 +218,16 @@ bool AnimatedModel::InitFromScene(const aiScene* pScene, const string& Filename)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Positions[0]) * Positions.size(), &Positions[0], GL_STATIC_DRAW);
 	glEnableVertexAttribArray(POSITION_LOCATION);
 	glVertexAttribPointer(POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[TEXCOORD_VB]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(TexCoords[0]) * TexCoords.size(), &TexCoords[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(TEX_COORD_LOCATION);
-	glVertexAttribPointer(TEX_COORD_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[NORMAL_VB]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Normals[0]) * Normals.size(), &Normals[0], GL_STATIC_DRAW);
 	glEnableVertexAttribArray(NORMAL_LOCATION);
 	glVertexAttribPointer(NORMAL_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[TEXCOORD_VB]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(TexCoords[0]) * TexCoords.size(), &TexCoords[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(TEX_COORD_LOCATION);
+	glVertexAttribPointer(TEX_COORD_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[BONE_VB]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(SkinWeights) * SkinWeights.size(), &SkinWeights[0], GL_STATIC_DRAW);
@@ -264,7 +264,6 @@ void AnimatedModel::InitMesh(unsigned int MeshIndex,
 		Normals.push_back(glm::vec3(pNormal->x, pNormal->y, pNormal->z));
 		TexCoords.push_back(glm::vec2(pTexCoord->x, pTexCoord->y));
 	}
-
 
 	LoadBones(MeshIndex, paiMesh, SkinWeights);
 
@@ -431,7 +430,7 @@ void AnimatedModel::Draw(Shader* pShader)
 	//pShader->SetVec3("material.diffuse", 0.6, 0.6, 0.6);
 	//pShader->SetVec3("material.specular", 1, 1, 1);
 	//pShader->SetFloat("material.shininess", 2.0f);
-	pShader->SetFloat("material.shininess", 10.0f);
+	pShader->SetFloat("material.shininess", 3.0f);
 
 	glBindVertexArray(m_VAO);
 	for (MeshEntry mesh : m_Entries)

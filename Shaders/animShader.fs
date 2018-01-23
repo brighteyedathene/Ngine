@@ -25,8 +25,9 @@ in vec3 Normal;
 in vec3 FragPos;
 in vec2 TexCoords;
 
+int NUM_SHADES = 1;
 
-void main()
+vec3 NormalShading()
 {
     // ambient
     vec3 ambient = vec3(texture(material.diffuse, TexCoords)) * light.ambient;
@@ -45,13 +46,38 @@ void main()
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 specular = spec * vec3(texture(material.specular, TexCoords)) * light.specular;
 
-    //vec3 result = ambient + diffuse + specular;
     vec3 result = ambient + diffuse + specular;
+    return result;
 
-    //if (spec < 0.01){
-    //    result = vec3(1.0, 0.0, 0.0);
-    //}
-    //result += vec3(2.0, 2.0, 2.0);
+}
+
+
+vec3 FlatShading()
+{
+
+    // light direction and normal
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(light.position - FragPos);
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+
+    // Intensity
+    float amb = 0;
+    float diff = max(dot(norm, lightDir), 0.0);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+
+    float intensity = amb + diff + spec;
+    intensity = ceil(intensity * NUM_SHADES)/NUM_SHADES;
+
+    vec3 result = intensity * vec3(texture(material.diffuse, TexCoords));
+
+    return result;
+
+}
+
+void main()
+{
+	vec3 result = FlatShading();
 
     FragColor = vec4(result, 1.0);
 }

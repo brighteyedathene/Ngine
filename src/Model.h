@@ -9,14 +9,14 @@
 #include <assimp/postprocess.h>
 
 #include "Mesh.h"
+#include "IDrawable.h"
 
-
-class Model
+class Model : public IDrawable
 {
 public:
 	Model(const char* path);
 	~Model();
-	void Draw(Shader shader);
+	void Draw(Shader* pShader);
 private:
 	// model data
 	vector<Mesh> meshes;

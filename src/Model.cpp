@@ -14,10 +14,10 @@ Model::~Model()
 {
 }
 
-void Model::Draw(Shader shader)
+void Model::Draw(Shader* pShader)
 {
 	for (unsigned int i = 0; i < meshes.size(); i++)
-		meshes[i].Draw(shader);
+		meshes[i].Draw(*pShader);
 }
 
 void Model::LoadModel(string path)

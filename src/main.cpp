@@ -179,6 +179,8 @@ int main(int argc, char* argv[])
 	Shader lightingTestShader(lightingTestVertexShaderPath, lightingTestFragmentShaderPath);
 	Shader lightShader(lightVertexShaderPath, lightFragmentShaderPath);
 	Shader animShader(animVertexShaderPath, animFragmentShaderPath);
+	Shader flatShader(flatShaderVertexPath, flatShaderFragmentPath);
+
 
 	SATexture otherTexture(otherTexturePath);
 	SATexture myTexture(texturePath);
@@ -207,16 +209,16 @@ int main(int argc, char* argv[])
 	Transform floor;
 	floor.scale = glm::vec3(20.0f, 0.001f, 20.0f);
 
-	Model bearModel(bearPath);
-	
-	Transform mymodelTransform;
-	mymodelTransform.position = glm::vec3(3.0f, 1.0f, 2.0f);
-	mymodelTransform.rotation.y = 180;
-	mymodelTransform.scale *= 0.5f;
+	Model missileModel(missilePath);
+	NaiveGameObject missile;
+	missile.SetMesh(&missileModel);
+	missile.SetInput(&input);
+	missile.transform.scale = glm::vec3(0.1f);
+	missile.transform.position.y = 1.0f;
 
 
-	AnimatedModel mixamoModel;
-	mixamoModel.LoadMesh(mixamoFBXPATH);
+	//AnimatedModel mixamoModel;
+	//mixamoModel.LoadMesh(mixamoFBXPATH);
 
 	AnimatedModel ninjaModel;
 	ninjaModel.LoadMesh(bninjaPath);
@@ -225,7 +227,8 @@ int main(int argc, char* argv[])
 	//Animator animator(&mixamoModel);
 
 	NaiveGameObject myCharacter;
-	myCharacter.m_pMesh = &ninjaModel;
+	myCharacter.SetMesh(&ninjaModel);
+	myCharacter.SetInput(&input);
 	//myCharacter.m_pMesh = &mixamoModel;
 	myCharacter.transform.scale = glm::vec3(0.01f);
 
@@ -339,11 +342,35 @@ int main(int argc, char* argv[])
 			myCharacter.transform.rotation.x += 5.0f;
 
 
+		// for now, character movement is handled here...
+		if (input.GetButton("b_Forward"))
+			missile.transform.position += missile.transform.Forward() * 0.05f;
+		if (input.GetButton("b_Backward"))
+			missile.transform.position -= missile.transform.Forward() * 0.05f;
+		if (input.GetButton("b_Left"))
+			missile.transform.rotation.y -= 5.0f;
+		if (input.GetButton("b_Right"))
+			missile.transform.rotation.y += 5.0f;
+		if (input.GetButton("b_Up"))
+			missile.transform.rotation.x -= 5.0f;
+		if (input.GetButton("b_Down"))
+			missile.transform.rotation.x += 5.0f;
+
+
+
 		// Handle Camera controls // TODO move this to the camera controller
 		if (input.GetButtonDown("Freeze"))
 		{
 			freezecam = !freezecam;
-			std::cout << "Camera position: " << mainCamera.transform.ToString() << std::endl;
+
+			if (freezecam) 
+			{
+				SDL_SetRelativeMouseMode(SDL_FALSE);
+				std::cout << "Camera position: " << mainCamera.transform.ToString() << std::endl;
+			}
+			else
+				SDL_SetRelativeMouseMode(SDL_TRUE);
+
 		}
 		if(!freezecam)
 			camController.Tick();
@@ -378,7 +405,7 @@ int main(int argc, char* argv[])
 		// Draw the textured cube
 		unlitTextureShader.Use();
 		unlitTextureShader.SetMat4("mvp", pv * unlitTexturedCubeTransform.GetMatrix());
-		cube.Draw(unlitTextureShader);
+		cube.Draw(&unlitTextureShader);
 
 
 		// Draw the light
@@ -390,29 +417,36 @@ int main(int argc, char* argv[])
 
 
 		// Now draw the lit objects
-		lightingTestShader.Use();
+		flatShader.Use();
 
-		lightingTestShader.SetVec3("light.position", lightPyramid.transform.position);
-		lightingTestShader.SetVec3("light.ambient",  lightPyramid.ambient);
-		lightingTestShader.SetVec3("light.diffuse",  lightPyramid.diffuse); 
-		lightingTestShader.SetVec3("light.specular", lightPyramid.specular);
+		flatShader.SetVec3("light.position", lightPyramid.transform.position);
+		flatShader.SetVec3("light.ambient",  lightPyramid.ambient);
+		flatShader.SetVec3("light.diffuse",  lightPyramid.diffuse);
+		flatShader.SetVec3("light.specular", lightPyramid.specular);
 		
-		lightingTestShader.SetVec3("viewPos", mainCamera.transform.position);
-		lightingTestShader.SetMat4("projectionview", pv);
+		flatShader.SetVec3("viewPos", mainCamera.transform.position);
+		flatShader.SetMat4("projectionview", pv);
 
-		// all lit materials are set here for now
-		lightingTestShader.SetVec3("material.ambient", 0.1f, 0.1f, 0.4f);
-		lightingTestShader.SetVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-		lightingTestShader.SetVec3("material.specular", 0.3, 0.3f, 0.3f);
-		lightingTestShader.SetFloat("material.shininess", 30.0f);
-		
 		// floor
-		lightingTestShader.SetVec3("material.ambient", 0.3f, 0.3f, 0.3f);
-		lightingTestShader.SetVec3("material.specular", 0.0, 0.0f, 0.0f);
+		flatShader.SetVec3("material.ambient", 0.3f, 0.3f, 0.3f);
+		flatShader.SetVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+		flatShader.SetVec3("material.specular", 0.0, 0.0f, 0.0f);
+		flatShader.SetFloat("material.shininess", 30.0f);
 		mvp = pv * floor.GetMatrix();
-		lightingTestShader.SetMat4("model", floor.GetMatrix());
-		cube.Draw(lightingTestShader);
+		flatShader.SetMat4("model", floor.GetMatrix());
+		cube.Draw(&flatShader);
 
+
+		// missile
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		flatShader.SetVec3("material.ambient", 0.2f, 0.2f, 0.3f);
+		flatShader.SetVec3("material.diffuse", 0.4f, 0.45f, 0.6f);
+		flatShader.SetVec3("material.specular", 0.8, 0.8f, 0.8f);
+		flatShader.SetFloat("material.shininess", 12.0f);
+
+		mvp = pv * missile.transform.GetMatrix();
+		flatShader.SetMat4("model", missile.transform.GetMatrix());
+		missile.Draw(&flatShader);
 
 		// ANIMATION
 
@@ -427,7 +461,7 @@ int main(int argc, char* argv[])
 
 		animator.Tick(gameclock.deltaTime);
 		animShader.SetMat4Array("joints", animator.m_currentMatrices, animator.m_jointCount);
-		myCharacter.Draw(&animShader);
+		//myCharacter.Draw(&animShader);
 
 
 
@@ -453,7 +487,7 @@ int main(int argc, char* argv[])
 		lightingTestShader.SetVec3("viewPos", topDownCam.transform.position);
 		lightingTestShader.SetMat4("projectionview", pv);
 		lightingTestShader.SetMat4("model", floor.GetMatrix());
-		cube.Draw(lightingTestShader);
+		cube.Draw(&lightingTestShader);
 
 
 		// Draw the light
