@@ -27,21 +27,23 @@ in vec3 FragPos;
 void main()
 {
     // ambient
-    vec3 ambient = material.ambient * light.colour;
+    vec3 ambient = material.ambient;
 
     // light direction and normal
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(light.position - FragPos);
+    vec3 lightDir = light.position - FragPos;
+    float distance = length(lightDir);
+    lightDir = normalize(lightDir);
 
     // diffuse
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * material.diffuse * light.colour;
+    float lambertian = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = lambertian * material.diffuse * light.colour / distance;
 
     // specular
     vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular = spec * material.specular * light.colour;
+    vec3 halfDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(halfDir, norm), 0.0), material.shininess);
+    vec3 specular = spec * material.specular * light.colour / distance;
 
     vec3 result = ambient + diffuse + specular;
 

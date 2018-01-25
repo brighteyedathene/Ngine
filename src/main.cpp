@@ -179,8 +179,10 @@ int main(int argc, char* argv[])
 	Shader lightingTestShader(lightingTestVertexShaderPath, lightingTestFragmentShaderPath);
 	Shader lightShader(lightVertexShaderPath, lightFragmentShaderPath);
 	Shader animShader(animVertexShaderPath, animFragmentShaderPath);
+	
 	Shader flatShader(flatShaderVertexPath, flatShaderFragmentPath);
-
+	Shader blinnPhongShader(blinnPhongShaderVertexPath, blinPhongShaderFragmentPath);
+	Shader minnaertShader(minnaertShaderVertexPath, minnaertShaderFragmentPath);
 
 	SATexture otherTexture(otherTexturePath);
 	SATexture myTexture(texturePath);
@@ -195,20 +197,24 @@ int main(int argc, char* argv[])
 	unsigned int pyrVAO = CreatePyramidVAO();
 	int pyrCount = 18;
 	Light lightPyramid;
-	lightPyramid.ambient = glm::vec3(0.1f, 0.1f, 0.2f);
-	lightPyramid.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
-	lightPyramid.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+	lightPyramid.colour = glm::vec3(1.0f, 1.0f, 1.0f);
 	lightPyramid.transform.scale *= 0.1f;
+	lightPyramid.transform.position = glm::vec3(0.0f, 1.5f, -1.0f);
 
-	Model cube(cubeModelPath);
-	Transform cubeTransform;
-	cubeTransform.position.y = 1.0f;
-	cubeTransform.rotation.x = 90.0f;
-	cubeTransform.scale = glm::vec3(0.01f);
-	
-	Transform floor;
-	floor.scale = glm::vec3(20.0f, 0.001f, 20.0f);
 
+	// Floor object
+	Model cubeModel(cubeModelPath);
+	NaiveGameObject floor;
+	floor.SetMesh(&cubeModel);
+	floor.transform.scale = glm::vec3(20.0f, 0.001f, 20.0f);
+
+	floor.material.ambient = glm::vec3( 0.0f, 0.0f, 0.0f);
+	floor.material.diffuse = glm::vec3( 1.0f, 0.5f, 0.31f);
+	floor.material.specular = glm::vec3( 0.0, 0.0f, 0.0f);
+	floor.material.shininess = 30.0f;
+
+
+	// Missile object
 	Model missileModel(missilePath);
 	NaiveGameObject missile;
 	missile.SetMesh(&missileModel);
@@ -216,26 +222,24 @@ int main(int argc, char* argv[])
 	missile.transform.scale = glm::vec3(0.1f);
 	missile.transform.position.y = 1.0f;
 
+	missile.material.ambient = glm::vec3(0.2f, 0.2f, 0.3f);
+	missile.material.diffuse = glm::vec3(0.4f, 0.45f, 0.6f);
+	missile.material.specular = glm::vec3(0.8, 0.8f, 0.8f);
+	missile.material.shininess = 12.0f;
 
-	//AnimatedModel mixamoModel;
-	//mixamoModel.LoadMesh(mixamoFBXPATH);
 
-	AnimatedModel ninjaModel;
-	ninjaModel.LoadMesh(bninjaPath);
+	// Skull object
+	Model skullModel(skullPath);
+	NaiveGameObject skull;
+	skull.SetMesh(&skullModel);
+	skull.SetInput(&input);
+	skull.transform.scale = glm::vec3(0.5f);
+	skull.transform.position.y = 2.0f;
 
-	Animator animator(&ninjaModel);
-	//Animator animator(&mixamoModel);
-
-	NaiveGameObject myCharacter;
-	myCharacter.SetMesh(&ninjaModel);
-	myCharacter.SetInput(&input);
-	//myCharacter.m_pMesh = &mixamoModel;
-	myCharacter.transform.scale = glm::vec3(0.01f);
-
-	Transform unlitTexturedCubeTransform;
-	unlitTexturedCubeTransform.scale = glm::vec3(0.03f);
-	unlitTexturedCubeTransform.position = glm::vec3(0.0f, 4.0f, 0.0f);
-	unlitTexturedCubeTransform.rotation = glm::vec3(0.0f, 180.0f, 90.0f);
+	skull.material.ambient = glm::vec3(0.2f, 0.15f, 0.1f);
+	skull.material.diffuse = glm::vec3(0.9f, 0.7f, 0.5f);
+	skull.material.specular = glm::vec3(0.8, 0.8f, 0.8f);
+	skull.material.shininess = 12.0f;
 
 
 #pragma region camera_init
@@ -244,13 +248,12 @@ int main(int argc, char* argv[])
 	mainCamera.transform.position.y = 4.0f;
 	mainCamera.farClipDistance = 1000;
 	CameraController camController(&mainCamera, &input);
-	bool freezecam = false; // TODO move this to camera class and stop SDL from grabbing the mouse
+	bool freezecam = false; // TODO move this to camera class						
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 
-	Camera topDownCam;
-	topDownCam.orthographic = true;
-	topDownCam.transform.position = glm::vec3(0.0f, 20.0f, 0.0f);
-	topDownCam.transform.rotation.x = -90.0f;
-	topDownCam.orthoScale = 100;
+	// set up camera for shader showcase
+	mainCamera.transform.rotation = glm::vec3(-25, 148, 0.0);
+	mainCamera.transform.position = glm::vec3(1.5, 1.8, -0.9);
 
 #pragma endregion camera_init
 
@@ -269,27 +272,41 @@ int main(int argc, char* argv[])
 	input.CreateButtonMapping("Down", SDL_SCANCODE_X);
 
 	input.CreateButtonMapping("Freeze", SDL_SCANCODE_F);
-	input.CreateButtonMapping("OrthoToggle", SDL_SCANCODE_O);
+	input.CreateButtonMapping("OrthoToggle", SDL_SCANCODE_P);
 
 
-	// Controls for moving the model
+	// Controls for moving the model directly
 	input.CreateButtonMapping("b_Forward", SDL_SCANCODE_I);
 	input.CreateButtonMapping("b_Backward", SDL_SCANCODE_K);
-	input.CreateButtonMapping("b_Left", SDL_SCANCODE_J);
-	input.CreateButtonMapping("b_Right", SDL_SCANCODE_L);
-	input.CreateButtonMapping("b_Up", SDL_SCANCODE_Y);
-	input.CreateButtonMapping("b_Down", SDL_SCANCODE_H);
+	input.CreateButtonMapping("b_YawLeft", SDL_SCANCODE_J);
+	input.CreateButtonMapping("b_YawRight", SDL_SCANCODE_L);
+	input.CreateButtonMapping("b_PitchUp", SDL_SCANCODE_Y);
+	input.CreateButtonMapping("b_PitchDown", SDL_SCANCODE_H);
+	input.CreateButtonMapping("b_RollLeft", SDL_SCANCODE_U);
+	input.CreateButtonMapping("b_RollRight", SDL_SCANCODE_O);
 
 
-	// Numbers (for debugging mostly)
-	input.CreateButtonMapping("calc0", SDL_SCANCODE_0);
-	input.CreateButtonMapping("calc1", SDL_SCANCODE_1);
-	input.CreateButtonMapping("calc2", SDL_SCANCODE_2);
-	input.CreateButtonMapping("calc3", SDL_SCANCODE_3);
+	// Shader switches
+	input.CreateButtonMapping("shininess+", SDL_SCANCODE_3);
+	input.CreateButtonMapping("shininess-", SDL_SCANCODE_4);
+	input.CreateButtonMapping("numShades+", SDL_SCANCODE_1);
+	input.CreateButtonMapping("numShades-", SDL_SCANCODE_2);
+	input.CreateButtonMapping("specularCoefficient+", SDL_SCANCODE_5);
+	input.CreateButtonMapping("specularCoefficient-", SDL_SCANCODE_6);
+	input.CreateButtonMapping("darkenCoefficient+", SDL_SCANCODE_7);
+	input.CreateButtonMapping("darkenCoefficient-", SDL_SCANCODE_8);
 
+	int param_numShades = 2;
+	float param_shininess = 32.0;
+	float param_specularCoefficient = 1.0;
+	float param_darkenCoefficient = 1.0;
 
-	// putting controls stuff here too - maybe move this later
-	SDL_SetRelativeMouseMode(SDL_TRUE);
+	// Toggle automatic movement for showcase
+	input.CreateButtonMapping("toggleMovingLight", SDL_SCANCODE_T);
+	input.CreateButtonMapping("toggleMovingModel", SDL_SCANCODE_R);
+	bool movingLight = false;
+	bool movingModel = true;
+
 
 #pragma endregion button_mapping
 
@@ -318,45 +335,69 @@ int main(int argc, char* argv[])
 
 		time = gameclock.time;
 
-		// Move the light pyramid around
-		lightPyramid.transform.rotation.y += 360* gameclock.deltaTime;
-		lightPyramid.transform.position.y = 1 + sin(time)/2;
-		lightPyramid.transform.position.x = 1.5*sin(time);
-		lightPyramid.transform.position.z = 1.5*cos(time);
-		
-		// Spin the textured cube
-		unlitTexturedCubeTransform.rotation.x += gameclock.deltaTime * 90.0f;
-
-		// for now, character movement is handled here...
-		if (input.GetButton("b_Forward"))
-			myCharacter.transform.position += myCharacter.transform.Forward() * 0.05f;
-		if (input.GetButton("b_Backward"))
-			myCharacter.transform.position -= myCharacter.transform.Forward() * 0.05f;
-		if (input.GetButton("b_Left"))
-			myCharacter.transform.rotation.y -= 5.0f;
-		if (input.GetButton("b_Right"))
-			myCharacter.transform.rotation.y += 5.0f;
-		if (input.GetButton("b_Up"))
-			myCharacter.transform.rotation.x -= 5.0f;
-		if (input.GetButton("b_Down"))
-			myCharacter.transform.rotation.x += 5.0f;
-
 
 		// for now, character movement is handled here...
 		if (input.GetButton("b_Forward"))
 			missile.transform.position += missile.transform.Forward() * 0.05f;
 		if (input.GetButton("b_Backward"))
 			missile.transform.position -= missile.transform.Forward() * 0.05f;
-		if (input.GetButton("b_Left"))
+		if (input.GetButton("b_YawLeft"))
 			missile.transform.rotation.y -= 5.0f;
-		if (input.GetButton("b_Right"))
+		if (input.GetButton("b_YawRight"))
 			missile.transform.rotation.y += 5.0f;
-		if (input.GetButton("b_Up"))
+		if (input.GetButton("b_PitchUp"))
 			missile.transform.rotation.x -= 5.0f;
-		if (input.GetButton("b_Down"))
+		if (input.GetButton("b_PitchDown"))
 			missile.transform.rotation.x += 5.0f;
+		if (input.GetButton("b_RollLeft"))
+			missile.transform.rotation.z -= 5.0f;
+		if (input.GetButton("b_RollRight"))
+			missile.transform.rotation.z += 5.0f;
 
 
+		// Update shader parameters
+		// flat shader shades
+		if (input.GetButtonDown("numShades+")) {
+			param_numShades += 1;
+			std::cout << "NumShades: " << param_numShades << std::endl;
+		}
+		if (input.GetButtonDown("numShades-")) {
+			param_numShades = max(1, param_numShades - 1);
+			std::cout << "NumShades: " << param_numShades << std::endl;
+		}
+		// shininess exponent
+		if (input.GetButtonDown("shininess+")) {
+			param_shininess *= 2;
+			std::cout << "Shininess: " << param_shininess << std::endl;
+		}
+		if (input.GetButtonDown("shininess-")) {
+			param_shininess /= 2;
+			std::cout << "Shininess: " << param_shininess << std::endl;
+		}
+		// material's specular component
+		if (input.GetButtonDown("specularCoefficient+")) {
+			param_specularCoefficient *= 1.2;
+			std::cout << "SpecularCoefficient: " << param_specularCoefficient << std::endl;
+		}
+		if (input.GetButtonDown("specularCoefficient-")) {
+			param_specularCoefficient *= 0.8;
+			std::cout << "SpecularCoefficient: " << param_specularCoefficient << std::endl;
+		}
+		// minneart darken coefficient
+		if (input.GetButtonDown("darkenCoefficient+")) {
+			param_darkenCoefficient *= 1.2;
+			std::cout << "darkenCoefficient: " << param_darkenCoefficient << std::endl;
+		}
+		if (input.GetButtonDown("darkenCoefficient-")) {
+			param_darkenCoefficient *= 0.8;
+			std::cout << "darkenCoefficient: " << param_darkenCoefficient << std::endl;
+		}
+
+		// Toggle showcase movement
+		if (input.GetButtonDown("toggleMovingLight"))
+			movingLight = !movingLight;
+		if (input.GetButtonDown("toggleMovingModel"))
+			movingModel = !movingModel;
 
 		// Handle Camera controls // TODO move this to the camera controller
 		if (input.GetButtonDown("Freeze"))
@@ -380,12 +421,28 @@ int main(int argc, char* argv[])
 			mainCamera.orthographic = !mainCamera.orthographic;
 		}
 
+
+		// Move the light pyramid around
+		if (movingLight) {
+			lightPyramid.transform.rotation.y += 360* gameclock.deltaTime;
+			lightPyramid.transform.position.y = sin(time)/2;
+			lightPyramid.transform.position.x = 1.5*sin(time);
+			lightPyramid.transform.position.z = 1.5*cos(time);
+		}
+		
+		// Rotate the models
+		if (movingModel) {
+			skull.transform.rotation.y += gameclock.deltaTime*2;
+			missile.transform.rotation.y += gameclock.deltaTime*2;
+		}
+
+
 		// rendering
 		eye.Bind(0);
 		otherTexture.Bind(1);
 
 		glm::mat4 mvp; // more from this later
-
+		glm::mat4 pv = mainCamera.GetProjectionViewMatrix();
 
 
 		/*-------------------------------------------------------------------*/
@@ -394,25 +451,51 @@ int main(int argc, char* argv[])
 		int d_width, d_height;
 		display.GetWindowSize(&d_width, &d_height);
 		/*-------------------------------------------------------------------*/
-		/*-------------------------- MAIN CAMERA ----------------------------*/
+		/*-------------------------- Blinn/Phong ----------------------------*/
 		/*-------------------------------------------------------------------*/
-		glViewport(0, 0, d_width, d_height);
-
-		glPolygonMode(GL_FRONT, GL_FILL);
-
-		glm::mat4 pv = mainCamera.GetProjectionViewMatrix();
-
-		// Draw the textured cube
-		unlitTextureShader.Use();
-		unlitTextureShader.SetMat4("mvp", pv * unlitTexturedCubeTransform.GetMatrix());
-		cube.Draw(&unlitTextureShader);
-
+		glViewport(0, 0, (d_width/3) -1, d_height);
 
 		// Draw the light
 		lightShader.Use();
 		glBindVertexArray(pyrVAO);
 		mvp = pv * lightPyramid.transform.GetMatrix();
 		lightShader.SetMat4("mvp", mvp);
+		lightShader.SetVec3("ucolour", lightPyramid.colour);
+		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
+
+
+		// Now draw the lit objects
+		blinnPhongShader.Use();
+
+		blinnPhongShader.SetVec3("light.position", lightPyramid.transform.position);
+		blinnPhongShader.SetVec3("light.colour",  lightPyramid.colour);
+		blinnPhongShader.SetVec3("viewPos", mainCamera.transform.position);
+		blinnPhongShader.SetMat4("projectionview", pv);
+
+		// floor
+		floor.Draw(&blinnPhongShader);
+
+		// missile
+		missile.material.specular = glm::vec3(param_specularCoefficient);
+		missile.material.shininess = param_shininess;
+		missile.Draw(&blinnPhongShader);
+
+		// skull
+		skull.material.specular = glm::vec3(param_specularCoefficient);
+		skull.material.shininess = param_shininess;
+		skull.Draw(&blinnPhongShader);
+
+		/*-------------------------------------------------------------------*/
+		/*------------------------- Flat Shader -----------------------------*/
+		/*-------------------------------------------------------------------*/
+		glViewport(d_width/3, 0, (d_width / 3) - 1, d_height);
+
+		// Draw the light
+		lightShader.Use();
+		glBindVertexArray(pyrVAO);
+		mvp = pv * lightPyramid.transform.GetMatrix();
+		lightShader.SetMat4("mvp", mvp);
+		lightShader.SetVec3("ucolour", lightPyramid.colour);
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 
 
@@ -420,75 +503,30 @@ int main(int argc, char* argv[])
 		flatShader.Use();
 
 		flatShader.SetVec3("light.position", lightPyramid.transform.position);
-		flatShader.SetVec3("light.ambient",  lightPyramid.ambient);
-		flatShader.SetVec3("light.diffuse",  lightPyramid.diffuse);
-		flatShader.SetVec3("light.specular", lightPyramid.specular);
-		
+		flatShader.SetVec3("light.colour", lightPyramid.colour);
 		flatShader.SetVec3("viewPos", mainCamera.transform.position);
 		flatShader.SetMat4("projectionview", pv);
 
-		// floor
-		flatShader.SetVec3("material.ambient", 0.3f, 0.3f, 0.3f);
-		flatShader.SetVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-		flatShader.SetVec3("material.specular", 0.0, 0.0f, 0.0f);
-		flatShader.SetFloat("material.shininess", 30.0f);
-		mvp = pv * floor.GetMatrix();
-		flatShader.SetMat4("model", floor.GetMatrix());
-		cube.Draw(&flatShader);
+		// set the shader-specific parameters
+		flatShader.SetInt("numShades", param_numShades);
 
+		// floor
+		floor.Draw(&flatShader);
 
 		// missile
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		flatShader.SetVec3("material.ambient", 0.2f, 0.2f, 0.3f);
-		flatShader.SetVec3("material.diffuse", 0.4f, 0.45f, 0.6f);
-		flatShader.SetVec3("material.specular", 0.8, 0.8f, 0.8f);
-		flatShader.SetFloat("material.shininess", 12.0f);
-
-		mvp = pv * missile.transform.GetMatrix();
-		flatShader.SetMat4("model", missile.transform.GetMatrix());
+		missile.material.specular = glm::vec3(param_specularCoefficient);
+		missile.material.shininess = param_shininess;
 		missile.Draw(&flatShader);
 
-		// ANIMATION
-
-		animShader.Use();
-		animShader.SetMat4("projectionview", pv);
-		animShader.SetVec3("viewPos", mainCamera.transform.position);
-
-		animShader.SetVec3("light.position", lightPyramid.transform.position);
-		animShader.SetVec3("light.ambient", lightPyramid.ambient);
-		animShader.SetVec3("light.diffuse", lightPyramid.diffuse);
-		animShader.SetVec3("light.specular", lightPyramid.specular);
-
-		animator.Tick(gameclock.deltaTime);
-		animShader.SetMat4Array("joints", animator.m_currentMatrices, animator.m_jointCount);
-		//myCharacter.Draw(&animShader);
-
-
+		// skull
+		skull.material.specular = glm::vec3(param_specularCoefficient);
+		skull.material.shininess = param_shininess;
+		skull.Draw(&flatShader);
 
 		/*-------------------------------------------------------------------*/
-		/*---------------------- TOP DOWN CAMERA ----------------------------*/
+		/*----------------------- Minnaert Shader ---------------------------*/
 		/*-------------------------------------------------------------------*/
-		glViewport(3 * d_width / 4, 0, d_width / 4, d_height / 4);
-		
-		glScissor(3 * d_width / 4, 0, d_width / 4, d_height / 4);
-		glEnable(GL_SCISSOR_TEST);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // (or whatever buffer you want to clear)
-		glDisable(GL_SCISSOR_TEST);
-
-		pv = topDownCam.GetProjectionViewMatrix();
-		animShader.SetMat4("projectionview", pv);
-		animShader.SetVec3("viewPos", topDownCam.transform.position);
-
-		// Draw the animated model (shader is still in use)
-		myCharacter.Draw(&animShader);
-
-		// Draw floor
-		lightingTestShader.Use();
-		lightingTestShader.SetVec3("viewPos", topDownCam.transform.position);
-		lightingTestShader.SetMat4("projectionview", pv);
-		lightingTestShader.SetMat4("model", floor.GetMatrix());
-		cube.Draw(&lightingTestShader);
-
+		glViewport(2* d_width / 3, 0, (d_width / 3) - 1, d_height);
 
 		// Draw the light
 		lightShader.Use();
@@ -497,7 +535,29 @@ int main(int argc, char* argv[])
 		lightShader.SetMat4("mvp", mvp);
 		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 
+		// Now draw the lit objects
+		minnaertShader.Use();
 
+		minnaertShader.SetVec3("light.position", lightPyramid.transform.position);
+		minnaertShader.SetVec3("light.colour", lightPyramid.colour);
+		minnaertShader.SetVec3("viewPos", mainCamera.transform.position);
+		minnaertShader.SetMat4("projectionview", pv);
+
+		// set the shader-specific parameters
+		minnaertShader.SetFloat("darkenCoefficient", param_darkenCoefficient);
+
+		// floor
+		floor.Draw(&minnaertShader);
+
+		// missile
+		missile.material.specular = glm::vec3(param_specularCoefficient);
+		missile.material.shininess = param_shininess;
+		missile.Draw(&minnaertShader);
+
+		// skull
+		skull.material.specular = glm::vec3(param_specularCoefficient);
+		skull.material.shininess = param_shininess;
+		skull.Draw(&minnaertShader);
 
 		glBindVertexArray(0);
 		display.Update();

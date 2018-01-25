@@ -25,6 +25,12 @@ namespace ngine
 	const GLchar* flatShaderVertexPath = "./Shaders/flatShader.vs";
 	const GLchar* flatShaderFragmentPath = "./Shaders/flatShader.fs";
 
+	const GLchar* blinnPhongShaderVertexPath = "./Shaders/blinnPhong.vs";
+	const GLchar* blinPhongShaderFragmentPath = "./Shaders/blinnPhong.fs";
+
+	const GLchar* minnaertShaderVertexPath = "./Shaders/minnaertShader.vs";
+	const GLchar* minnaertShaderFragmentPath = "./Shaders/minnaertShader.fs";
+
 	// anim fragment shader is just lightingTestFShader for now
 
 	const GLchar* lightVertexShaderPath = "./Shaders/lightShader.vs";
@@ -37,6 +43,7 @@ namespace ngine
 	const char* bearPath = "./Models/bear/bear.fbx";
 	//const char* bearPath = "./Models/bear/mayabear.obj";
 	const char* missilePath = "./Models/missile/missile.obj";
+	const char* skullPath = "./Models/skull/skull.obj"; // obtained from https://sketchfab.com/models/1a9db900738d44298b0bc59f68123393#
 	const char* bninjaPath = "./Models/bninja/bnin_Idle_Textured.dae";
 
 	const char* cubeModelPath = "./Models/cube/cube.obj";

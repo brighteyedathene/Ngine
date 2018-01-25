@@ -2,13 +2,8 @@
 
 out vec4 FragColor;
  
-struct TextureMaterial {
-    sampler2D diffuse;
-    sampler2D specular;
-    float shininess;
-}; 
-
 struct Material {
+    vec3 ambient;
     vec3 diffuse;
     vec3 specular;
     float shininess;
@@ -20,42 +15,34 @@ struct Light {
 };
 
 uniform Material material;
-uniform Light light;
+uniform Light light;  
  
 uniform vec3 objectColor;
 uniform vec3 viewPos;
-uniform int numShades;
+
+uniform float darkenCoefficient;
 
 in vec3 Normal;
 in vec3 FragPos;
-in vec2 TexCoords;
 
-vec3 FlatShading()
+
+void main()
 {
     // light direction and normal
     vec3 norm = normalize(Normal);
     vec3 lightDir = light.position - FragPos;
     float distance = length(lightDir);
     lightDir = normalize(lightDir);
+
     vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
 
-    // Intensity
-    float amb = 0;
-    float diff = max(dot(norm, lightDir), 0.0);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    // minnaert
+    float nDotL = dot(norm, lightDir);
+    float nDotE = dot(norm, viewDir);
 
-    float intensity = amb + (diff + spec)/distance;
-    intensity = max(0.2, ceil(intensity * numShades)/numShades);
+    float intensity = clamp(nDotL, 0.0, 1.0) * pow(nDotL * nDotE, darkenCoefficient) / distance;
 
     vec3 result = intensity * material.diffuse * light.colour;
-
-    return result;
-}
-
-void main()
-{
-	vec3 result = FlatShading();
 
     FragColor = vec4(result, 1.0);
 }
