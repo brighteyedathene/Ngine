@@ -28,6 +28,9 @@ in vec3 FragPos;
 
 void main()
 {
+    // ambient
+    vec3 ambient = material.ambient;
+
     // light direction and normal
     vec3 norm = normalize(Normal);
     vec3 lightDir = light.position - FragPos;
@@ -40,9 +43,9 @@ void main()
     float nDotL = dot(norm, lightDir);
     float nDotE = dot(norm, viewDir);
 
-    float intensity = clamp(nDotL, 0.0, 1.0) * pow(nDotL * nDotE, darkenCoefficient) / distance;
+    float intensity = max(clamp(nDotL, 0.0, 1.0) * pow(nDotL * nDotE, darkenCoefficient) / distance, 0);
 
-    vec3 result = intensity * material.diffuse * light.colour;
+    vec3 result = ambient + intensity * material.diffuse * light.colour;
 
     FragColor = vec4(result, 1.0);
 }

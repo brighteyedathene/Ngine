@@ -425,7 +425,7 @@ int main(int argc, char* argv[])
 		// Move the light pyramid around
 		if (movingLight) {
 			lightPyramid.transform.rotation.y += 360* gameclock.deltaTime;
-			lightPyramid.transform.position.y = sin(time)/2;
+			lightPyramid.transform.position.y = 1 + sin(time)/2;
 			lightPyramid.transform.position.x = 1.5*sin(time);
 			lightPyramid.transform.position.z = 1.5*cos(time);
 		}
