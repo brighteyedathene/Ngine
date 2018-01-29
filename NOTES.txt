@@ -148,4 +148,28 @@ This also allows you to actually use polymorphic behaviour - even if the class w
 
 
 
+======================================================================================
+Animator
+======================================================================================
+// Setup
+AnimatedModel ninjaModel;
+ninjaModel.LoadMesh(bninjaPath);
+Animator animator(&ninjaModel);
+NaiveGameObject myCharacter;
+myCharacter.SetMesh(&ninjaModel);
+myCharacter.SetInput(&input);
+myCharacter.transform.scale = glm::vec3(0.01f);
+
+// In rendering loop
+animShader.Use();
+animShader.SetMat4("projectionview", pv);
+animShader.SetVec3("viewPos", mainCamera.transform.position);
+animShader.SetVec3("light.position", lightPyramid.transform.position);
+animShader.SetVec3("light.ambient", lightPyramid.ambient);
+animShader.SetVec3("light.diffuse", lightPyramid.diffuse);
+animShader.SetVec3("light.specular", lightPyramid.specular);
+animator.Tick(gameclock.deltaTime);
+animShader.SetMat4Array("joints", animator.m_currentMatrices, animator.m_jointCount);
+myCharacter.Draw(&animShader);
+
 
