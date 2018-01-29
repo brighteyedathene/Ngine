@@ -16,9 +16,7 @@ struct Material {
 
 struct Light {
     vec3 position;
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
+    vec3 colour;
 };
 
 uniform Material material;
@@ -26,19 +24,19 @@ uniform Light light;
  
 uniform vec3 objectColor;
 uniform vec3 viewPos;
+uniform int numShades;
 
 in vec3 Normal;
 in vec3 FragPos;
 in vec2 TexCoords;
 
-int NUM_SHADES = 2;
-
 vec3 FlatShading()
 {
-
     // light direction and normal
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(light.position - FragPos);
+    vec3 lightDir = light.position - FragPos;
+    float distance = length(lightDir);
+    lightDir = normalize(lightDir);
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
 
@@ -47,13 +45,12 @@ vec3 FlatShading()
     float diff = max(dot(norm, lightDir), 0.0);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
 
-    float intensity = amb + diff + spec;
-    intensity = max(0.2, ceil(intensity * NUM_SHADES)/NUM_SHADES);
+    float intensity = amb + (diff + spec)/distance;
+    intensity = max(0.2, ceil(intensity * numShades)/numShades);
 
-    vec3 result = intensity * material.diffuse;
+    vec3 result = intensity * material.diffuse * light.colour;
 
     return result;
-
 }
 
 void main()

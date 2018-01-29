@@ -4,6 +4,7 @@
 
 #include "Transform.h"
 #include "Shader.h"
+#include "Material.h"
 #include "Input.h"
 #include "IDrawable.h"
 
@@ -11,6 +12,7 @@ class NaiveGameObject
 {
 public:
 	Transform transform;
+	Material material;
 
 	NaiveGameObject();
 	~NaiveGameObject();

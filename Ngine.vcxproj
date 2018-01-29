@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\NaiveGameObject.cpp" />
     <ClCompile Include="src\AssortedUtils.cpp" />
@@ -174,6 +175,7 @@
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\IDrawable.h" />
     <ClInclude Include="src\NaiveGameObject.h" />
