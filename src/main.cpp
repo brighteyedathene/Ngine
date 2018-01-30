@@ -220,7 +220,7 @@ int main(int argc, char* argv[])
 	missile.SetMesh(&missileModel);
 	missile.SetInput(&input);
 	//missile.transform.scale = glm::vec3(0.1f);
-	missile.transform.position.y = 1.0f;
+	missile.transform.position.y = 20.0f;
 
 	missile.material.ambient = glm::vec3(0.2f, 0.2f, 0.3f);
 	missile.material.diffuse = glm::vec3(0.4f, 0.45f, 0.6f);
@@ -396,8 +396,9 @@ int main(int argc, char* argv[])
 
 			glm::quat deltaq = EulerToQuat(eulerRotation);
 			//glm::quat q1 = EulerToQuat(missile.transform.rotation);
-			glm::quat q2 = deltaq * qtransform.rotation;
+			glm::quat q2 = qtransform.rotation * deltaq;
 			q2 = glm::normalize(q2);
+			std::cout << "qtransform quat: " << qtransform.rotation.w <<" "<< qtransform.rotation.x <<" "<< qtransform.rotation.y <<" "<< qtransform.rotation.z << std::endl;
 			qtransform.rotation = q2;
 			glm::vec3 newEulerRotation = glm::eulerAngles(qtransform.rotation);
 			missile.transform.rotation = newEulerRotation;
@@ -437,6 +438,7 @@ int main(int argc, char* argv[])
 		if (firstPerson) {
 			mainCamera.transform.position = missile.transform.position + missile.transform.Up()*1.5f;
 			mainCamera.transform.rotation = missile.transform.rotation;
+			//mainCamera.transform.rotation = glm::eulerAngles(qtransform.rotation);
 			//glm::quat missileQuat = glm::quat_cast(missile.GetOffsetTransformMatrix());
 			//mainCamera.transform.rotation = glm::eulerAngles(missileQuat);
 
