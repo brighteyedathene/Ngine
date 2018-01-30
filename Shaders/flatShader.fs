@@ -41,11 +41,11 @@ vec3 FlatShading()
     vec3 reflectDir = reflect(-lightDir, norm);
 
     // Intensity
-    float amb = 0;
+    float amb = 0.2;
     float diff = max(dot(norm, lightDir), 0.0);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
 
-    float intensity = amb + (diff + spec)/distance;
+    float intensity = amb + (diff + spec);
     intensity = max(0.2, ceil(intensity * numShades)/numShades);
 
     vec3 result = intensity * material.diffuse * light.colour;
@@ -56,6 +56,7 @@ vec3 FlatShading()
 void main()
 {
 	vec3 result = FlatShading();
+    //result = light.colour;
 
     FragColor = vec4(result, 1.0);
 }

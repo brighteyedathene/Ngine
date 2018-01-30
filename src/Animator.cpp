@@ -21,7 +21,7 @@ Animator::~Animator()
 
 void Animator::Tick(float deltaTime)
 {
-	m_currentTime += deltaTime;
+	m_currentTime += deltaTime * 3.0f;
 	
 	GetNextPose();
 

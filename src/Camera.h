@@ -41,5 +41,6 @@ public:
 	~Camera();
 
 	glm::mat4 GetProjectionViewMatrix();
+	glm::mat4 GetProjectionViewMatrix(glm::mat4 view);
 };
 
