@@ -40,7 +40,9 @@ namespace ngine
 
 	const GLchar* skyboxFragmentPath = "./Shaders/skyboxShader.fs";
 	const GLchar* skyboxVertexPath = "./Shaders/skyboxShader.vs";
-
+	
+	const GLchar* transmittanceFragmentPath = "./Shaders/transmittanceShader.fs";
+	const GLchar* transmittanceVertexPath = "./Shaders/transmittanceShader.vs";
 
 #pragma endregion shaders
 
@@ -60,7 +62,8 @@ namespace ngine
 	//const char* majorkongPath = "./Models/majorkong/kong-nobomb.fbx";
 	
 	const char* cubeModelPath = "./Models/cube/cube.obj";
-	
+	const char* sphereModelPath = "./Models/sphere/sphere.obj";
+
 	const char* mixamoFBXPATH = "./Models/shit-for-testing/ybot_swagger_withmodel.fbx";
 	
 	// obtained this cubemap from http://www.custommapmakers.org/skyboxes.php
@@ -70,8 +73,8 @@ namespace ngine
 
 		"./Textures/cubemap_green/green_ft.tga",
 		"./Textures/cubemap_green/green_bk.tga",
-		"./Textures/cubemap_green/green_dn.tga",
 		"./Textures/cubemap_green/green_up.tga",
+		"./Textures/cubemap_green/green_dn.tga",
 		"./Textures/cubemap_green/green_rt.tga",
 		"./Textures/cubemap_green/green_lf.tga",
 	};

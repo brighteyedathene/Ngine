@@ -16,7 +16,7 @@ void Cubemap::LoadCubemap(vector<std::string> faces)
 {
 	glGenTextures(1, &m_textureID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureID);
-
+	stbi_set_flip_vertically_on_load(0);
 	int width, height, nrChannels;
 	for (unsigned int i = 0; i < faces.size(); i++)
 	{
@@ -38,4 +38,5 @@ void Cubemap::LoadCubemap(vector<std::string> faces)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
+	stbi_set_flip_vertically_on_load(0);
 }
