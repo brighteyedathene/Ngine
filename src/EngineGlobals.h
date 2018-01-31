@@ -46,6 +46,10 @@ namespace ngine
 	const char* skullPath = "./Models/skull/skull.obj"; // obtained from https://sketchfab.com/models/1a9db900738d44298b0bc59f68123393#
 	const char* bninjaPath = "./Models/bninja/bnin_Idle_Textured.dae";
 
+	const char* majorkongPath = "./Models/majorkong/majorkong-only.dae";
+	//const char* majorkongPath = "./Models/majorkong/idle-test.dae";
+	//const char* majorkongPath = "./Models/majorkong/kong-nobomb.fbx";
+	
 	const char* cubeModelPath = "./Models/cube/cube.obj";
 	
 	const char* mixamoFBXPATH = "./Models/shit-for-testing/ybot_swagger_withmodel.fbx";

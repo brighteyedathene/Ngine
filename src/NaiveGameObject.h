@@ -24,7 +24,7 @@ public:
 	inline void SetMesh(IDrawable* pMesh) { m_pMesh = pMesh; }
 	inline void SetInput(Input* pInput) { m_pInput = pInput; }
 
-private:
+//private:
 	Input* m_pInput;
 	IDrawable* m_pMesh;
 

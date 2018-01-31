@@ -3,7 +3,7 @@
 out vec4 FragColor;
  
 struct Material {
-    sampler2D diffuse;
+    sampler2D diffuseTexture;
     sampler2D specular;
     float shininess;
 }; 
@@ -25,12 +25,12 @@ in vec3 Normal;
 in vec3 FragPos;
 in vec2 TexCoords;
 
-int NUM_SHADES = 1;
+int NUM_SHADES = 2;
 
 vec3 NormalShading()
 {
     // ambient
-    vec3 ambient = vec3(texture(material.diffuse, TexCoords)) * light.ambient;
+    vec3 ambient = vec3(texture(material.diffuseTexture, TexCoords)) * light.ambient;
 
     // light direction and normal
     vec3 norm = normalize(Normal);
@@ -38,7 +38,7 @@ vec3 NormalShading()
 
     // diffuse
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * vec3(texture(material.diffuse, TexCoords)) * light.diffuse;
+    vec3 diffuse = diff * vec3(texture(material.diffuseTexture, TexCoords)) * light.diffuse;
 
     // specular
     vec3 viewDir = normalize(viewPos - FragPos);
@@ -47,6 +47,7 @@ vec3 NormalShading()
     vec3 specular = spec * vec3(texture(material.specular, TexCoords)) * light.specular;
 
     vec3 result = ambient + diffuse + specular;
+
     return result;
 
 }
@@ -62,14 +63,14 @@ vec3 FlatShading()
     vec3 reflectDir = reflect(-lightDir, norm);
 
     // Intensity
-    float amb = 0;
+    float amb = 0.2;
     float diff = max(dot(norm, lightDir), 0.0);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
 
     float intensity = amb + diff + spec;
     intensity = ceil(intensity * NUM_SHADES)/NUM_SHADES;
 
-    vec3 result = intensity * vec3(texture(material.diffuse, TexCoords));
+    vec3 result = intensity * vec3(texture(material.diffuseTexture, TexCoords));
 
     return result;
 

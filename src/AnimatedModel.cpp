@@ -303,17 +303,23 @@ void AnimatedModel::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, vecto
 
 			// Now try to find the node's parent
 			// if it hasn't been mapped yet, assume this node is a root and give it no parent
-			string parentName(pNode->mParent->mName.data);
-			if (m_Skeleton.m_jointMap.find(parentName) == m_Skeleton.m_jointMap.end())
-			{
-				std::cout << "This node was referenced as a parent bone without being mapped: " << parentName << std::endl;
-				std::cout << "----Assuming the following node is a root: " << BoneName.c_str() << std::endl;
+			if (pNode->mParent == NULL) {
 				joint.m_parentIndex = -1;
 			}
-			else
-			{
-				joint.m_parentIndex = m_Skeleton.m_jointMap[parentName];
+			else {
+				string parentName(pNode->mParent->mName.data);
+				if (m_Skeleton.m_jointMap.find(parentName) == m_Skeleton.m_jointMap.end())
+				{
+					std::cout << "This node was referenced as a parent bone without being mapped: " << parentName << std::endl;
+					std::cout << "----Assuming the following node is a root: " << BoneName.c_str() << std::endl;
+					joint.m_parentIndex = -1;
+				}
+				else
+				{
+					joint.m_parentIndex = m_Skeleton.m_jointMap[parentName];
+				}
 			}
+
 
 			// Set the joint ID
 			joint.m_index = m_NumBones;
@@ -385,11 +391,11 @@ bool AnimatedModel::InitMaterials(const aiScene* pScene, const string& Filename)
 		const aiMaterial* pMaterial = pScene->mMaterials[i];
 		m_Textures[i] = NULL;
 
-		cout << dir << ":" << endl;
-		for (int j = 0; j < pMaterial->mNumProperties; j++)
-		{
-			cout << pMaterial->mProperties[j]->mType << " " << pMaterial->mProperties[j]->mKey.C_Str() << endl;
-		}
+		//cout << dir << ":" << endl;
+		//for (int j = 0; j < pMaterial->mNumProperties; j++)
+		//{
+		//	cout << pMaterial->mProperties[j]->mType << " " << pMaterial->mProperties[j]->mKey.C_Str() << endl;
+		//}
 
 		if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0)
 		{
@@ -426,10 +432,10 @@ void AnimatedModel::Draw(Shader* pShader)
 {
 
 	// TODO set the mesh's materials here
-	//pShader->SetVec3("material.ambient", 1, 1, 1);
-	//pShader->SetVec3("material.diffuse", 0.6, 0.6, 0.6);
-	//pShader->SetVec3("material.specular", 1, 1, 1);
-	//pShader->SetFloat("material.shininess", 2.0f);
+	pShader->SetVec3("material.ambient", 1, 1, 1);
+	pShader->SetVec3("material.diffuse", 0.6, 0.6, 0.6);
+	pShader->SetVec3("material.specular", 1, 1, 1);
+	pShader->SetFloat("material.shininess", 2.0f);
 	pShader->SetFloat("material.shininess", 3.0f);
 
 	glBindVertexArray(m_VAO);
@@ -438,7 +444,7 @@ void AnimatedModel::Draw(Shader* pShader)
 		//TODO bind materials
 		if (m_Textures[mesh.MaterialIndex])
 		{
-			pShader->SetInt("material.diffuse", 0);
+			pShader->SetInt("material.diffuseTexture", 0);
 			m_Textures[mesh.MaterialIndex]->Bind(GL_TEXTURE0);
 		}
 		

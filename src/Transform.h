@@ -43,7 +43,36 @@ public:
 	inline void SetRotation(glm::vec3 value) { this->rotation = value; }
 	inline void SetScale(glm::vec3 value) { this->scale = value; }
 
+	inline glm::mat4 GetOffsetTransformMatrix()
+	{
+		Transform offset;
+		offset.rotation.y = -rotation.y + 90.0f;
+		offset.rotation.x = -rotation.x;
+
+		return offset.GetMatrix();
+	}
+};
+
+
+class QTransform
+{
+public:
+
+	glm::vec3 position;
+	glm::quat rotation; 
+	glm::vec3 scale;
+	glm::mat4 GetMatrix();
+
+	//glm::vec3 Forward();
+	//glm::vec3 Right();
+	//glm::vec3 Up();
+
+	QTransform();
+	QTransform(const QTransform &transform);
+	~QTransform();
+
 
 };
+
 
 #endif

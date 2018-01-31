@@ -49,15 +49,27 @@ glm::vec3 Transform::Forward()
 	return forward;
 }
 
+
 glm::vec3 Transform::Right()
 {
-	glm::vec3 forward;
-	forward.x = cos(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
-	forward.y = sin(glm::radians(rotation.x));
-	forward.z = sin(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
-	forward = glm::normalize(forward);
-	
-	return glm::normalize(glm::cross(forward, WORLD_UP));
+	glm::vec3 right;
+	right.z = cos(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
+	right.y = sin(glm::radians(rotation.x)) * -sin(glm::radians(rotation.z));
+	right.x = -sin(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
+	right = glm::normalize(right);
+
+	return right;
+}
+
+glm::vec3 Upv2(glm::vec3 rotation) 
+{
+	glm::vec3 up;
+	up.x = cos(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
+	up.y = sin(glm::radians(rotation.x));
+	up.z = sin(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
+	up = glm::normalize(up);
+
+	return up;
 }
 
 glm::vec3 Transform::Up()
@@ -68,8 +80,7 @@ glm::vec3 Transform::Up()
 	forward.z = sin(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
 	forward = glm::normalize(forward);
 
-	glm::vec3 right = glm::normalize(glm::cross(forward, WORLD_UP));
-	return glm::normalize(glm::cross(right, forward));
+	return glm::normalize(glm::cross(Right(), forward));
 }
 
 std::string Transform::ToString()
@@ -80,4 +91,38 @@ std::string Transform::ToString()
 		<< "sca: " << scale.x    << ", " << scale.y    << ", " << scale.z    << "\n";
 	
 	return out.str();
+}
+
+
+//-----------QTransform--------//
+
+QTransform::QTransform()
+{
+	position = glm::vec3(0.0f);
+	scale = glm::vec3(1.0f);
+	rotation = glm::quat();
+}
+
+QTransform::QTransform(const QTransform &transform)
+{
+	position = transform.position;
+	rotation = transform.rotation;
+	scale = transform.scale;
+}
+
+QTransform::~QTransform()
+{
+}
+
+glm::mat4 QTransform::GetMatrix()
+{
+	glm::mat4 mat_translation = glm::translate(glm::mat4(1.0f), position);
+
+	glm::mat4 mat_rotation = glm::mat4_cast(rotation);
+
+	glm::mat4 mat_scale = glm::scale(glm::mat4(1.0f), scale);
+
+	glm::mat4 mat = mat_translation * mat_rotation * mat_scale;
+
+	return mat;
 }
