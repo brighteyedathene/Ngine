@@ -20,6 +20,8 @@
 #include "Model.h"
 #include "Light.h"
 
+#include "Skybox.h"
+
 #include "AnimatedModel.h"
 #include "Animator.h"
 
@@ -165,8 +167,6 @@ unsigned int CreateCubeVAO()
 // namespace ngine contains all the paths for assets and some default values for the window
 using namespace ngine;
 
-int DEBUG_jointIndex = 0;
-
 #undef main
 int main(int argc, char* argv[]) 
 {
@@ -184,14 +184,22 @@ int main(int argc, char* argv[])
 	Shader blinnPhongShader(blinnPhongShaderVertexPath, blinPhongShaderFragmentPath);
 	Shader minnaertShader(minnaertShaderVertexPath, minnaertShaderFragmentPath);
 
+	Shader skyboxShader(skyboxVertexPath, skyboxFragmentPath);
+
 	SATexture otherTexture(otherTexturePath);
 	SATexture myTexture(texturePath);
 	SATexture eye(eyePath);
+
+
+
 
 	// Tell shader where its textures are
 	unlitTextureShader.SetInt("texture1", 0); // OR...
 	glUniform1i(glGetUniformLocation(unlitTextureShader.ID, "texture2"), 1);
 	
+
+	// skybox
+	Skybox greenSkybox(greenCubemapFaces);
 
 	// this will be the light
 	unsigned int pyrVAO = CreatePyramidVAO();
@@ -219,26 +227,6 @@ int main(int argc, char* argv[])
 	NaiveGameObject missile;
 	missile.SetMesh(&missileModel);
 	missile.SetInput(&input);
-	//missile.transform.scale = glm::vec3(0.1f);
-	missile.transform.position.y = 20.0f;
-
-	missile.material.ambient = glm::vec3(0.2f, 0.2f, 0.3f);
-	missile.material.diffuse = glm::vec3(0.4f, 0.45f, 0.6f);
-	missile.material.specular = glm::vec3(0.8, 0.8f, 0.8f);
-	missile.material.shininess = 12.0f;
-
-	// Major Kong
-
-	AnimatedModel controlModel;
-	controlModel.LoadMesh(bninjaPath);
-
-	AnimatedModel majorkongModel;
-	majorkongModel.LoadMesh(majorkongPath);
-	Animator animator(&majorkongModel);
-	NaiveGameObject majorkong;
-	majorkong.SetMesh(&majorkongModel);
-	majorkong.SetInput(&input);
-	majorkong.transform.scale = glm::vec3(0.01f);
 
 	// Skull object
 	Model skullModel(skullPath);
@@ -310,18 +298,6 @@ int main(int argc, char* argv[])
 	input.CreateButtonMapping("b_RollRight", SDL_SCANCODE_O);
 
 
-
-	// Lab specific controls
-	input.CreateButtonMapping("toggleUseQuat", SDL_SCANCODE_T);
-	input.CreateButtonMapping("toggleFirstPerson", SDL_SCANCODE_R);
-	bool useQuat = false;
-	bool firstPerson = false;
-	QTransform qtransform;
-	qtransform.position = missile.transform.position;
-	qtransform.rotation = EulerToQuat(missile.transform.rotation);
-	qtransform.scale = missile.transform.scale;
-
-
 #pragma endregion button_mapping
 
 	float time = 0;
@@ -349,61 +325,25 @@ int main(int argc, char* argv[])
 		time = gameclock.time;
 
 
-		// Toggle fpp, useQuat
-		if (input.GetButtonDown("toggleUseQuat"))
-			useQuat = !useQuat;
-		if (input.GetButtonDown("toggleFirstPerson"))
-			firstPerson = !firstPerson;
-
-
 		// for now, character movement is handled here...
 		if (input.GetButton("b_Forward"))
 			missile.transform.position += missile.transform.Forward() * 0.05f;
 		if (input.GetButton("b_Backward"))
 			missile.transform.position -= missile.transform.Forward() * 0.05f;
-		// rotations
-		if (!useQuat) 
-		{
-			if (input.GetButton("b_YawLeft"))
-				missile.transform.rotation.y -= 1.0f;
-			if (input.GetButton("b_YawRight"))
-				missile.transform.rotation.y += 1.0f;
-			if (input.GetButton("b_PitchUp"))
-				missile.transform.rotation.x -= 1.0f;
-			if (input.GetButton("b_PitchDown"))
-				missile.transform.rotation.x += 1.0f;
-			if (input.GetButton("b_RollLeft"))
-				missile.transform.rotation.z -= 1.0f;
-			if (input.GetButton("b_RollRight"))
-				missile.transform.rotation.z += 1.0f;
-		}
-		else 
-		{
-			// Use quaternions
-			glm::vec3 eulerRotation = glm::vec3(0.0f);
-			if (input.GetButton("b_YawLeft"))
-				eulerRotation.y -= 1.0f;
-			if (input.GetButton("b_YawRight"))
-				eulerRotation.y += 1.0f;
-			if (input.GetButton("b_PitchUp"))
-				eulerRotation.x -= 1.0f;
-			if (input.GetButton("b_PitchDown"))
-				eulerRotation.x += 1.0f;
-			if (input.GetButton("b_RollLeft"))
-				eulerRotation.z -= 1.0f;
-			if (input.GetButton("b_RollRight"))
-				eulerRotation.z += 1.0f;
+		if (input.GetButton("b_YawLeft"))
+			missile.transform.rotation.y -= 1.0f;
+		if (input.GetButton("b_YawRight"))
+			missile.transform.rotation.y += 1.0f;
+		if (input.GetButton("b_PitchUp"))
+			missile.transform.rotation.x -= 1.0f;
+		if (input.GetButton("b_PitchDown"))
+			missile.transform.rotation.x += 1.0f;
+		if (input.GetButton("b_RollLeft"))
+			missile.transform.rotation.z -= 1.0f;
+		if (input.GetButton("b_RollRight"))
+			missile.transform.rotation.z += 1.0f;
+		
 
-			glm::quat deltaq = EulerToQuat(eulerRotation);
-			//glm::quat q1 = EulerToQuat(missile.transform.rotation);
-			glm::quat q2 = qtransform.rotation * deltaq;
-			q2 = glm::normalize(q2);
-			std::cout << "qtransform quat: " << qtransform.rotation.w <<" "<< qtransform.rotation.x <<" "<< qtransform.rotation.y <<" "<< qtransform.rotation.z << std::endl;
-			qtransform.rotation = q2;
-			glm::vec3 newEulerRotation = glm::eulerAngles(qtransform.rotation);
-			missile.transform.rotation = newEulerRotation;
-			
-		}
 
 		// Handle Camera controls // TODO move this to the camera controller
 		if (input.GetButtonDown("Freeze"))
@@ -434,18 +374,6 @@ int main(int argc, char* argv[])
 		glm::mat4 mvp; // more from this later
 		glm::mat4 pv = mainCamera.GetProjectionViewMatrix();
 
-		// Apply first person constraint (basically remove all controls)
-		if (firstPerson) {
-			mainCamera.transform.position = missile.transform.position + missile.transform.Up()*1.5f;
-			mainCamera.transform.rotation = missile.transform.rotation;
-			//mainCamera.transform.rotation = glm::eulerAngles(qtransform.rotation);
-			//glm::quat missileQuat = glm::quat_cast(missile.GetOffsetTransformMatrix());
-			//mainCamera.transform.rotation = glm::eulerAngles(missileQuat);
-
-			//glm::mat4 fpp = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -4.5f, 0.0f));
-			//fpp = fpp* missile.transform.GetMatrix();
-			//pv = mainCamera.GetProjectionViewMatrix(fpp);
-		}
 
 		/*-------------------------------------------------------------------*/
 		/*-------------------------- Viewports ------------------------------*/
@@ -474,7 +402,7 @@ int main(int argc, char* argv[])
 		flatShader.SetMat4("projectionview", pv);
 
 		// floor
-		floor.Draw(&flatShader);
+		//floor.Draw(&flatShader);
 
 		// skulls
 		for (int i = 0; i < NUM_SKULLS; i++) {
@@ -484,27 +412,8 @@ int main(int argc, char* argv[])
 			skull.Draw(&flatShader);
 		}
 
-		// missile
-		missile.material.specular = glm::vec3(1.0f);
-		missile.material.shininess = 12.0f;
-		missile.Draw(&flatShader);
-
-		// major kong
-		animShader.Use();
-		animShader.SetMat4("projectionview", pv);
-		animShader.SetVec3("viewPos", mainCamera.transform.position);
-		animShader.SetVec3("light.position", lightPyramid.transform.position);
-		//animShader.SetVec3("light.colour", lightPyramid.colour);
-		animShader.SetVec3("light.ambient", glm::vec3(0.6f));
-		animShader.SetVec3("light.diffuse", lightPyramid.colour);
-		animShader.SetVec3("light.specular", lightPyramid.colour);
-		animator.Tick(gameclock.deltaTime);
-		animShader.SetMat4Array("joints", animator.m_currentMatrices, animator.m_jointCount);
-		
-		//majorkong.Draw(&animShader); // instead of this, do the following:
-		animShader.SetMat4("model", missile.GetOffsetTransformMatrix() * majorkong.transform.GetMatrix()); // the parent's model matrix
-		majorkongModel.Draw(&animShader); // Draw directly from animated model - not the gameobject
-
+		// Draw the skybox
+		greenSkybox.Draw(&skyboxShader, &mainCamera);
 
 		glBindVertexArray(0);
 		display.Update();

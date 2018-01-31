@@ -153,6 +153,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Skybox.cpp" />
+    <ClCompile Include="src\Cubemap.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\NaiveGameObject.cpp" />
@@ -175,6 +177,8 @@
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Skybox.h" />
+    <ClInclude Include="src\Cubemap.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\IDrawable.h" />

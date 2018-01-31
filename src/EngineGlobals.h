@@ -2,6 +2,7 @@
 #ifndef ENGINEGLOBALS_H 
 #define ENGINEGLOBALS_H
 
+#include <vector>
 
 #include <SDL2/SDL.h>
 
@@ -12,6 +13,9 @@ namespace ngine
 {
 	int WINDOW_WIDTH = 1280; // initial width
 	int WINDOW_HEIGHT = 720; // initial height
+
+
+#pragma region shaders
 
 	const GLchar* vertexShaderPath = "./Shaders/shader.vs";
 	const GLchar* fragmentShaderPath = "./Shaders/shader.fs";
@@ -31,10 +35,15 @@ namespace ngine
 	const GLchar* minnaertShaderVertexPath = "./Shaders/minnaertShader.vs";
 	const GLchar* minnaertShaderFragmentPath = "./Shaders/minnaertShader.fs";
 
-	// anim fragment shader is just lightingTestFShader for now
-
 	const GLchar* lightVertexShaderPath = "./Shaders/lightShader.vs";
 	const GLchar* lightFragmentShaderPath = "./Shaders/lightShader.fs";
+
+	const GLchar* skyboxFragmentPath = "./Shaders/skyboxShader.fs";
+	const GLchar* skyboxVertexPath = "./Shaders/skyboxShader.vs";
+
+
+#pragma endregion shaders
+
 
 	const GLchar* texturePath = "./Textures/myTexture.jpg";
 	const GLchar* otherTexturePath = "./Textures/otherTexture.jpg";
@@ -54,6 +63,30 @@ namespace ngine
 	
 	const char* mixamoFBXPATH = "./Models/shit-for-testing/ybot_swagger_withmodel.fbx";
 	
+	// obtained this cubemap from http://www.custommapmakers.org/skyboxes.php
+	std::string greenCubemapFaces_array[] =
+	{
+
+
+		"./Textures/cubemap_green/green_ft.tga",
+		"./Textures/cubemap_green/green_bk.tga",
+		"./Textures/cubemap_green/green_dn.tga",
+		"./Textures/cubemap_green/green_up.tga",
+		"./Textures/cubemap_green/green_rt.tga",
+		"./Textures/cubemap_green/green_lf.tga",
+	};
+	std::vector<std::string> greenCubemapFaces(greenCubemapFaces_array, greenCubemapFaces_array + sizeof(greenCubemapFaces_array) / sizeof(greenCubemapFaces_array[0]));
+	
+	std::string exampleSkyboxFaces_array[] =
+	{
+		"./Textures/example_skybox/right.jpg",
+		"./Textures/example_skybox/left.jpg",
+		"./Textures/example_skybox/bottom.jpg",
+		"./Textures/example_skybox/top.jpg",
+		"./Textures/example_skybox/front.jpg",
+		"./Textures/example_skybox/back.jpg",
+	};
+	//std::vector<std::string> greenCubemapFaces(exampleSkyboxFaces_array, exampleSkyboxFaces_array + sizeof(exampleSkyboxFaces_array) / sizeof(exampleSkyboxFaces_array[0]));
 }
 
 #endif
