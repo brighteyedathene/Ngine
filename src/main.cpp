@@ -20,6 +20,8 @@
 #include "Model.h"
 #include "Light.h"
 
+#include "Skybox.h"
+
 #include "AnimatedModel.h"
 #include "Animator.h"
 
@@ -165,8 +167,6 @@ unsigned int CreateCubeVAO()
 // namespace ngine contains all the paths for assets and some default values for the window
 using namespace ngine;
 
-int DEBUG_jointIndex = 0;
-
 #undef main
 int main(int argc, char* argv[]) 
 {
@@ -184,14 +184,23 @@ int main(int argc, char* argv[])
 	Shader blinnPhongShader(blinnPhongShaderVertexPath, blinPhongShaderFragmentPath);
 	Shader minnaertShader(minnaertShaderVertexPath, minnaertShaderFragmentPath);
 
+	Shader skyboxShader(skyboxVertexPath, skyboxFragmentPath);
+	Shader transmittanceShader(transmittanceVertexPath, transmittanceFragmentPath);
+
 	SATexture otherTexture(otherTexturePath);
 	SATexture myTexture(texturePath);
 	SATexture eye(eyePath);
+
+
+
 
 	// Tell shader where its textures are
 	unlitTextureShader.SetInt("texture1", 0); // OR...
 	glUniform1i(glGetUniformLocation(unlitTextureShader.ID, "texture2"), 1);
 	
+
+	// skybox
+	Skybox greenSkybox(greenCubemapFaces);
 
 	// this will be the light
 	unsigned int pyrVAO = CreatePyramidVAO();
@@ -202,50 +211,31 @@ int main(int argc, char* argv[])
 	lightPyramid.transform.position = glm::vec3(0.0f, 12.5f, -1.0f);
 
 
-	// Floor object
+	// Sphere
+	Model sphereModel(sphereModelPath);
+	NaiveGameObject sphere;
+	sphere.SetMesh(&sphereModel);
+	sphere.transform.scale = glm::vec3(10.0f);
+
+	// Cube
 	Model cubeModel(cubeModelPath);
-	NaiveGameObject floor;
-	floor.SetMesh(&cubeModel);
-	floor.transform.scale = glm::vec3(20.0f, 0.001f, 20.0f);
-
-	floor.material.ambient = glm::vec3( 0.0f, 0.0f, 0.0f);
-	floor.material.diffuse = glm::vec3( 1.0f, 0.5f, 0.31f);
-	floor.material.specular = glm::vec3( 0.0, 0.0f, 0.0f);
-	floor.material.shininess = 30.0f;
-
+	NaiveGameObject cube;
+	cube.SetMesh(&cubeModel);
+	cube.transform.position = glm::vec3(0.0f, 0.0f, 70.0f);
 
 	// Missile object
 	Model missileModel(missilePath);
 	NaiveGameObject missile;
 	missile.SetMesh(&missileModel);
 	missile.SetInput(&input);
-	//missile.transform.scale = glm::vec3(0.1f);
-	missile.transform.position.y = 20.0f;
-
-	missile.material.ambient = glm::vec3(0.2f, 0.2f, 0.3f);
-	missile.material.diffuse = glm::vec3(0.4f, 0.45f, 0.6f);
-	missile.material.specular = glm::vec3(0.8, 0.8f, 0.8f);
-	missile.material.shininess = 12.0f;
-
-	// Major Kong
-
-	AnimatedModel controlModel;
-	controlModel.LoadMesh(bninjaPath);
-
-	AnimatedModel majorkongModel;
-	majorkongModel.LoadMesh(majorkongPath);
-	Animator animator(&majorkongModel);
-	NaiveGameObject majorkong;
-	majorkong.SetMesh(&majorkongModel);
-	majorkong.SetInput(&input);
-	majorkong.transform.scale = glm::vec3(0.01f);
 
 	// Skull object
 	Model skullModel(skullPath);
 	NaiveGameObject skull;
 	skull.SetMesh(&skullModel);
 	skull.SetInput(&input);
-	skull.transform.scale = glm::vec3(3.5f);
+	skull.transform.scale = glm::vec3(10.0f);
+	skull.transform.position = glm::vec3(0.0f, 0.0f, -70.0f);
 
 
 	skull.material.ambient = glm::vec3(0.2f, 0.15f, 0.1f);
@@ -253,19 +243,6 @@ int main(int argc, char* argv[])
 	skull.material.specular = glm::vec3(0.8, 0.8f, 0.8f);
 	skull.material.shininess = 12.0f;
 
-	// Vector of skull positions
-	int NUM_SKULLS = 30;
-	float RANGE = 200;
-	vector<Transform> skullTransforms;
-	skullTransforms.resize(NUM_SKULLS);
-	for (int i = 0; i < NUM_SKULLS; i++) {
-		float random_x = (RANGE * static_cast <float> (rand()) / static_cast <float> (RAND_MAX)) - RANGE / 2;
-		float random_z = (RANGE * static_cast <float> (rand()) / static_cast <float> (RAND_MAX)) - RANGE / 2;
-		skullTransforms[i].position.x = random_x;
-		skullTransforms[i].position.z = random_z;
-		skullTransforms[i].position.y = 4.0f;
-		skullTransforms[i].rotation.y = 360 * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-	}
 
 #pragma region camera_init
 
@@ -276,8 +253,8 @@ int main(int argc, char* argv[])
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	// set up camera for shader showcase
-	mainCamera.transform.rotation = glm::vec3(-20.0, -45.0, 0.0);
-	mainCamera.transform.position = glm::vec3(-13.0, 10.0, 25.0);
+	mainCamera.transform.rotation = glm::vec3(0.0, 180.0, 0.0);
+	mainCamera.transform.position = glm::vec3(142.0, 0.0, 0.0);
 
 #pragma endregion camera_init
 
@@ -310,17 +287,22 @@ int main(int argc, char* argv[])
 	input.CreateButtonMapping("b_RollRight", SDL_SCANCODE_O);
 
 
+	// Demo Stuff
+	input.CreateButtonMapping("refractiveIndex+", SDL_SCANCODE_1);
+	input.CreateButtonMapping("refractiveIndex-", SDL_SCANCODE_2);
 
-	// Lab specific controls
-	input.CreateButtonMapping("toggleUseQuat", SDL_SCANCODE_T);
-	input.CreateButtonMapping("toggleFirstPerson", SDL_SCANCODE_R);
-	bool useQuat = false;
-	bool firstPerson = false;
-	QTransform qtransform;
-	qtransform.position = missile.transform.position;
-	qtransform.rotation = EulerToQuat(missile.transform.rotation);
-	qtransform.scale = missile.transform.scale;
+	input.CreateButtonMapping("fresnelBias+", SDL_SCANCODE_KP_7);
+	input.CreateButtonMapping("fresnelBias-", SDL_SCANCODE_KP_8);
+	input.CreateButtonMapping("fresnelScale+", SDL_SCANCODE_KP_4);
+	input.CreateButtonMapping("fresnelScale-", SDL_SCANCODE_KP_5);
+	input.CreateButtonMapping("fresnelPower+", SDL_SCANCODE_KP_1);
+	input.CreateButtonMapping("fresnelPower-", SDL_SCANCODE_KP_2);
 
+	glm::vec3 refractiveIndexRGB = glm::vec3(0.45f, 0.52f, 0.58f);
+	float refractiveIndex = 1.52f;
+	float fresnelScale = 1.0f;
+	float fresnelBias = 0.0f;
+	float fresnelPower = 1;
 
 #pragma endregion button_mapping
 
@@ -349,61 +331,24 @@ int main(int argc, char* argv[])
 		time = gameclock.time;
 
 
-		// Toggle fpp, useQuat
-		if (input.GetButtonDown("toggleUseQuat"))
-			useQuat = !useQuat;
-		if (input.GetButtonDown("toggleFirstPerson"))
-			firstPerson = !firstPerson;
-
-
 		// for now, character movement is handled here...
 		if (input.GetButton("b_Forward"))
-			missile.transform.position += missile.transform.Forward() * 0.05f;
+			cube.transform.position += cube.transform.Forward() * 0.05f;
 		if (input.GetButton("b_Backward"))
-			missile.transform.position -= missile.transform.Forward() * 0.05f;
-		// rotations
-		if (!useQuat) 
-		{
-			if (input.GetButton("b_YawLeft"))
-				missile.transform.rotation.y -= 1.0f;
-			if (input.GetButton("b_YawRight"))
-				missile.transform.rotation.y += 1.0f;
-			if (input.GetButton("b_PitchUp"))
-				missile.transform.rotation.x -= 1.0f;
-			if (input.GetButton("b_PitchDown"))
-				missile.transform.rotation.x += 1.0f;
-			if (input.GetButton("b_RollLeft"))
-				missile.transform.rotation.z -= 1.0f;
-			if (input.GetButton("b_RollRight"))
-				missile.transform.rotation.z += 1.0f;
-		}
-		else 
-		{
-			// Use quaternions
-			glm::vec3 eulerRotation = glm::vec3(0.0f);
-			if (input.GetButton("b_YawLeft"))
-				eulerRotation.y -= 1.0f;
-			if (input.GetButton("b_YawRight"))
-				eulerRotation.y += 1.0f;
-			if (input.GetButton("b_PitchUp"))
-				eulerRotation.x -= 1.0f;
-			if (input.GetButton("b_PitchDown"))
-				eulerRotation.x += 1.0f;
-			if (input.GetButton("b_RollLeft"))
-				eulerRotation.z -= 1.0f;
-			if (input.GetButton("b_RollRight"))
-				eulerRotation.z += 1.0f;
-
-			glm::quat deltaq = EulerToQuat(eulerRotation);
-			//glm::quat q1 = EulerToQuat(missile.transform.rotation);
-			glm::quat q2 = qtransform.rotation * deltaq;
-			q2 = glm::normalize(q2);
-			std::cout << "qtransform quat: " << qtransform.rotation.w <<" "<< qtransform.rotation.x <<" "<< qtransform.rotation.y <<" "<< qtransform.rotation.z << std::endl;
-			qtransform.rotation = q2;
-			glm::vec3 newEulerRotation = glm::eulerAngles(qtransform.rotation);
-			missile.transform.rotation = newEulerRotation;
-			
-		}
+			cube.transform.position -= cube.transform.Forward() * 0.05f;
+		if (input.GetButton("b_YawLeft"))
+			cube.transform.rotation.y -= 1.0f;
+		if (input.GetButton("b_YawRight"))
+			cube.transform.rotation.y += 1.0f;
+		if (input.GetButton("b_PitchUp"))
+			cube.transform.rotation.x -= 1.0f;
+		if (input.GetButton("b_PitchDown"))
+			cube.transform.rotation.x += 1.0f;
+		if (input.GetButton("b_RollLeft"))
+			cube.transform.rotation.z -= 1.0f;
+		if (input.GetButton("b_RollRight"))
+			cube.transform.rotation.z += 1.0f;
+		
 
 		// Handle Camera controls // TODO move this to the camera controller
 		if (input.GetButtonDown("Freeze"))
@@ -427,6 +372,61 @@ int main(int argc, char* argv[])
 			mainCamera.orthographic = !mainCamera.orthographic;
 		}
 
+
+#pragma region democontrols
+		// Demo stuff
+		if (input.GetButton("refractiveIndex+"))
+		{
+			refractiveIndex += 0.02f;
+			refractiveIndexRGB.r += 0.01f;
+			refractiveIndexRGB.g += 0.01f;
+			refractiveIndexRGB.b += 0.01f;
+			//std::cout << "refractiveIndex: " << refractiveIndex << std::endl;
+			std::cout << "refractiveIndex (RGB): " << refractiveIndexRGB.r << "  " << refractiveIndexRGB.g << "  " << refractiveIndexRGB.b << std::endl;
+		}
+		if (input.GetButton("refractiveIndex-"))
+		{
+			refractiveIndex -= 0.02f;
+			refractiveIndexRGB.r -= 0.01f;
+			refractiveIndexRGB.g -= 0.01f;
+			refractiveIndexRGB.b -= 0.01f;
+			//std::cout << "refractiveIndex (monochrome): " << refractiveIndex << std::endl;
+			std::cout << "refractiveIndex (RGB): " << refractiveIndexRGB.r << "  " << refractiveIndexRGB.g << "  " << refractiveIndexRGB.b << std::endl;
+		}
+		if (input.GetButton("fresnelScale+"))
+		{
+			fresnelScale += 0.02f;
+			std::cout << "fresnelScale: " << fresnelScale << std::endl;
+		}
+		if (input.GetButton("fresnelScale-"))
+		{
+			fresnelScale -= 0.02f;
+			std::cout << "fresnelScale: " << fresnelScale << std::endl;
+		}
+		if (input.GetButton("fresnelBias+"))
+		{
+			fresnelBias += 0.02f;
+			std::cout << "fresnelBias: " << fresnelBias << std::endl;
+		}
+		if (input.GetButton("fresnelBias-"))
+		{
+			fresnelBias -= 0.02f;
+			std::cout << "fresnelBias: " << fresnelBias << std::endl;
+		}
+		if (input.GetButton("fresnelPower+"))
+		{
+			fresnelPower += 0.1;
+			std::cout << "fresnelPower: " << fresnelPower << std::endl;
+		}
+		if (input.GetButton("fresnelPower-"))
+		{
+			fresnelPower -= 0.1;
+			std::cout << "fresnelPower: " << fresnelPower << std::endl;
+		}
+
+#pragma endregion democontrols
+
+
 		// rendering
 		eye.Bind(0);
 		otherTexture.Bind(1);
@@ -434,18 +434,6 @@ int main(int argc, char* argv[])
 		glm::mat4 mvp; // more from this later
 		glm::mat4 pv = mainCamera.GetProjectionViewMatrix();
 
-		// Apply first person constraint (basically remove all controls)
-		if (firstPerson) {
-			mainCamera.transform.position = missile.transform.position + missile.transform.Up()*1.5f;
-			mainCamera.transform.rotation = missile.transform.rotation;
-			//mainCamera.transform.rotation = glm::eulerAngles(qtransform.rotation);
-			//glm::quat missileQuat = glm::quat_cast(missile.GetOffsetTransformMatrix());
-			//mainCamera.transform.rotation = glm::eulerAngles(missileQuat);
-
-			//glm::mat4 fpp = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -4.5f, 0.0f));
-			//fpp = fpp* missile.transform.GetMatrix();
-			//pv = mainCamera.GetProjectionViewMatrix(fpp);
-		}
 
 		/*-------------------------------------------------------------------*/
 		/*-------------------------- Viewports ------------------------------*/
@@ -455,56 +443,33 @@ int main(int argc, char* argv[])
 
 		glViewport(0, 0, d_width, d_height);
 
-		// Draw the light
-		lightShader.Use();
-		glBindVertexArray(pyrVAO);
-		mvp = pv * lightPyramid.transform.GetMatrix();
-		lightShader.SetMat4("mvp", mvp);
-		lightShader.SetVec3("ucolour", lightPyramid.colour);
-		glDrawElements(GL_TRIANGLES, pyrCount, GL_UNSIGNED_INT, 0);
 
+		// prepare transmittance shader
+		transmittanceShader.Use();
+		transmittanceShader.SetMat4("projectionview", pv);
+		transmittanceShader.SetVec3("viewPos", mainCamera.transform.position);
+		transmittanceShader.SetInt("skybox", 0);
 
-		// Now draw the lit objects
-		flatShader.Use();
-		flatShader.SetInt("numShades", 2);
+		transmittanceShader.SetVec3("refractiveIndexRGB", refractiveIndexRGB);
+		transmittanceShader.SetFloat("refractiveIndex", refractiveIndex);
+		transmittanceShader.SetFloat("scale", fresnelScale);
+		transmittanceShader.SetFloat("bias", fresnelBias);
+		transmittanceShader.SetFloat("power", fresnelPower);
 
-		flatShader.SetVec3("light.position", lightPyramid.transform.position);
-		flatShader.SetVec3("light.colour",  lightPyramid.colour);
-		flatShader.SetVec3("viewPos", mainCamera.transform.position);
-		flatShader.SetMat4("projectionview", pv);
+		transmittanceShader.BindCubemap(greenSkybox.m_cubemap.m_textureID, 0);
 
-		// floor
-		floor.Draw(&flatShader);
+		// Skull
+		skull.transform.rotation.y += 1.0f;
+		skull.Draw(&transmittanceShader);
 
-		// skulls
-		for (int i = 0; i < NUM_SKULLS; i++) {
-			skull.transform.position = skullTransforms[i].position;
-			skull.transform.rotation = skullTransforms[i].rotation;
-			skullTransforms[i].rotation.y += 1.0f;
-			skull.Draw(&flatShader);
-		}
-
-		// missile
-		missile.material.specular = glm::vec3(1.0f);
-		missile.material.shininess = 12.0f;
-		missile.Draw(&flatShader);
-
-		// major kong
-		animShader.Use();
-		animShader.SetMat4("projectionview", pv);
-		animShader.SetVec3("viewPos", mainCamera.transform.position);
-		animShader.SetVec3("light.position", lightPyramid.transform.position);
-		//animShader.SetVec3("light.colour", lightPyramid.colour);
-		animShader.SetVec3("light.ambient", glm::vec3(0.6f));
-		animShader.SetVec3("light.diffuse", lightPyramid.colour);
-		animShader.SetVec3("light.specular", lightPyramid.colour);
-		animator.Tick(gameclock.deltaTime);
-		animShader.SetMat4Array("joints", animator.m_currentMatrices, animator.m_jointCount);
+		// Sphere
+		sphere.Draw(&transmittanceShader);
 		
-		//majorkong.Draw(&animShader); // instead of this, do the following:
-		animShader.SetMat4("model", missile.GetOffsetTransformMatrix() * majorkong.transform.GetMatrix()); // the parent's model matrix
-		majorkongModel.Draw(&animShader); // Draw directly from animated model - not the gameobject
+		// Cube
+		cube.Draw(&transmittanceShader);
 
+		// Draw the skybox
+		greenSkybox.Draw(&skyboxShader, &mainCamera);
 
 		glBindVertexArray(0);
 		display.Update();

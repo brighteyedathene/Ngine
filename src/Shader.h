@@ -86,6 +86,12 @@ public:
 		glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), count, GL_FALSE, glm::value_ptr(mats[0]));
 	}
 
+	void BindCubemap(unsigned int textureID, unsigned int index) const
+	{
+		glActiveTexture(GL_TEXTURE0 + index);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+	}
+
 #pragma endregion setter_functions
 
 };

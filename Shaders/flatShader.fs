@@ -22,7 +22,6 @@ struct Light {
 uniform Material material;
 uniform Light light;
  
-uniform vec3 objectColor;
 uniform vec3 viewPos;
 uniform int numShades;
 
