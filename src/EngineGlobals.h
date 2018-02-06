@@ -44,6 +44,10 @@ namespace ngine
 	const GLchar* transmittanceFragmentPath = "./Shaders/transmittanceShader.fs";
 	const GLchar* transmittanceVertexPath = "./Shaders/transmittanceShader.vs";
 
+	const GLchar* particleShaderVertexPath = "./Shaders/particleShader.vs";
+	const GLchar* particleShaderFragmentPath = "./Shaders/particleShader.fs";
+
+
 #pragma endregion shaders
 
 

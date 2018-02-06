@@ -21,147 +21,17 @@
 #include "Light.h"
 
 #include "Skybox.h"
+#include "ParticleSystem.h"
 
 #include "AnimatedModel.h"
 #include "Animator.h"
 
 #include "NaiveGameObject.h"
 
-// Macro for indexing vertex buffer (just forwards the value you give it)
-#define BUFFER_OFFSET(i) ((char *)NULL + (i))
-
 // ...it's global for convenience
 Input input;
 bool spinning = true;
 float fov = 45.0f;
-
-
-#pragma region VAO_creation
-
-unsigned int CreatePyramidVAO()
-{
-	float vertices[] = {
-		// posishez             // colourz           // texture coordz				   					    
-		-0.5f, -0.5f, -0.5f,    0.1f, 1.0f, 0.1f,    0.0f, 0.0f, //front left,
-		0.5f, -0.5f, -0.5f,     0.1f, 1.0f, 0.1f,    1.0f, 0.0f, // front right
-		-0.5f, -0.5f, 0.5f,     0.1f, 0.5f, 0.1f,    0.0f, 1.0f, // back left
-		0.5f, -0.5f, 0.5f,      0.1f, 0.5f, 0.1f,    1.0f, 1.0f, // back right
-		0.0f, 0.5f, 0.0f,       1.0f, 0.5f, 0.1f,    0.5f, 1.0f // top 
-	};
-	unsigned int indices[] = {
-		// sides
-		0,1,4,
-		1,3,4,
-		3,2,4,
-		2,0,4,
-		// base
-		0,1,3,
-		3,2,0
-	};
-
-	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	unsigned int EBO;
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), BUFFER_OFFSET(0));
-	glEnableVertexAttribArray(0); // defined with 'layout(location = 0)' in the vertex shader
-	 // point at the colors
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), BUFFER_OFFSET(3 * sizeof(float)));
-	glEnableVertexAttribArray(1); // also layout'd in the vertex shader
-	// point at the texture coords
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), BUFFER_OFFSET(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	return VAO;
-}
-
-unsigned int CreateCubeVAO()
-{
-	// sample data
-	float vertices[] = {
-		// posishez            // colourz           // texture coordz
-		//front				   					    
-		-0.5f, -0.5f, 0.5f,    1.0f, 1.0f, 0.0f,    0.0f, 0.0f, //bot left,
-		0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 0.0f,    1.0f, 0.0f, // bot right
-		-0.5f, 0.5f, 0.5f,     1.0f, 0.5f, 0.0f,    0.0f, 1.0f, // top mid
-		0.5f, 0.5f, 0.5f,      1.0f, 0.5f, 0.0f,    1.0f, 1.0f,  // top right
-
-		// back									    
-		-0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 0.0f,    0.0f, 0.0f, //bot left,
-		0.5f, -0.5f, -0.5f,    1.0f, 1.0f, 0.0f,    1.0f, 0.0f, // bot right
-		-0.5f, 0.5f, -0.5f,    1.0f, 0.5f, 0.0f,    0.0f, 1.0f, // top mid
-		0.5f, 0.5f, -0.5f,     1.0f, 0.5f, 0.0f,    1.0f, 1.0f  // top right
-	};
-
-	unsigned int indices[] = {
-		// front face
-		0, 1, 3, // first triangle
-		3, 2, 0, // second triangle
-		// top face
-		2, 3, 6,
-		6, 7, 3,
-		// left face
-		0, 2, 6,
-		6, 4, 0,
-		// right face
-		3, 7, 1,
-		1, 5, 7,
-		// back face
-		5, 4, 6,
-		6, 7, 5,
-		// bot face
-		0, 4, 5,
-		5, 1, 0
-	};
-
-
-	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-	/*
-	after this call, all VBO, EBO, glVertexAttribPointer
-	and glEnableVertexAttribArray calls will be stored inside the bound VAO
-	*/
-	glBindVertexArray(VAO);
-
-	// veery simple VBO creation
-	// fill the VBO with the stupid array of vertices
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	// very simple EBO
-	// fill the EBO with indices (of 'vertices' array) governing which trios of points make triangles
-	unsigned int EBO;
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	// link vertex attributes for VAO
-	// point at the positions
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), BUFFER_OFFSET(0));
-	glEnableVertexAttribArray(0); // defined with 'layout(location = 0)' in the vertex shader
-								  // point at the colors
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), BUFFER_OFFSET(3 * sizeof(float)));
-	glEnableVertexAttribArray(1); // also layout'd in the vertex shader
-								  // point at the texture coords
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), BUFFER_OFFSET(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	return VAO;
-}
-
-#pragma endregion VAO_creation
 
 
 // namespace ngine contains all the paths for assets and some default values for the window
@@ -187,16 +57,10 @@ int main(int argc, char* argv[])
 	Shader skyboxShader(skyboxVertexPath, skyboxFragmentPath);
 	Shader transmittanceShader(transmittanceVertexPath, transmittanceFragmentPath);
 
-	SATexture otherTexture(otherTexturePath);
-	SATexture myTexture(texturePath);
-	SATexture eye(eyePath);
+	Shader particleShader(particleShaderVertexPath, particleShaderFragmentPath);
 
 
-
-
-	// Tell shader where its textures are
-	unlitTextureShader.SetInt("texture1", 0); // OR...
-	glUniform1i(glGetUniformLocation(unlitTextureShader.ID, "texture2"), 1);
+#pragma region load_assets
 	
 
 	// skybox
@@ -243,6 +107,8 @@ int main(int argc, char* argv[])
 	skull.material.specular = glm::vec3(0.8, 0.8f, 0.8f);
 	skull.material.shininess = 12.0f;
 
+#pragma endregion load_assets
+
 
 #pragma region camera_init
 
@@ -254,7 +120,7 @@ int main(int argc, char* argv[])
 
 	// set up camera for shader showcase
 	mainCamera.transform.rotation = glm::vec3(0.0, 180.0, 0.0);
-	mainCamera.transform.position = glm::vec3(142.0, 0.0, 0.0);
+	mainCamera.transform.position = glm::vec3(142.0, 30.0, 50.0);
 
 #pragma endregion camera_init
 
@@ -298,7 +164,7 @@ int main(int argc, char* argv[])
 	input.CreateButtonMapping("fresnelPower+", SDL_SCANCODE_KP_1);
 	input.CreateButtonMapping("fresnelPower-", SDL_SCANCODE_KP_2);
 
-	glm::vec3 refractiveIndexRGB = glm::vec3(0.45f, 0.52f, 0.58f);
+	glm::vec3 refractiveIndexRGB = glm::vec3(0.51f, 0.52f, 0.527f);
 	float refractiveIndex = 1.52f;
 	float fresnelScale = 1.0f;
 	float fresnelBias = 0.0f;
@@ -311,6 +177,48 @@ int main(int argc, char* argv[])
 	// Start the clock just before render loop
 	//struct Clock clock;
 	gameclock.Init();
+
+
+
+
+#pragma region particles
+
+	ParticleSystem particleSystem(
+		glm::vec3(0.0, 6.0, 0.0),
+		glm::vec3(100.0, 100.0, 100.0),
+		10000,
+		glm::vec3(2.0, 20.0, 0.0),
+		1.0f
+	);
+
+	particleSystem.m_pClock = &gameclock;
+
+
+	// Random spheres
+	int numSpheres = 4;
+	vector<glm::vec3> spherePositions;
+	vector<float> sphereRadii;
+
+	spherePositions.resize(numSpheres);
+	sphereRadii.resize(numSpheres);
+	for (int i = 0; i < numSpheres; i++)
+	{
+		spherePositions[i].x = Randf() * 100.0f;
+		spherePositions[i].z = Randf() * 100.0f;
+		spherePositions[i].y = Randf() * 200.0f - 100.0f;
+
+		sphereRadii[i] = 3 + Randf() * 25.0f;
+
+		CollisionSphere cs;
+		cs.centre = spherePositions[i];
+		cs.radius = sphereRadii[i];
+		particleSystem.spheres.push_back(cs);
+	}
+
+#pragma endregion particles
+
+
+
 
 
 	// render loop!
@@ -428,21 +336,18 @@ int main(int argc, char* argv[])
 
 
 		// rendering
-		eye.Bind(0);
-		otherTexture.Bind(1);
+
 
 		glm::mat4 mvp; // more from this later
-		glm::mat4 pv = mainCamera.GetProjectionViewMatrix();
+		glm::mat4 projection = mainCamera.GetProjectionMatrix();
+		glm::mat4 view = mainCamera.GetViewMatrix();
+		glm::mat4 pv = projection * view;
 
 
-		/*-------------------------------------------------------------------*/
-		/*-------------------------- Viewports ------------------------------*/
-		/*-------------------------------------------------------------------*/
 		int d_width, d_height;
 		display.GetWindowSize(&d_width, &d_height);
 
 		glViewport(0, 0, d_width, d_height);
-
 
 		// prepare transmittance shader
 		transmittanceShader.Use();
@@ -460,13 +365,32 @@ int main(int argc, char* argv[])
 
 		// Skull
 		skull.transform.rotation.y += 1.0f;
-		skull.Draw(&transmittanceShader);
+		//skull.Draw(&transmittanceShader);
 
 		// Sphere
-		sphere.Draw(&transmittanceShader);
+		for (int i = 0; i < numSpheres; i++)
+		{
+			sphere.transform.position = spherePositions[i];
+			sphere.transform.scale = glm::vec3(sphereRadii[i]);
+			sphere.Draw(&transmittanceShader);
+		}
 		
 		// Cube
-		cube.Draw(&transmittanceShader);
+		//cube.Draw(&transmittanceShader);
+
+
+
+		// Particle system
+		particleShader.Use();
+		particleShader.SetMat4("projectionview", pv);
+		particleShader.SetVec3("cameraRight", glm::vec3(view[0][0], view[1][0], view[2][0]));
+		particleShader.SetVec3("cameraUp", view[0][1], view[1][1], view[2][1]);
+
+		particleSystem.Tick();
+		particleSystem.Draw(&particleShader);
+
+
+		//std::cout << "cam right: " << view[0][0] << " " << view[1][0] << " " << view[2][0] << std::endl;
 
 		// Draw the skybox
 		greenSkybox.Draw(&skyboxShader, &mainCamera);

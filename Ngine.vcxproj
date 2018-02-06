@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ParticleSystem.cpp" />
     <ClCompile Include="src\Skybox.cpp" />
     <ClCompile Include="src\Cubemap.cpp" />
     <ClCompile Include="src\Material.cpp" />
@@ -177,6 +178,7 @@
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ParticleSystem.h" />
     <ClInclude Include="src\Skybox.h" />
     <ClInclude Include="src\Cubemap.h" />
     <ClInclude Include="src\Material.h" />
