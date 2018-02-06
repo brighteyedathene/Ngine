@@ -13,13 +13,15 @@ uniform mat4 projectionview;
 uniform vec3 cameraRight;
 uniform vec3 cameraUp;
 
+float PARTICLE_SIZE = 1.5;
+
 void main()
 {
 	//TexCoords = aTexCoord;
 
 	vec3 finalVertexPosition = aParticlePos 
-								+ cameraRight * aVertexPos.x
-								+ cameraUp * aVertexPos.y;
+								+ cameraRight * aVertexPos.x * PARTICLE_SIZE
+								+ cameraUp * aVertexPos.y * PARTICLE_SIZE;
 
 	gl_Position =  projectionview * vec4(finalVertexPosition, 1.0);
 

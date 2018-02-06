@@ -85,7 +85,9 @@ int main(int argc, char* argv[])
 	Model cubeModel(cubeModelPath);
 	NaiveGameObject cube;
 	cube.SetMesh(&cubeModel);
-	cube.transform.position = glm::vec3(0.0f, 0.0f, 70.0f);
+	cube.transform.position = glm::vec3(0.0f, -200.0f, 0.0f);
+	cube.transform.rotation = glm::vec3(45.0, 0.0, 0.0);
+	cube.transform.scale = glm::vec3(200.0f, 0.2f, 200.0f);
 
 	// Missile object
 	Model missileModel(missilePath);
@@ -184,11 +186,12 @@ int main(int argc, char* argv[])
 #pragma region particles
 
 	ParticleSystem particleSystem(
-		glm::vec3(0.0, 6.0, 0.0),
-		glm::vec3(100.0, 100.0, 100.0),
-		10000,
-		glm::vec3(2.0, 20.0, 0.0),
-		1.0f
+		glm::vec3(0.0, 150.0, 0.0),
+		glm::vec3(30.0, 100.0, 30.0),
+		5000,
+		glm::vec3(800.0, 20.0, 800.0),
+		1.0f,
+		45.0f
 	);
 
 	particleSystem.m_pClock = &gameclock;
@@ -376,7 +379,7 @@ int main(int argc, char* argv[])
 		}
 		
 		// Cube
-		//cube.Draw(&transmittanceShader);
+		cube.Draw(&transmittanceShader);
 
 
 

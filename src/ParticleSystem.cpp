@@ -7,9 +7,16 @@ ParticleSystem::ParticleSystem(
 	glm::vec3 spawnVariance, 
 	int numParticles, 
 	glm::vec3 initialForce, 
-	float initialMass)
+	float initialMass,
+	float lifespan)
 {
+	// Apply defaults
 	m_numParticles = numParticles;
+	m_spawnPosition = spawnPosition;
+	m_spawnVariance = spawnVariance;
+	m_initialForce = initialForce;
+	m_initialMass = initialMass;
+	m_lifespan = lifespan;
 
 	// resize particle vectors
 	pvec_position.resize(m_numParticles);
@@ -21,27 +28,33 @@ ParticleSystem::ParticleSystem(
 	pvec_remainingLife.resize(m_numParticles);
 
 	// initialise particle vectors
-	for (int i = 0; i < numParticles; i++)
+	for (int i = 0; i < m_numParticles; i++)
 	{
 		pvec_position[i] = glm::vec3(
-			spawnPosition.x + Randf() * spawnVariance.x,
-			spawnPosition.y + Randf() * spawnVariance.y,
-			spawnPosition.z + Randf() * spawnVariance.z
+			m_spawnPosition.x + Randf() * m_spawnVariance.x,
+			m_spawnPosition.y + Randf() * m_spawnVariance.y,
+			m_spawnPosition.z + Randf() * m_spawnVariance.z
 		);
-		pvec_velocity[i] = glm::vec3(0.0);
-		pvec_force[i] = initialForce;
-		pvec_mass[i] = initialMass + Randf();
 
-		pvec_colour[i] = glm::vec3(0.2, 0.4, 1.0);
-		pvec_remainingLife[i] = 5.0f;
+		pvec_force[i] = glm::vec3(
+			m_initialForce.x * Randf(),
+			m_initialForce.y * Randf(),
+			m_initialForce.z * Randf()
+		);
+
+		pvec_velocity[i] = glm::vec3(0.0);
+		pvec_mass[i] = m_initialMass + Randf();
+
+		pvec_colour[i] = waterColour;
+		pvec_remainingLife[i] = m_lifespan + Randf() * m_lifespan;
 
 	}
 
 
 	// Initialize forces
 	gravity = glm::vec3(0.0f, -9.8f, 0.0f);
-	dragCoefficient = 0.4;
-
+	dragCoefficient = 0.4f;
+	absorbsionCoefficient = 0.8f;
 
 	CollisionPlane plane;
 	plane.offset = glm::vec3(0.0, -100.0, 0.0);
@@ -49,8 +62,8 @@ ParticleSystem::ParticleSystem(
 	//planes.push_back(plane);
 
 	CollisionPlane plane2;
-	plane2.offset = glm::vec3(0.0, -300.0, 0.0);
-	plane2.normal = glm::vec3(-0.2, 1.0, 0.0);
+	plane2.offset = glm::vec3(0.0, -200.0, 0.0);
+	plane2.normal = glm::normalize(glm::vec3(-1, 1.0, 0.0));
 	planes.push_back(plane2);
 
 	CollisionSphere sphere;
@@ -92,7 +105,7 @@ void ParticleSystem::Tick()
 			float penetratingDot = glm::dot(planes[j].normal, newVelocity);
 			if (intersectingDot < 0.01 && penetratingDot < 0.01)
 			{
-				newVelocity = newVelocity - 2 * penetratingDot * planes[j].normal;
+				newVelocity = newVelocity - 2 * penetratingDot * planes[j].normal * absorbsionCoefficient;
 				pvec_colour[i] = glm::vec3(1.0);
 			}
 		}
@@ -111,7 +124,7 @@ void ParticleSystem::Tick()
 				difference = spheres[j].centre - pvec_position[i] + newVelocity * deltaTime;
 				if (glm::length(difference) < spheres[j].radius)
 				{
-					newVelocity = glm::normalize(-difference) * spheres[j].radius;
+					//newVelocity = glm::normalize(-difference) * spheres[j].radius;
 				}
 
 				pvec_colour[i] = glm::vec3(1.0);
@@ -132,6 +145,29 @@ void ParticleSystem::Tick()
 		pvec_colour[i].r = max(waterColour.r, pvec_colour[i].r - deltaTime * 0.08f);
 		pvec_colour[i].g = max(waterColour.g, pvec_colour[i].g - deltaTime * 0.05f);
 		pvec_colour[i].b = max(waterColour.b, pvec_colour[i].b - deltaTime * 0.03f);
+
+		// recycle particles
+		if (pvec_position[i].y < -300.0f || pvec_remainingLife[i] < 0.0f)
+		{
+			pvec_position[i] = glm::vec3(
+				m_spawnPosition.x + Randf() * m_spawnVariance.x,
+				m_spawnPosition.y + Randf() * m_spawnVariance.y,
+				m_spawnPosition.z + Randf() * m_spawnVariance.z
+			);
+
+			pvec_force[i] = glm::vec3(
+				m_initialForce.x * Randf(),
+				m_initialForce.y * Randf(),
+				m_initialForce.z * Randf()
+			);
+			
+			pvec_velocity[i] = glm::vec3(0.0);
+			pvec_mass[i] = m_initialMass + Randf();
+
+			pvec_colour[i] = glm::vec3(0.2, 0.4, 1.0);
+			pvec_remainingLife[i] = m_lifespan;
+		}
+			
 	}
 }
 

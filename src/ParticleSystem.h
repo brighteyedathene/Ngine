@@ -39,16 +39,29 @@ public:
 		glm::vec3 spawnVariance, 
 		int numParticles, 
 		glm::vec3 initialForce, 
-		float initialMass = 1
+		float initialMass,
+		float lifspan
 	);
 	~ParticleSystem();
 
 	int m_numParticles;
-	Clock* m_pClock;
 
+
+	// Defaults
+	// physics
 	glm::vec3 gravity;
 	float dragCoefficient;
+	float absorbsionCoefficient;
 
+	// spawning
+	glm::vec3 m_spawnPosition;
+	glm::vec3 m_spawnVariance;
+	glm::vec3 m_initialForce;
+	float m_initialMass;
+	float m_lifespan;
+
+
+	Clock* m_pClock;
 	void Tick();
 	void Draw(Shader* pShader);
 	void SetupVAO();
@@ -68,6 +81,6 @@ public:
 	vector<CollisionPlane> planes;
 	vector<CollisionSphere> spheres;
 
-	const glm::vec3 waterColour = glm::vec3(0.2f, 0.5f, 0.8f);
+	const glm::vec3 waterColour = glm::vec3(0.5f, 0.8f, 0.75f);
 
 };
