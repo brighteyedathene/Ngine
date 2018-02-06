@@ -85,9 +85,9 @@ int main(int argc, char* argv[])
 	Model cubeModel(cubeModelPath);
 	NaiveGameObject cube;
 	cube.SetMesh(&cubeModel);
-	cube.transform.position = glm::vec3(0.0f, -200.0f, 0.0f);
+	cube.transform.position = glm::vec3(0.0f, -202.0f, 0.0f);
 	cube.transform.rotation = glm::vec3(45.0, 0.0, 0.0);
-	cube.transform.scale = glm::vec3(200.0f, 0.2f, 200.0f);
+	cube.transform.scale = glm::vec3(15.0f, 0.1f, 60.0f);
 
 	// Missile object
 	Model missileModel(missilePath);
@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
 	float refractiveIndex = 1.52f;
 	float fresnelScale = 1.0f;
 	float fresnelBias = 0.0f;
-	float fresnelPower = 1;
+	float fresnelPower = 2;
 
 #pragma endregion button_mapping
 
@@ -187,11 +187,11 @@ int main(int argc, char* argv[])
 
 	ParticleSystem particleSystem(
 		glm::vec3(0.0, 150.0, 0.0),
-		glm::vec3(15.0, 100.0, 15.0),
-		5000,
+		glm::vec3(5.0, 100.0, 5.0),
+		10000,
 		glm::vec3(20.0, 20.0, 20.0),
 		1.0f,
-		45.0f
+		30.0f
 	);
 
 	particleSystem.m_pClock = &gameclock;
@@ -254,9 +254,15 @@ int main(int argc, char* argv[])
 			particleSystem.spheres[0].centre.z -= 1.0f;
 		}
 		if (input.GetButton("b_YawLeft"))
-			cube.transform.rotation.y -= 1.0f;
+		{
+			spherePositions[0].x += 1.0f;
+			particleSystem.spheres[0].centre.x += 1.0f;
+		}
 		if (input.GetButton("b_YawRight"))
-			cube.transform.rotation.y += 1.0f;
+		{
+			spherePositions[0].x -= 1.0f;
+			particleSystem.spheres[0].centre.x -= 1.0f;
+		}
 		if (input.GetButton("b_PitchUp"))
 			cube.transform.rotation.x -= 1.0f;
 		if (input.GetButton("b_PitchDown"))
@@ -385,6 +391,7 @@ int main(int argc, char* argv[])
 		}
 		
 		// Cube
+		//transmittanceShader.BindCubemap(0, 0);
 		cube.Draw(&transmittanceShader);
 
 

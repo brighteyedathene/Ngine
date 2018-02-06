@@ -98,17 +98,10 @@ void ParticleSystem::Tick()
 			float distance = glm::length(difference);
 			if (distance < spheres[j].radius)
 			{
-
 				glm::vec3 collisionNormal = glm::normalize(difference);
 				float penetratingDot = glm::dot(collisionNormal, newVelocity);
 				newVelocity = newVelocity - 2 * penetratingDot * collisionNormal * absorbsionCoefficient;
-				//newVelocity = glm::reflect(newVelocity, collisionNormal);
 				difference = spheres[j].centre - pvec_position[i] + newVelocity * deltaTime;
-				if (glm::length(difference) < spheres[j].radius)
-				{
-					//newVelocity = glm::normalize(-difference) * spheres[j].radius;
-				}
-
 				pvec_colour[i] = glm::vec3(1.0);
 			}
 
@@ -129,7 +122,7 @@ void ParticleSystem::Tick()
 		pvec_colour[i].b = max(waterColour.b, pvec_colour[i].b - deltaTime * 0.06f);
 
 		// recycle particles
-		if (pvec_position[i].y < -300.0f || pvec_remainingLife[i] < 0.0f)
+		if (pvec_remainingLife[i] < 0.0f)
 		{
 			InitialiseParticle(i);
 		}

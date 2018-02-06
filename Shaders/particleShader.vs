@@ -13,7 +13,7 @@ uniform mat4 projectionview;
 uniform vec3 cameraRight;
 uniform vec3 cameraUp;
 
-float PARTICLE_SIZE = 1.5;
+float PARTICLE_SIZE = 1.0;
 
 void main()
 {
