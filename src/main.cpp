@@ -187,9 +187,9 @@ int main(int argc, char* argv[])
 
 	ParticleSystem particleSystem(
 		glm::vec3(0.0, 150.0, 0.0),
-		glm::vec3(30.0, 100.0, 30.0),
+		glm::vec3(15.0, 100.0, 15.0),
 		5000,
-		glm::vec3(800.0, 20.0, 800.0),
+		glm::vec3(20.0, 20.0, 20.0),
 		1.0f,
 		45.0f
 	);
@@ -206,11 +206,11 @@ int main(int argc, char* argv[])
 	sphereRadii.resize(numSpheres);
 	for (int i = 0; i < numSpheres; i++)
 	{
-		spherePositions[i].x = Randf() * 100.0f;
-		spherePositions[i].z = Randf() * 100.0f;
+		spherePositions[i].x = Randf() * 50.0f;
+		spherePositions[i].z = Randf() * 50.0f;
 		spherePositions[i].y = Randf() * 200.0f - 100.0f;
 
-		sphereRadii[i] = 3 + Randf() * 25.0f;
+		sphereRadii[i] = 3 + Randf() * 15.0f;
 
 		CollisionSphere cs;
 		cs.centre = spherePositions[i];
@@ -244,9 +244,15 @@ int main(int argc, char* argv[])
 
 		// for now, character movement is handled here...
 		if (input.GetButton("b_Forward"))
-			cube.transform.position += cube.transform.Forward() * 0.05f;
+		{
+			spherePositions[0].z += 1.0f;
+			particleSystem.spheres[0].centre.z += 1.0f;
+		}
 		if (input.GetButton("b_Backward"))
-			cube.transform.position -= cube.transform.Forward() * 0.05f;
+		{
+			spherePositions[0].z -= 1.0f;
+			particleSystem.spheres[0].centre.z -= 1.0f;
+		}
 		if (input.GetButton("b_YawLeft"))
 			cube.transform.rotation.y -= 1.0f;
 		if (input.GetButton("b_YawRight"))

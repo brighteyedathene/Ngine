@@ -63,6 +63,7 @@ public:
 
 	Clock* m_pClock;
 	void Tick();
+	void InitialiseParticle(int i);
 	void Draw(Shader* pShader);
 	void SetupVAO();
 

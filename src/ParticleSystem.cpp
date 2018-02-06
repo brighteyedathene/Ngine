@@ -30,26 +30,8 @@ ParticleSystem::ParticleSystem(
 	// initialise particle vectors
 	for (int i = 0; i < m_numParticles; i++)
 	{
-		pvec_position[i] = glm::vec3(
-			m_spawnPosition.x + Randf() * m_spawnVariance.x,
-			m_spawnPosition.y + Randf() * m_spawnVariance.y,
-			m_spawnPosition.z + Randf() * m_spawnVariance.z
-		);
-
-		pvec_force[i] = glm::vec3(
-			m_initialForce.x * Randf(),
-			m_initialForce.y * Randf(),
-			m_initialForce.z * Randf()
-		);
-
-		pvec_velocity[i] = glm::vec3(0.0);
-		pvec_mass[i] = m_initialMass + Randf();
-
-		pvec_colour[i] = waterColour;
-		pvec_remainingLife[i] = m_lifespan + Randf() * m_lifespan;
-
+		InitialiseParticle(i);
 	}
-
 
 	// Initialize forces
 	gravity = glm::vec3(0.0f, -9.8f, 0.0f);
@@ -118,9 +100,9 @@ void ParticleSystem::Tick()
 			{
 
 				glm::vec3 collisionNormal = glm::normalize(difference);
-				//float penetratingDot = glm::dot(collisionNormal, newVelocity);
-				//newVelocity = newVelocity - 2 * penetratingDot * collisionNormal * 0.8f;
-				newVelocity = glm::reflect(newVelocity, collisionNormal);
+				float penetratingDot = glm::dot(collisionNormal, newVelocity);
+				newVelocity = newVelocity - 2 * penetratingDot * collisionNormal * absorbsionCoefficient;
+				//newVelocity = glm::reflect(newVelocity, collisionNormal);
 				difference = spheres[j].centre - pvec_position[i] + newVelocity * deltaTime;
 				if (glm::length(difference) < spheres[j].radius)
 				{
@@ -142,35 +124,39 @@ void ParticleSystem::Tick()
 		pvec_remainingLife[i] -= deltaTime;
 
 		// fade back to blue
-		pvec_colour[i].r = max(waterColour.r, pvec_colour[i].r - deltaTime * 0.08f);
-		pvec_colour[i].g = max(waterColour.g, pvec_colour[i].g - deltaTime * 0.05f);
-		pvec_colour[i].b = max(waterColour.b, pvec_colour[i].b - deltaTime * 0.03f);
+		pvec_colour[i].r = max(waterColour.r, pvec_colour[i].r - deltaTime * 0.16f);
+		pvec_colour[i].g = max(waterColour.g, pvec_colour[i].g - deltaTime * 0.1f);
+		pvec_colour[i].b = max(waterColour.b, pvec_colour[i].b - deltaTime * 0.06f);
 
 		// recycle particles
 		if (pvec_position[i].y < -300.0f || pvec_remainingLife[i] < 0.0f)
 		{
-			pvec_position[i] = glm::vec3(
-				m_spawnPosition.x + Randf() * m_spawnVariance.x,
-				m_spawnPosition.y + Randf() * m_spawnVariance.y,
-				m_spawnPosition.z + Randf() * m_spawnVariance.z
-			);
-
-			pvec_force[i] = glm::vec3(
-				m_initialForce.x * Randf(),
-				m_initialForce.y * Randf(),
-				m_initialForce.z * Randf()
-			);
-			
-			pvec_velocity[i] = glm::vec3(0.0);
-			pvec_mass[i] = m_initialMass + Randf();
-
-			pvec_colour[i] = glm::vec3(0.2, 0.4, 1.0);
-			pvec_remainingLife[i] = m_lifespan;
+			InitialiseParticle(i);
 		}
 			
 	}
 }
 
+void ParticleSystem::InitialiseParticle(int i)
+{
+	pvec_position[i] = glm::vec3(
+		m_spawnPosition.x + Randf() * m_spawnVariance.x,
+		m_spawnPosition.y + Randf() * m_spawnVariance.y,
+		m_spawnPosition.z + Randf() * m_spawnVariance.z
+	);
+
+	pvec_force[i] = glm::vec3(
+		m_initialForce.x * Randf(),
+		m_initialForce.y * Randf(),
+		m_initialForce.z * Randf()
+	);
+
+	pvec_velocity[i] = glm::vec3(0.0);
+	pvec_mass[i] = m_initialMass + Randf();
+
+	pvec_colour[i] = waterColour;
+	pvec_remainingLife[i] = m_lifespan + Randf() * m_lifespan;
+}
 
 void ParticleSystem::Draw(Shader* pShader)
 {
