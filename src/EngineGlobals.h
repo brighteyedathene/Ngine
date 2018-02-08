@@ -47,6 +47,9 @@ namespace ngine
 	const GLchar* particleShaderVertexPath = "./Shaders/particleShader.vs";
 	const GLchar* particleShaderFragmentPath = "./Shaders/particleShader.fs";
 
+	const GLchar* bumpmapShaderVertexPath = "./Shaders/bumpmapShader.vs";
+	const GLchar* bumpmapShaderFragmentPath = "./Shaders/bumpmapShader.fs";
+
 
 #pragma endregion shaders
 
@@ -70,6 +73,9 @@ namespace ngine
 
 	const char* mixamoFBXPATH = "./Models/shit-for-testing/ybot_swagger_withmodel.fbx";
 	
+	const char* metalDiffusePath = "./Textures/metal/metal_texture.jpg";
+	const char* metalNormalPath = "./Textures/metal/metal_normalmap.jpg";
+
 	// obtained this cubemap from http://www.custommapmakers.org/skyboxes.php
 	std::string greenCubemapFaces_array[] =
 	{

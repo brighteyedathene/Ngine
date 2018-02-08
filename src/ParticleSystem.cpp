@@ -38,21 +38,6 @@ ParticleSystem::ParticleSystem(
 	dragCoefficient = 0.4f;
 	absorbsionCoefficient = 0.8f;
 
-	CollisionPlane plane;
-	plane.offset = glm::vec3(0.0, -100.0, 0.0);
-	plane.normal = glm::vec3(0.5, 1.0, 0.0);
-	//planes.push_back(plane);
-
-	CollisionPlane plane2;
-	plane2.offset = glm::vec3(0.0, -200.0, 0.0);
-	plane2.normal = glm::normalize(glm::vec3(-1, 1.0, 0.0));
-	planes.push_back(plane2);
-
-	CollisionSphere sphere;
-	sphere.centre = glm::vec3(5.0, 5.0, 5.0);
-	sphere.radius = 10.0f;
-	//spheres.push_back(sphere);
-
 	SetupVAO();
 }
 

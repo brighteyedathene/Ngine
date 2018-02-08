@@ -58,6 +58,7 @@ int main(int argc, char* argv[])
 	Shader transmittanceShader(transmittanceVertexPath, transmittanceFragmentPath);
 
 	Shader particleShader(particleShaderVertexPath, particleShaderFragmentPath);
+	Shader bumpmapShader(bumpmapShaderVertexPath, bumpmapShaderFragmentPath);
 
 
 #pragma region load_assets
@@ -85,9 +86,9 @@ int main(int argc, char* argv[])
 	Model cubeModel(cubeModelPath);
 	NaiveGameObject cube;
 	cube.SetMesh(&cubeModel);
-	cube.transform.position = glm::vec3(0.0f, -202.0f, 0.0f);
-	cube.transform.rotation = glm::vec3(45.0, 0.0, 0.0);
-	cube.transform.scale = glm::vec3(15.0f, 0.1f, 60.0f);
+	cube.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	cube.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
+	cube.transform.scale = glm::vec3(5.0f, 5.0f, 5.0f);
 
 	// Missile object
 	Model missileModel(missilePath);
@@ -108,6 +109,10 @@ int main(int argc, char* argv[])
 	skull.material.diffuse = glm::vec3(0.9f, 0.7f, 0.5f);
 	skull.material.specular = glm::vec3(0.8, 0.8f, 0.8f);
 	skull.material.shininess = 12.0f;
+
+	SATexture metalDiffuse(metalDiffusePath);
+	SATexture metalNormal(metalNormalPath);
+
 
 #pragma endregion load_assets
 
@@ -169,7 +174,7 @@ int main(int argc, char* argv[])
 	glm::vec3 refractiveIndexRGB = glm::vec3(0.51f, 0.52f, 0.527f);
 	float refractiveIndex = 1.52f;
 	float fresnelScale = 1.0f;
-	float fresnelBias = 0.0f;
+	float fresnelBias = 0.42f;
 	float fresnelPower = 2;
 
 #pragma endregion button_mapping
@@ -206,7 +211,7 @@ int main(int argc, char* argv[])
 	sphereRadii.resize(numSpheres);
 	for (int i = 0; i < numSpheres; i++)
 	{
-		spherePositions[i].x = Randf() * 50.0f;
+		spherePositions[i].x = 80 + Randf() * 50.0f;
 		spherePositions[i].z = Randf() * 50.0f;
 		spherePositions[i].y = Randf() * 200.0f - 100.0f;
 
@@ -246,22 +251,18 @@ int main(int argc, char* argv[])
 		if (input.GetButton("b_Forward"))
 		{
 			spherePositions[0].z += 1.0f;
-			particleSystem.spheres[0].centre.z += 1.0f;
 		}
 		if (input.GetButton("b_Backward"))
 		{
 			spherePositions[0].z -= 1.0f;
-			particleSystem.spheres[0].centre.z -= 1.0f;
 		}
 		if (input.GetButton("b_YawLeft"))
 		{
 			spherePositions[0].x += 1.0f;
-			particleSystem.spheres[0].centre.x += 1.0f;
 		}
 		if (input.GetButton("b_YawRight"))
 		{
 			spherePositions[0].x -= 1.0f;
-			particleSystem.spheres[0].centre.x -= 1.0f;
 		}
 		if (input.GetButton("b_PitchUp"))
 			cube.transform.rotation.x -= 1.0f;
@@ -352,7 +353,6 @@ int main(int argc, char* argv[])
 
 		// rendering
 
-
 		glm::mat4 mvp; // more from this later
 		glm::mat4 projection = mainCamera.GetProjectionMatrix();
 		glm::mat4 view = mainCamera.GetViewMatrix();
@@ -365,18 +365,22 @@ int main(int argc, char* argv[])
 		glViewport(0, 0, d_width, d_height);
 
 		// prepare transmittance shader
-		transmittanceShader.Use();
-		transmittanceShader.SetMat4("projectionview", pv);
-		transmittanceShader.SetVec3("viewPos", mainCamera.transform.position);
-		transmittanceShader.SetInt("skybox", 0);
+		bumpmapShader.Use();
+		bumpmapShader.SetMat4("projectionview", pv);
+		bumpmapShader.SetVec3("viewPos", mainCamera.transform.position);
 
-		transmittanceShader.SetVec3("refractiveIndexRGB", refractiveIndexRGB);
-		transmittanceShader.SetFloat("refractiveIndex", refractiveIndex);
-		transmittanceShader.SetFloat("scale", fresnelScale);
-		transmittanceShader.SetFloat("bias", fresnelBias);
-		transmittanceShader.SetFloat("power", fresnelPower);
+		metalDiffuse.Bind(1);
+		metalNormal.Bind(2);
+		bumpmapShader.SetInt("skybox", 0);
+		bumpmapShader.SetInt("texturemap", 1);
+		bumpmapShader.SetInt("normalmap", 2);
+		bumpmapShader.SetVec3("refractiveIndexRGB", refractiveIndexRGB);
+		bumpmapShader.SetFloat("refractiveIndex", refractiveIndex);
+		bumpmapShader.SetFloat("scale", fresnelScale);
+		bumpmapShader.SetFloat("bias", fresnelBias);
+		bumpmapShader.SetFloat("power", fresnelPower);
 
-		transmittanceShader.BindCubemap(greenSkybox.m_cubemap.m_textureID, 0);
+		bumpmapShader.BindCubemap(greenSkybox.m_cubemap.m_textureID, 0);
 
 		// Skull
 		skull.transform.rotation.y += 1.0f;
@@ -387,26 +391,12 @@ int main(int argc, char* argv[])
 		{
 			sphere.transform.position = spherePositions[i];
 			sphere.transform.scale = glm::vec3(sphereRadii[i]);
-			sphere.Draw(&transmittanceShader);
+			sphere.Draw(&bumpmapShader);
 		}
 		
 		// Cube
 		//transmittanceShader.BindCubemap(0, 0);
-		cube.Draw(&transmittanceShader);
-
-
-
-		// Particle system
-		particleShader.Use();
-		particleShader.SetMat4("projectionview", pv);
-		particleShader.SetVec3("cameraRight", glm::vec3(view[0][0], view[1][0], view[2][0]));
-		particleShader.SetVec3("cameraUp", view[0][1], view[1][1], view[2][1]);
-
-		particleSystem.Tick();
-		particleSystem.Draw(&particleShader);
-
-
-		//std::cout << "cam right: " << view[0][0] << " " << view[1][0] << " " << view[2][0] << std::endl;
+		cube.Draw(&bumpmapShader);
 
 		// Draw the skybox
 		greenSkybox.Draw(&skyboxShader, &mainCamera);

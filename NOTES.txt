@@ -173,3 +173,35 @@ animShader.SetMat4Array("joints", animator.m_currentMatrices, animator.m_jointCo
 myCharacter.Draw(&animShader);
 
 
+======================================================================================
+Particle System usage
+======================================================================================
+
+// before render loop
+
+ParticleSystem particleSystem(
+	glm::vec3(0.0, 150.0, 0.0),
+	glm::vec3(5.0, 100.0, 5.0),
+	10000,
+	glm::vec3(20.0, 20.0, 20.0),
+	1.0f,
+	30.0f
+);
+
+particleSystem.m_pClock = &gameclock;
+
+// remember to set up all the collision spheres and planes
+CollisionSphere cs;
+cs.centre = spherePositions[i];
+cs.radius = sphereRadii[i];
+particleSystem.spheres.push_back(cs);
+
+// in render loop
+particleShader.Use();
+particleShader.SetMat4("projectionview", pv);
+particleShader.SetVec3("cameraRight", glm::vec3(view[0][0], view[1][0], view[2][0]));
+particleShader.SetVec3("cameraUp", view[0][1], view[1][1], view[2][1]);
+
+particleSystem.Tick();
+particleSystem.Draw(&particleShader);
+
