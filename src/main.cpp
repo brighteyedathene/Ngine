@@ -206,9 +206,9 @@ int main(int argc, char* argv[])
 
 	// these labels are ordered to correspond to both filter vectors
 	vector<string> filterLabels = {
-		"GL_NEAREST", "GL_LINEAR",
-		"GL_NEAREST_MIPMAP_NEAREST", "GL_NEAREST_MIPMAP_LINEAR",
-		"GL_LINEAR_MIPMAP_NEAREST", "GL_LINEAR_MIPMAP_LINEAR"
+		"GL_NEAREST (Nearest texel)", "GL_LINEAR (Interpolate texels)",
+		"GL_NEAREST_MIPMAP_NEAREST (Nearest texel, nearest mipmap)", "GL_NEAREST_MIPMAP_LINEAR (Nearest texel, interpolate mipmaps)",
+		"GL_LINEAR_MIPMAP_NEAREST (Interpolate texels, nearest mipmap)", "GL_LINEAR_MIPMAP_LINEAR (Interpolate texelss, interpolate mipmaps)"
 	};
 
 	squaresTexture->LoadFromPath(mipPath16, generateMipMap, minFilters[minFilterIndex], magFilters[magFilterIndex], anisotropicFiltering);
@@ -335,6 +335,7 @@ int main(int argc, char* argv[])
 		if (reloadTexture)
 		{
 			reloadTexture = false;
+		std:cout << std::endl;
 			std::cout << "Texture number:        " << mipTextureIndex << std::endl;
 			std::cout << "Generate mip map:      " << generateMipMap << std::endl;
 			std::cout << "Anisotropic filtering: " << anisotropicFiltering << std::endl;
