@@ -54,6 +54,8 @@ namespace ngine
 #pragma endregion shaders
 
 
+#pragma region assets
+
 	const GLchar* texturePath = "./Textures/myTexture.jpg";
 	const GLchar* otherTexturePath = "./Textures/otherTexture.jpg";
 	const GLchar* eyePath = "./Textures/eye.jpg";
@@ -75,6 +77,14 @@ namespace ngine
 	
 	const char* metalDiffusePath = "./Textures/metal/metal_texture.jpg";
 	const char* metalNormalPath = "./Textures/metal/metal_normalmap.jpg";
+
+	const char* mipPath16 = "./Textures/mipmap_textures/16x16.png";
+	const char* mipPath32 = "./Textures/mipmap_textures/32x32.png";
+	const char* mipPath64 = "./Textures/mipmap_textures/64x64.png";
+	const char* mipPath128 = "./Textures/mipmap_textures/128x128.png";
+	const char* mipPath512 = "./Textures/mipmap_textures/512x512.png";
+	const char* mipPath1024 = "./Textures/mipmap_textures/1024x1024.png";
+	const char* mipPath2048 = "./Textures/mipmap_textures/2048x2048.png";
 
 	// obtained this cubemap from http://www.custommapmakers.org/skyboxes.php
 	std::string greenCubemapFaces_array[] =
@@ -100,6 +110,9 @@ namespace ngine
 		"./Textures/example_skybox/back.jpg",
 	};
 	//std::vector<std::string> greenCubemapFaces(exampleSkyboxFaces_array, exampleSkyboxFaces_array + sizeof(exampleSkyboxFaces_array) / sizeof(exampleSkyboxFaces_array[0]));
+
+#pragma endregion assets
+
 }
 
 #endif

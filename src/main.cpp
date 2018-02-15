@@ -86,9 +86,9 @@ int main(int argc, char* argv[])
 	Model cubeModel(cubeModelPath);
 	NaiveGameObject cube;
 	cube.SetMesh(&cubeModel);
-	cube.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	cube.transform.position = glm::vec3(5000.0f, -5000.0f, 5000.0f);
 	cube.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
-	cube.transform.scale = glm::vec3(5.0f, 5.0f, 5.0f);
+	cube.transform.scale = glm::vec3(500.0f, 500.0f, 500.0f);
 
 	// Missile object
 	Model missileModel(missilePath);
@@ -113,6 +113,9 @@ int main(int argc, char* argv[])
 	SATexture metalDiffuse(metalDiffusePath);
 	SATexture metalNormal(metalNormalPath);
 
+	
+	SATexture* squaresTexture = new SATexture();
+	// This will be loaded later
 
 #pragma endregion load_assets
 
@@ -120,14 +123,15 @@ int main(int argc, char* argv[])
 #pragma region camera_init
 
 	Camera mainCamera;
-	mainCamera.farClipDistance = 1000;
+	mainCamera.farClipDistance = 50000;
+	mainCamera.nearClipDistance = 10.0f;
 	CameraController camController(&mainCamera, &input);
 	bool freezecam = false; // TODO move this to camera class						
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	// set up camera for shader showcase
-	mainCamera.transform.rotation = glm::vec3(0.0, 180.0, 0.0);
-	mainCamera.transform.position = glm::vec3(142.0, 30.0, 50.0);
+	mainCamera.transform.rotation = glm::vec3(0.0, 45.0, 0.0);
+	mainCamera.transform.position = glm::vec3(-50.0, 30.0, -50.0);
 
 #pragma endregion camera_init
 
@@ -161,21 +165,53 @@ int main(int argc, char* argv[])
 
 
 	// Demo Stuff
-	input.CreateButtonMapping("refractiveIndex+", SDL_SCANCODE_1);
-	input.CreateButtonMapping("refractiveIndex-", SDL_SCANCODE_2);
+	input.CreateButtonMapping("min_filter+", SDL_SCANCODE_KP_4);
+	input.CreateButtonMapping("min_filter-", SDL_SCANCODE_KP_5);
 
-	input.CreateButtonMapping("fresnelBias+", SDL_SCANCODE_KP_7);
-	input.CreateButtonMapping("fresnelBias-", SDL_SCANCODE_KP_8);
-	input.CreateButtonMapping("fresnelScale+", SDL_SCANCODE_KP_4);
-	input.CreateButtonMapping("fresnelScale-", SDL_SCANCODE_KP_5);
-	input.CreateButtonMapping("fresnelPower+", SDL_SCANCODE_KP_1);
-	input.CreateButtonMapping("fresnelPower-", SDL_SCANCODE_KP_2);
+	input.CreateButtonMapping("mag_filter+", SDL_SCANCODE_KP_7);
+	input.CreateButtonMapping("mag_filter-", SDL_SCANCODE_KP_8);
 
-	glm::vec3 refractiveIndexRGB = glm::vec3(0.51f, 0.52f, 0.527f);
-	float refractiveIndex = 1.52f;
-	float fresnelScale = 1.0f;
-	float fresnelBias = 0.42f;
-	float fresnelPower = 2;
+	input.CreateButtonMapping("mip_texture+", SDL_SCANCODE_KP_1);
+	input.CreateButtonMapping("mip_texture-", SDL_SCANCODE_KP_2);
+
+	input.CreateButtonMapping("mipmap_toggle", SDL_SCANCODE_M);
+	input.CreateButtonMapping("anisotropicFiltering_toggle", SDL_SCANCODE_N);
+
+	bool generateMipMap = false;
+	bool anisotropicFiltering = false;
+	int minFilterIndex = 0;
+	int magFilterIndex = 0;
+	int mipTextureIndex = 0;
+	
+	bool reloadTexture = false;
+
+	vector<GLint> minFilters = {
+		GL_NEAREST, GL_LINEAR,
+		GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_LINEAR,
+		GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_LINEAR 
+	};
+	vector<GLint> magFilters = {
+		GL_NEAREST, GL_LINEAR
+	};
+
+	vector<const GLchar*> mipPaths = {
+		mipPath16,
+		mipPath32,
+		mipPath64,
+		mipPath128,
+		mipPath512,
+		mipPath1024,
+		mipPath2048
+	};
+
+	// these labels are ordered to correspond to both filter vectors
+	vector<string> filterLabels = {
+		"GL_NEAREST", "GL_LINEAR",
+		"GL_NEAREST_MIPMAP_NEAREST", "GL_NEAREST_MIPMAP_LINEAR",
+		"GL_LINEAR_MIPMAP_NEAREST", "GL_LINEAR_MIPMAP_LINEAR"
+	};
+
+	squaresTexture->LoadFromPath(mipPath16, generateMipMap, minFilters[minFilterIndex], magFilters[magFilterIndex], anisotropicFiltering);
 
 #pragma endregion button_mapping
 
@@ -184,47 +220,6 @@ int main(int argc, char* argv[])
 	// Start the clock just before render loop
 	//struct Clock clock;
 	gameclock.Init();
-
-
-
-
-#pragma region particles
-
-	ParticleSystem particleSystem(
-		glm::vec3(0.0, 150.0, 0.0),
-		glm::vec3(5.0, 100.0, 5.0),
-		10000,
-		glm::vec3(20.0, 20.0, 20.0),
-		1.0f,
-		30.0f
-	);
-
-	particleSystem.m_pClock = &gameclock;
-
-
-	// Random spheres
-	int numSpheres = 4;
-	vector<glm::vec3> spherePositions;
-	vector<float> sphereRadii;
-
-	spherePositions.resize(numSpheres);
-	sphereRadii.resize(numSpheres);
-	for (int i = 0; i < numSpheres; i++)
-	{
-		spherePositions[i].x = 80 + Randf() * 50.0f;
-		spherePositions[i].z = Randf() * 50.0f;
-		spherePositions[i].y = Randf() * 200.0f - 100.0f;
-
-		sphereRadii[i] = 3 + Randf() * 15.0f;
-
-		CollisionSphere cs;
-		cs.centre = spherePositions[i];
-		cs.radius = sphereRadii[i];
-		particleSystem.spheres.push_back(cs);
-	}
-
-#pragma endregion particles
-
 
 
 
@@ -250,20 +245,16 @@ int main(int argc, char* argv[])
 		// for now, character movement is handled here...
 		if (input.GetButton("b_Forward"))
 		{
-			spherePositions[0].z += 1.0f;
+			cube.transform.position += cube.transform.Forward() * 10.0f;
 		}
 		if (input.GetButton("b_Backward"))
 		{
-			spherePositions[0].z -= 1.0f;
+			cube.transform.position -= cube.transform.Forward() * 10.0f;
 		}
 		if (input.GetButton("b_YawLeft"))
-		{
-			spherePositions[0].x += 1.0f;
-		}
+			cube.transform.rotation.y += 1.0f;
 		if (input.GetButton("b_YawRight"))
-		{
-			spherePositions[0].x -= 1.0f;
-		}
+			cube.transform.rotation.y -= 1.0f;
 		if (input.GetButton("b_PitchUp"))
 			cube.transform.rotation.x -= 1.0f;
 		if (input.GetButton("b_PitchDown"))
@@ -299,53 +290,63 @@ int main(int argc, char* argv[])
 
 #pragma region democontrols
 		// Demo stuff
-		if (input.GetButton("refractiveIndex+"))
+		if (input.GetButtonDown("mipmap_toggle"))
 		{
-			refractiveIndex += 0.02f;
-			refractiveIndexRGB.r += 0.01f;
-			refractiveIndexRGB.g += 0.01f;
-			refractiveIndexRGB.b += 0.01f;
-			//std::cout << "refractiveIndex: " << refractiveIndex << std::endl;
-			std::cout << "refractiveIndex (RGB): " << refractiveIndexRGB.r << "  " << refractiveIndexRGB.g << "  " << refractiveIndexRGB.b << std::endl;
+			generateMipMap = !generateMipMap;
+			reloadTexture = true;
 		}
-		if (input.GetButton("refractiveIndex-"))
+		if (input.GetButtonDown("anisotropicFiltering_toggle"))
 		{
-			refractiveIndex -= 0.02f;
-			refractiveIndexRGB.r -= 0.01f;
-			refractiveIndexRGB.g -= 0.01f;
-			refractiveIndexRGB.b -= 0.01f;
-			//std::cout << "refractiveIndex (monochrome): " << refractiveIndex << std::endl;
-			std::cout << "refractiveIndex (RGB): " << refractiveIndexRGB.r << "  " << refractiveIndexRGB.g << "  " << refractiveIndexRGB.b << std::endl;
+			anisotropicFiltering = !anisotropicFiltering;
+			reloadTexture = true;
 		}
-		if (input.GetButton("fresnelScale+"))
+		if (input.GetButtonDown("min_filter+"))
 		{
-			fresnelScale += 0.02f;
-			std::cout << "fresnelScale: " << fresnelScale << std::endl;
+			minFilterIndex = (minFilterIndex + 1) % minFilters.size();
+			reloadTexture = true;
 		}
-		if (input.GetButton("fresnelScale-"))
+		if (input.GetButtonDown("min_filter-"))
 		{
-			fresnelScale -= 0.02f;
-			std::cout << "fresnelScale: " << fresnelScale << std::endl;
+			minFilterIndex = (minFilterIndex - 1 + minFilters.size()) % minFilters.size();
+			reloadTexture = true;
 		}
-		if (input.GetButton("fresnelBias+"))
+		if (input.GetButtonDown("mag_filter+"))
 		{
-			fresnelBias += 0.02f;
-			std::cout << "fresnelBias: " << fresnelBias << std::endl;
+			magFilterIndex = (magFilterIndex + 1) % magFilters.size();
+			reloadTexture = true;
 		}
-		if (input.GetButton("fresnelBias-"))
+		if (input.GetButtonDown("mag_filter-"))
 		{
-			fresnelBias -= 0.02f;
-			std::cout << "fresnelBias: " << fresnelBias << std::endl;
+			magFilterIndex = (magFilterIndex - 1) % magFilters.size();
+			reloadTexture = true;
 		}
-		if (input.GetButton("fresnelPower+"))
+
+		if (input.GetButtonDown("mip_texture+"))
 		{
-			fresnelPower += 0.1;
-			std::cout << "fresnelPower: " << fresnelPower << std::endl;
+			mipTextureIndex = (mipTextureIndex + 1) % mipPaths.size();
+			reloadTexture = true;
 		}
-		if (input.GetButton("fresnelPower-"))
+		if (input.GetButtonDown("mip_texture-"))
 		{
-			fresnelPower -= 0.1;
-			std::cout << "fresnelPower: " << fresnelPower << std::endl;
+			mipTextureIndex = (mipTextureIndex - 1 + mipPaths.size()) % mipPaths.size();
+			reloadTexture = true;
+		}
+
+		if (reloadTexture)
+		{
+			reloadTexture = false;
+			std::cout << "Texture number:        " << mipTextureIndex << std::endl;
+			std::cout << "Generate mip map:      " << generateMipMap << std::endl;
+			std::cout << "Anisotropic filtering: " << anisotropicFiltering << std::endl;
+			std::cout << "Min Filter:            " << filterLabels[minFilterIndex] << " (" << minFilterIndex << ")" << std::endl;
+			std::cout << "Mag Filter:            " << filterLabels[magFilterIndex] << " (" << magFilterIndex << ")" << std::endl;
+			squaresTexture->LoadFromPath(
+				mipPaths[mipTextureIndex], 
+				generateMipMap,
+				minFilters[minFilterIndex], 
+				magFilters[magFilterIndex],
+				anisotropicFiltering
+			);
 		}
 
 #pragma endregion democontrols
@@ -365,40 +366,16 @@ int main(int argc, char* argv[])
 		glViewport(0, 0, d_width, d_height);
 
 		// prepare transmittance shader
-		bumpmapShader.Use();
-		bumpmapShader.SetMat4("projectionview", pv);
-		bumpmapShader.SetVec3("viewPos", mainCamera.transform.position);
+		unlitTextureShader.Use();
+		unlitTextureShader.SetMat4("projectionview", pv);
+		unlitTextureShader.SetVec3("viewPos", mainCamera.transform.position);
 
-		metalDiffuse.Bind(1);
-		metalNormal.Bind(2);
-		bumpmapShader.SetInt("skybox", 0);
-		bumpmapShader.SetInt("texturemap", 1);
-		bumpmapShader.SetInt("normalmap", 2);
-		bumpmapShader.SetVec3("refractiveIndexRGB", refractiveIndexRGB);
-		bumpmapShader.SetFloat("refractiveIndex", refractiveIndex);
-		bumpmapShader.SetFloat("scale", fresnelScale);
-		bumpmapShader.SetFloat("bias", fresnelBias);
-		bumpmapShader.SetFloat("power", fresnelPower);
+		squaresTexture->Bind(0);
+		unlitTextureShader.SetInt("texture1", 0);
 
-		bumpmapShader.BindCubemap(greenSkybox.m_cubemap.m_textureID, 0);
-
-		// Skull
-		skull.transform.rotation.y += 1.0f;
-		//skull.Draw(&transmittanceShader);
-
-		// Sphere
-		for (int i = 0; i < numSpheres; i++)
-		{
-			sphere.transform.position = spherePositions[i];
-			sphere.transform.scale = glm::vec3(sphereRadii[i]);
-			sphere.Draw(&bumpmapShader);
-		}
-		
 		// Cube
-		//transmittanceShader.BindCubemap(0, 0);
-		cube.Draw(&bumpmapShader);
+		cube.Draw(&unlitTextureShader);
 
-		// Draw the skybox
 		greenSkybox.Draw(&skyboxShader, &mainCamera);
 
 		glBindVertexArray(0);
