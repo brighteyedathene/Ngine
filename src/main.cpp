@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
 	vector<string> filterLabels = {
 		"GL_NEAREST (Nearest texel)", "GL_LINEAR (Interpolate texels)",
 		"GL_NEAREST_MIPMAP_NEAREST (Nearest texel, nearest mipmap)", "GL_NEAREST_MIPMAP_LINEAR (Nearest texel, interpolate mipmaps)",
-		"GL_LINEAR_MIPMAP_NEAREST (Interpolate texels, nearest mipmap)", "GL_LINEAR_MIPMAP_LINEAR (Interpolate texelss, interpolate mipmaps)"
+		"GL_LINEAR_MIPMAP_NEAREST (Interpolate texels, nearest mipmap)", "GL_LINEAR_MIPMAP_LINEAR (Interpolate texels, interpolate mipmaps)"
 	};
 
 	squaresTexture->LoadFromPath(mipPath16, generateMipMap, minFilters[minFilterIndex], magFilters[magFilterIndex], anisotropicFiltering);
