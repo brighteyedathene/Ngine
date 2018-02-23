@@ -211,6 +211,16 @@ int main(int argc, char* argv[])
 		"GL_LINEAR_MIPMAP_NEAREST (Interpolate texels, nearest mipmap)", "GL_LINEAR_MIPMAP_LINEAR (Interpolate texels, interpolate mipmaps)"
 	};
 
+	vector<string> textureLabels = {
+		"16x16",
+		"32x32",
+		"64x64",
+		"128x128",
+		"512x512",
+		"1024x1024",
+		"2048x2048",
+	};
+
 	squaresTexture->LoadFromPath(mipPath16, generateMipMap, minFilters[minFilterIndex], magFilters[magFilterIndex], anisotropicFiltering);
 
 #pragma endregion button_mapping
@@ -273,7 +283,7 @@ int main(int argc, char* argv[])
 			if (freezecam) 
 			{
 				SDL_SetRelativeMouseMode(SDL_FALSE);
-				std::cout << "Camera position: " << mainCamera.transform.ToString() << std::endl;
+				//std::cout << "Camera position: " << mainCamera.transform.ToString() << std::endl;
 			}
 			else
 				SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -294,6 +304,7 @@ int main(int argc, char* argv[])
 		{
 			generateMipMap = !generateMipMap;
 			reloadTexture = true;
+			std::cout << "Generate mip map:      " << generateMipMap << std::endl;
 		}
 		if (input.GetButtonDown("anisotropicFiltering_toggle"))
 		{
@@ -325,22 +336,29 @@ int main(int argc, char* argv[])
 		{
 			mipTextureIndex = (mipTextureIndex + 1) % mipPaths.size();
 			reloadTexture = true;
+
 		}
 		if (input.GetButtonDown("mip_texture-"))
 		{
 			mipTextureIndex = (mipTextureIndex - 1 + mipPaths.size()) % mipPaths.size();
 			reloadTexture = true;
+
 		}
 
 		if (reloadTexture)
 		{
 			reloadTexture = false;
-		std:cout << std::endl;
-			std::cout << "Texture number:        " << mipTextureIndex << std::endl;
-			std::cout << "Generate mip map:      " << generateMipMap << std::endl;
-			std::cout << "Anisotropic filtering: " << anisotropicFiltering << std::endl;
-			std::cout << "Min Filter:            " << filterLabels[minFilterIndex] << " (" << minFilterIndex << ")" << std::endl;
-			std::cout << "Mag Filter:            " << filterLabels[magFilterIndex] << " (" << magFilterIndex << ")" << std::endl;
+			std:cout << std::endl;
+
+			std::cout << "Texture size: " << textureLabels[mipTextureIndex] << std::endl;
+			std::cout << "Mag Filter: " << filterLabels[magFilterIndex] << " (" << magFilterIndex << ")" << std::endl;
+			std::cout << "Min Filter: " << filterLabels[minFilterIndex] << " (" << minFilterIndex << ")" << std::endl;
+
+			if (anisotropicFiltering)
+				std::cout << "Anisotropic filtering: " << "16x" << std::endl;
+			else
+				std::cout << "Anisotropic filtering: " << "off" << std::endl;
+
 			squaresTexture->LoadFromPath(
 				mipPaths[mipTextureIndex], 
 				generateMipMap,
@@ -375,6 +393,7 @@ int main(int argc, char* argv[])
 		unlitTextureShader.SetInt("texture1", 0);
 
 		// Cube
+		cube.transform.rotation.y += sin(gameclock.time*0.5) *0.1;
 		cube.Draw(&unlitTextureShader);
 
 		greenSkybox.Draw(&skyboxShader, &mainCamera);
