@@ -37,7 +37,7 @@ void main()
 
     // diffuse
     float lambertian = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = lambertian * material.diffuse * light.colour / distance;
+    vec3 diffuse = lambertian * material.diffuse * light.colour / distance*distance;
 
     // specular
     vec3 viewDir = normalize(viewPos - FragPos);

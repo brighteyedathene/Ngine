@@ -60,6 +60,7 @@ int main(int argc, char* argv[])
 	Shader particleShader(particleShaderVertexPath, particleShaderFragmentPath);
 	Shader bumpmapShader(bumpmapShaderVertexPath, bumpmapShaderFragmentPath);
 
+	Shader invertedHullShader(invertedHullShaderVertexPath, invertedHullShaderFragmentPath);
 
 #pragma region load_assets
 	
@@ -86,9 +87,9 @@ int main(int argc, char* argv[])
 	Model cubeModel(cubeModelPath);
 	NaiveGameObject cube;
 	cube.SetMesh(&cubeModel);
-	cube.transform.position = glm::vec3(5000.0f, -5000.0f, 5000.0f);
+	cube.transform.position = glm::vec3(30.0f, 0.0f, 0.0f);
 	cube.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
-	cube.transform.scale = glm::vec3(500.0f, 500.0f, 500.0f);
+	cube.transform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
 	// Missile object
 	Model missileModel(missilePath);
@@ -102,7 +103,7 @@ int main(int argc, char* argv[])
 	skull.SetMesh(&skullModel);
 	skull.SetInput(&input);
 	skull.transform.scale = glm::vec3(10.0f);
-	skull.transform.position = glm::vec3(0.0f, 0.0f, -70.0f);
+	skull.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
 
 
 	skull.material.ambient = glm::vec3(0.2f, 0.15f, 0.1f);
@@ -110,12 +111,12 @@ int main(int argc, char* argv[])
 	skull.material.specular = glm::vec3(0.8, 0.8f, 0.8f);
 	skull.material.shininess = 12.0f;
 
-	SATexture metalDiffuse(metalDiffusePath);
-	SATexture metalNormal(metalNormalPath);
-
-	
-	SATexture* squaresTexture = new SATexture();
-	// This will be loaded later
+	// Bear object
+	Model bearModel(bearPath);
+	NaiveGameObject bear;
+	bear.SetMesh(&bearModel);
+	bear.transform.scale = glm::vec3(5.0f);
+	bear.transform.position = glm::vec3(-30.0, 0.0, 0.0);
 
 #pragma endregion load_assets
 
@@ -123,15 +124,15 @@ int main(int argc, char* argv[])
 #pragma region camera_init
 
 	Camera mainCamera;
-	mainCamera.farClipDistance = 50000;
-	mainCamera.nearClipDistance = 10.0f;
+	mainCamera.farClipDistance = 10000;
+	mainCamera.nearClipDistance = 0.10f;
 	CameraController camController(&mainCamera, &input);
 	bool freezecam = false; // TODO move this to camera class						
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	// set up camera for shader showcase
 	mainCamera.transform.rotation = glm::vec3(0.0, 45.0, 0.0);
-	mainCamera.transform.position = glm::vec3(-50.0, 30.0, -50.0);
+	mainCamera.transform.position = glm::vec3(0.0, 0.0, -20.0);
 
 #pragma endregion camera_init
 
@@ -165,8 +166,8 @@ int main(int argc, char* argv[])
 
 
 	// Demo Stuff
-	input.CreateButtonMapping("min_filter+", SDL_SCANCODE_KP_4);
-	input.CreateButtonMapping("min_filter-", SDL_SCANCODE_KP_5);
+	input.CreateButtonMapping("thickness+", SDL_SCANCODE_KP_4);
+	input.CreateButtonMapping("thickness-", SDL_SCANCODE_KP_5);
 
 	input.CreateButtonMapping("mag_filter+", SDL_SCANCODE_KP_7);
 	input.CreateButtonMapping("mag_filter-", SDL_SCANCODE_KP_8);
@@ -177,51 +178,6 @@ int main(int argc, char* argv[])
 	input.CreateButtonMapping("mipmap_toggle", SDL_SCANCODE_M);
 	input.CreateButtonMapping("anisotropicFiltering_toggle", SDL_SCANCODE_N);
 
-	bool generateMipMap = false;
-	bool anisotropicFiltering = false;
-	int minFilterIndex = 0;
-	int magFilterIndex = 0;
-	int mipTextureIndex = 0;
-	
-	bool reloadTexture = false;
-
-	vector<GLint> minFilters = {
-		GL_NEAREST, GL_LINEAR,
-		GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_LINEAR,
-		GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_LINEAR 
-	};
-	vector<GLint> magFilters = {
-		GL_NEAREST, GL_LINEAR
-	};
-
-	vector<const GLchar*> mipPaths = {
-		mipPath16,
-		mipPath32,
-		mipPath64,
-		mipPath128,
-		mipPath512,
-		mipPath1024,
-		mipPath2048
-	};
-
-	// these labels are ordered to correspond to both filter vectors
-	vector<string> filterLabels = {
-		"GL_NEAREST (Nearest texel)", "GL_LINEAR (Interpolate texels)",
-		"GL_NEAREST_MIPMAP_NEAREST (Nearest texel, nearest mipmap)", "GL_NEAREST_MIPMAP_LINEAR (Nearest texel, interpolate mipmaps)",
-		"GL_LINEAR_MIPMAP_NEAREST (Interpolate texels, nearest mipmap)", "GL_LINEAR_MIPMAP_LINEAR (Interpolate texels, interpolate mipmaps)"
-	};
-
-	vector<string> textureLabels = {
-		"16x16",
-		"32x32",
-		"64x64",
-		"128x128",
-		"512x512",
-		"1024x1024",
-		"2048x2048",
-	};
-
-	squaresTexture->LoadFromPath(mipPath16, generateMipMap, minFilters[minFilterIndex], magFilters[magFilterIndex], anisotropicFiltering);
 
 #pragma endregion button_mapping
 
@@ -237,7 +193,7 @@ int main(int argc, char* argv[])
 	// render loop!
 	while (!display.IsClosed()) 
 	{
-		display.Clear(0.0f, 0.0f, 0.0f, 1.0f);
+		display.Clear(0.8f, 0.8f, 0.8f, 1.0f);
 
 		// logic
 		if (input.GetButtonDown("Escape"))
@@ -299,74 +255,6 @@ int main(int argc, char* argv[])
 
 
 #pragma region democontrols
-		// Demo stuff
-		if (input.GetButtonDown("mipmap_toggle"))
-		{
-			generateMipMap = !generateMipMap;
-			reloadTexture = true;
-			std::cout << "Generate mip map:      " << generateMipMap << std::endl;
-		}
-		if (input.GetButtonDown("anisotropicFiltering_toggle"))
-		{
-			anisotropicFiltering = !anisotropicFiltering;
-			reloadTexture = true;
-		}
-		if (input.GetButtonDown("min_filter+"))
-		{
-			minFilterIndex = (minFilterIndex + 1) % minFilters.size();
-			reloadTexture = true;
-		}
-		if (input.GetButtonDown("min_filter-"))
-		{
-			minFilterIndex = (minFilterIndex - 1 + minFilters.size()) % minFilters.size();
-			reloadTexture = true;
-		}
-		if (input.GetButtonDown("mag_filter+"))
-		{
-			magFilterIndex = (magFilterIndex + 1) % magFilters.size();
-			reloadTexture = true;
-		}
-		if (input.GetButtonDown("mag_filter-"))
-		{
-			magFilterIndex = (magFilterIndex - 1) % magFilters.size();
-			reloadTexture = true;
-		}
-
-		if (input.GetButtonDown("mip_texture+"))
-		{
-			mipTextureIndex = (mipTextureIndex + 1) % mipPaths.size();
-			reloadTexture = true;
-
-		}
-		if (input.GetButtonDown("mip_texture-"))
-		{
-			mipTextureIndex = (mipTextureIndex - 1 + mipPaths.size()) % mipPaths.size();
-			reloadTexture = true;
-
-		}
-
-		if (reloadTexture)
-		{
-			reloadTexture = false;
-			std:cout << std::endl;
-
-			std::cout << "Texture size: " << textureLabels[mipTextureIndex] << std::endl;
-			std::cout << "Mag Filter: " << filterLabels[magFilterIndex] << " (" << magFilterIndex << ")" << std::endl;
-			std::cout << "Min Filter: " << filterLabels[minFilterIndex] << " (" << minFilterIndex << ")" << std::endl;
-
-			if (anisotropicFiltering)
-				std::cout << "Anisotropic filtering: " << "16x" << std::endl;
-			else
-				std::cout << "Anisotropic filtering: " << "off" << std::endl;
-
-			squaresTexture->LoadFromPath(
-				mipPaths[mipTextureIndex], 
-				generateMipMap,
-				minFilters[minFilterIndex], 
-				magFilters[magFilterIndex],
-				anisotropicFiltering
-			);
-		}
 
 #pragma endregion democontrols
 
@@ -385,18 +273,45 @@ int main(int argc, char* argv[])
 		glViewport(0, 0, d_width, d_height);
 
 		// prepare transmittance shader
-		unlitTextureShader.Use();
-		unlitTextureShader.SetMat4("projectionview", pv);
-		unlitTextureShader.SetVec3("viewPos", mainCamera.transform.position);
+		invertedHullShader.Use();
+		invertedHullShader.SetMat4("projectionview", pv);
+		invertedHullShader.SetVec3("viewPos", mainCamera.transform.position);
+		invertedHullShader.SetFloat("edgeThreshold", 0.3);
+		invertedHullShader.SetFloat("scaleFactor", 1.01);
 
-		squaresTexture->Bind(0);
-		unlitTextureShader.SetInt("texture1", 0);
+		// prepare blinn phong shader
+		blinnPhongShader.Use();
+		blinnPhongShader.SetMat4("projectionview", pv);
+		blinnPhongShader.SetVec3("viewPos", mainCamera.transform.position);
+		blinnPhongShader.SetVec3("light.position", mainCamera.transform.position);
+		blinnPhongShader.SetVec3("light.colour", glm::vec3(1.0));
 
-		// Cube
-		cube.transform.rotation.y += sin(gameclock.time*0.5) *0.1;
-		cube.Draw(&unlitTextureShader);
+		// Skull
+		skull.transform.rotation.y += sin(gameclock.time*0.5) *0.1;
+		
 
-		greenSkybox.Draw(&skyboxShader, &mainCamera);
+
+		glEnable(GL_CULL_FACE);
+		
+		//glCullFace(GL_FRONT);
+		glFrontFace(GL_CW);
+		invertedHullShader.Use();
+		
+		skull.Draw(&invertedHullShader);
+		cube.Draw(&invertedHullShader);
+		bear.Draw(&invertedHullShader);
+
+		//glCullFace(GL_BACK);
+		glFrontFace(GL_CCW);
+		
+		
+		blinnPhongShader.Use();
+		skull.Draw(&blinnPhongShader);
+		cube.Draw(&blinnPhongShader);
+		bear.Draw(&blinnPhongShader);
+
+
+		//greenSkybox.Draw(&skyboxShader, &mainCamera);
 
 		glBindVertexArray(0);
 		display.Update();

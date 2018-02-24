@@ -50,6 +50,9 @@ namespace ngine
 	const GLchar* bumpmapShaderVertexPath = "./Shaders/bumpmapShader.vs";
 	const GLchar* bumpmapShaderFragmentPath = "./Shaders/bumpmapShader.fs";
 
+	const GLchar* invertedHullShaderVertexPath = "./Shaders/invertedHullShader.vs";
+	const GLchar* invertedHullShaderFragmentPath = "./Shaders/invertedHullShader.fs";
+
 
 #pragma endregion shaders
 
