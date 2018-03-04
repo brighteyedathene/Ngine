@@ -28,6 +28,9 @@ public:
 	glm::vec3 Right();
 	glm::vec3 Up();
 
+	// Sets rotation of the transform with 0 roll
+	void SetRotationFromDirection(glm::vec3 direction);
+
 	Transform();
 	Transform(const Transform &transform);
 	~Transform();

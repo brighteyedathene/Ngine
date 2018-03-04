@@ -118,6 +118,12 @@ int main(int argc, char* argv[])
 	bear.transform.scale = glm::vec3(5.0f);
 	bear.transform.position = glm::vec3(-30.0, 0.0, 0.0);
 
+	// IK joint model
+	Model ikjointModel(ikjointPath);
+	NaiveGameObject ikjoint;
+	ikjoint.SetMesh(&ikjointModel);
+	// maybe add the ik base here as well
+
 #pragma endregion load_assets
 
 
@@ -325,7 +331,7 @@ int main(int argc, char* argv[])
 		glFrontFace(GL_CW);
 		invertedHullShader.Use();
 		
-		skull.Draw(&invertedHullShader);
+		//ikjoint.Draw(&invertedHullShader);
 		//cube.Draw(&invertedHullShader);
 		//bear.Draw(&invertedHullShader);
 
@@ -334,7 +340,7 @@ int main(int argc, char* argv[])
 		
 		
 		blinnPhongShader.Use();
-		skull.Draw(&blinnPhongShader);
+		ikjoint.Draw(&blinnPhongShader);
 		//cube.Draw(&blinnPhongShader);
 		//bear.Draw(&blinnPhongShader);
 

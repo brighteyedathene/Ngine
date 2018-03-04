@@ -94,6 +94,16 @@ std::string Transform::ToString()
 }
 
 
+void Transform::SetRotationFromDirection(glm::vec3 direction)
+{
+	glm::normalize(direction);
+	rotation.y = atan2f(direction.z, direction.z);
+	rotation.x = asinf(direction.y);
+	rotation.z = 0;
+}
+
+
+
 //-----------QTransform--------//
 
 QTransform::QTransform()

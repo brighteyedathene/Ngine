@@ -77,6 +77,8 @@ namespace ngine
 	const char* cubeModelPath = "./Models/cube/cube.obj";
 	const char* sphereModelPath = "./Models/sphere/sphere.obj";
 
+	const char* ikjointPath = "./Models/ikjoints/joint.obj";
+
 	const char* mixamoFBXPATH = "./Models/shit-for-testing/ybot_swagger_withmodel.fbx";
 	
 	const char* metalDiffusePath = "./Textures/metal/metal_texture.jpg";
