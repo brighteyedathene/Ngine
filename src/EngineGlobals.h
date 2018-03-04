@@ -66,7 +66,8 @@ namespace ngine
 	const char* bearPath = "./Models/bear/bear.fbx";
 	//const char* bearPath = "./Models/bear/mayabear.obj";
 	const char* missilePath = "./Models/missile/missile.obj";
-	const char* skullPath = "./Models/skull/skull.obj"; // obtained from https://sketchfab.com/models/1a9db900738d44298b0bc59f68123393#
+	//const char* skullPath = "./Models/skull/skull.obj"; // obtained from https://sketchfab.com/models/1a9db900738d44298b0bc59f68123393#
+	const char* skullPath = "./Models/colourmodels/skull.fbx"; // obtained from https://sketchfab.com/models/1a9db900738d44298b0bc59f68123393#
 	const char* bninjaPath = "./Models/bninja/bnin_Idle_Textured.dae";
 
 	const char* majorkongPath = "./Models/majorkong/majorkong-only.dae";

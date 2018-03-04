@@ -23,6 +23,7 @@ uniform vec3 viewPos;
 in vec3 Normal;
 in vec3 FragPos;
 
+in vec3 vColour;
 
 void main()
 {
@@ -47,5 +48,8 @@ void main()
 
     vec3 result = ambient + diffuse + specular;
 
-    FragColor = vec4(result, 1.0);
+    //FragColor = vec4(result, 1);
+    //FragColor = vec4(1);
+    FragColor = vec4(vColour.r, 0.5, 0.5, 1.0);
+ 
 }

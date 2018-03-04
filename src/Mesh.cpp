@@ -48,10 +48,12 @@ void Mesh::SetupMesh()
 	// vertex tangents
 	glEnableVertexAttribArray(3);
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Tangent));
-
+	// vertex bitangents
 	glEnableVertexAttribArray(4);
 	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent));
-
+	//vertex colours
+	glEnableVertexAttribArray(5);
+	glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Colour));
 	glBindVertexArray(0);
 }
 

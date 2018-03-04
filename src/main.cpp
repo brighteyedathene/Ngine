@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 	skull.SetInput(&input);
 	skull.transform.scale = glm::vec3(10.0f);
 	skull.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
-
+	skull.transform.rotation.y = -90.0;
 
 	skull.material.ambient = glm::vec3(0.2f, 0.15f, 0.1f);
 	skull.material.diffuse = glm::vec3(0.9f, 0.7f, 0.5f);
@@ -166,8 +166,13 @@ int main(int argc, char* argv[])
 
 
 	// Demo Stuff
-	input.CreateButtonMapping("thickness+", SDL_SCANCODE_KP_4);
-	input.CreateButtonMapping("thickness-", SDL_SCANCODE_KP_5);
+	input.CreateButtonMapping("thicknessMax+", SDL_SCANCODE_KP_4);
+	input.CreateButtonMapping("thicknessMax-", SDL_SCANCODE_KP_5);
+	float thicknessMax = 0.05;
+
+	input.CreateButtonMapping("thicknessMin+", SDL_SCANCODE_KP_1);
+	input.CreateButtonMapping("thicknessMin-", SDL_SCANCODE_KP_2);
+	float thicknessMin = 0.01;
 
 	input.CreateButtonMapping("mag_filter+", SDL_SCANCODE_KP_7);
 	input.CreateButtonMapping("mag_filter-", SDL_SCANCODE_KP_8);
@@ -256,6 +261,28 @@ int main(int argc, char* argv[])
 
 #pragma region democontrols
 
+		if (input.GetButton("thicknessMax+"))
+		{
+			thicknessMax += 0.0001;
+			std::cout << "thicknessMax: " << thicknessMax << std::endl;
+		}
+		if (input.GetButton("thicknessMax-"))
+		{
+			thicknessMax -= 0.0001;
+			std::cout << "thicknessMax: " << thicknessMax << std::endl;
+		}
+
+		if (input.GetButton("thicknessMin+"))
+		{
+			thicknessMin += 0.0001;
+			std::cout << "thicknessMin: " << thicknessMin << std::endl;
+		}
+		if (input.GetButton("thicknessMin-"))
+		{
+			thicknessMin -= 0.0001;
+			std::cout << "thicknessMin: " << thicknessMin << std::endl;
+		}
+
 #pragma endregion democontrols
 
 
@@ -277,7 +304,8 @@ int main(int argc, char* argv[])
 		invertedHullShader.SetMat4("projectionview", pv);
 		invertedHullShader.SetVec3("viewPos", mainCamera.transform.position);
 		invertedHullShader.SetFloat("edgeThreshold", 0.3);
-		invertedHullShader.SetFloat("scaleFactor", 1.01);
+		invertedHullShader.SetFloat("thicknessMin", thicknessMin);
+		invertedHullShader.SetFloat("thicknessMax", thicknessMax);
 
 		// prepare blinn phong shader
 		blinnPhongShader.Use();
@@ -298,8 +326,8 @@ int main(int argc, char* argv[])
 		invertedHullShader.Use();
 		
 		skull.Draw(&invertedHullShader);
-		cube.Draw(&invertedHullShader);
-		bear.Draw(&invertedHullShader);
+		//cube.Draw(&invertedHullShader);
+		//bear.Draw(&invertedHullShader);
 
 		//glCullFace(GL_BACK);
 		glFrontFace(GL_CCW);
@@ -307,8 +335,8 @@ int main(int argc, char* argv[])
 		
 		blinnPhongShader.Use();
 		skull.Draw(&blinnPhongShader);
-		cube.Draw(&blinnPhongShader);
-		bear.Draw(&blinnPhongShader);
+		//cube.Draw(&blinnPhongShader);
+		//bear.Draw(&blinnPhongShader);
 
 
 		//greenSkybox.Draw(&skyboxShader, &mainCamera);

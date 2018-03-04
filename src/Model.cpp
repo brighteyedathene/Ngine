@@ -61,26 +61,58 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene)
 		Vertex vertex;
 		// process vertex positions, normals and texture coordinates
 		glm::vec3 vector;
+		
 		// positions
 		vector.x = mesh->mVertices[i].x;
 		vector.y = mesh->mVertices[i].y;
 		vector.z = mesh->mVertices[i].z;
 		vertex.Position = vector;
-		// normals
-		vector.x = mesh->mNormals[i].x;
-		vector.y = mesh->mNormals[i].y;
-		vector.z = mesh->mNormals[i].z;
-		vertex.Normal = vector;
-		// tangents
-		vector.x = mesh->mTangents[i].x;
-		vector.y = mesh->mTangents[i].y;
-		vector.z = mesh->mTangents[i].z;
-		vertex.Tangent = vector;
-		// bitangents
-		vector.x = mesh->mBitangents[i].x;
-		vector.y = mesh->mBitangents[i].y;
-		vector.z = mesh->mBitangents[i].z;
-		vertex.Bitangent = vector;
+
+		if (mesh->HasNormals())
+		{		
+			// normals
+			vector.x = mesh->mNormals[i].x;
+			vector.y = mesh->mNormals[i].y;
+			vector.z = mesh->mNormals[i].z;
+			vertex.Normal = vector;
+		}
+	
+		if (mesh->HasTangentsAndBitangents())
+		{	
+			// tangents
+			vector.x = mesh->mTangents[i].x;
+			vector.y = mesh->mTangents[i].y;
+			vector.z = mesh->mTangents[i].z;
+			vertex.Tangent = vector;
+			// bitangents
+			vector.x = mesh->mBitangents[i].x;
+			vector.y = mesh->mBitangents[i].y;
+			vector.z = mesh->mBitangents[i].z;
+			vertex.Bitangent = vector;
+		}
+
+		if (mesh->GetNumColorChannels() > 0)
+		{
+			//std::cout << "number of colour channels: " << mesh->GetNumColorChannels() << std::endl;
+		}
+		if (mesh->HasVertexColors(0))
+		{
+			//std::cout << "has colours";
+			vector.x = mesh->mColors[0][i].r;
+			vector.y = mesh->mColors[0][i].g;
+			vector.z = mesh->mColors[0][i].b;
+
+			//std::cout << mesh->mColors[0][i].r << " " << mesh->mColors[0][i].g << " " << mesh->mColors[0][i].b << std::endl;
+
+			//vector.x = mesh->mColors[i];
+			//vector.y = mesh->mColors[i].g;
+			//vector.z = mesh->mColors[i].b;
+			vertex.Colour = vector;
+		}
+		else
+		{
+			//std::cout << "no colours";
+		}
 
 		if (mesh->mTextureCoords[0])
 		{
