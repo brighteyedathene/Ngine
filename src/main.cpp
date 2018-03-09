@@ -131,21 +131,38 @@ int main(int argc, char* argv[])
 
 	// IK
 	Model ikjointModel(ikjointPath);
-	IKFrame ikframe;
+	IKFrame ikframe(3);
 	ikframe.jointModel = &ikjointModel;
 	ikframe.transform.position = glm::vec3(0.0, 0.0, 0.0);
 	ikframe.goal = glm::vec3(1.0, 1.0, 1.0);
 
+	ikframe.joints[2].length *= 0.3f;
+
+	ikframe.joints[1].dof.down = 0.0f;
 	//ikframe.joints[1].dof.left = 1.0f;
-	ikframe.joints[0].dof.down = 120.0f;
-	ikframe.joints[0].dof.left = 10.0f;
-	ikframe.joints[0].dof.right = 10.0f;
-	ikframe.joints[0].dof.up = 120.0f;
+	ikframe.joints[1].dof.right = 0.0f;
+	//ikframe.joints[0].dof.down = 100.0f;
+	//ikframe.joints[0].dof.up = 120.0f;
+
+	ikframe.Init();
+
+
+	// trunk
+	IKFrame iktrunk(20);
+	iktrunk.jointModel = &ikjointModel;
+	iktrunk.transform.position = glm::vec3(6.0, 0.0, 0.0);
+	for (int i = 0; i < iktrunk.joints.size(); i++)
+	{
+		iktrunk.joints[i].length = 0.5f;
+	}
+	iktrunk.Init();
 
 	// Spline
 	Spline spline(3);
 	spline.model = &sphereModel;
 	spline.controlPoints[3] = glm::vec3(0.0, 3.0, 3.0);
+	spline.controlPoints[4] = glm::vec3(1.0, 3.0, 3.0);
+	spline.controlPoints[5] = glm::vec3(2.0, 5.0, 3.0);
 	spline.Smoothen();
 
 #pragma endregion load_assets
@@ -217,7 +234,11 @@ int main(int argc, char* argv[])
 	// ik
 	input.CreateButtonMapping("toggleMoveIKFrameWithCamera", SDL_SCANCODE_T);
 	bool moveIKFrameWithCamera = false;
-
+	 
+	input.CreateButtonMapping("toggleConstraints", SDL_SCANCODE_C);
+	bool constrainIK = false;
+	ikframe.constrain = constrainIK;
+	iktrunk.constrain = constrainIK;
 
 #pragma endregion button_mapping
 
@@ -322,12 +343,19 @@ int main(int argc, char* argv[])
 		{
 			moveIKFrameWithCamera = !moveIKFrameWithCamera;
 		}
+		if (input.GetButtonDown("toggleConstraints"))
+		{
+			constrainIK = !constrainIK;
+			ikframe.constrain = constrainIK;
+			iktrunk.constrain = constrainIK;
+			std::cout << "constrain joints: " << constrainIK << std::endl;
+		}
 
 #pragma endregion democontrols
 
 		// ik pass
 		float deviation = sin(time/4) / 2 + 0.5;
-		deviation = 0.4f;
+		//deviation = 0.4f;
 		ikframe.goal = spline.Sample(deviation);
 
 		if (moveIKFrameWithCamera)
@@ -352,7 +380,13 @@ int main(int argc, char* argv[])
 		sphere.transform.position = ikframe.transform.position;
 
 		ikframe.UpdateIK();
-		//std::cout << "reachable? " << ikframe.goalReachable << std::endl;
+		std::cout << "reachable? " << ikframe.goalReachable << std::endl;
+
+
+
+		// ik trunk
+		iktrunk.goal = spline.Sample(deviation);
+		iktrunk.UpdateIK();
 
 
 
@@ -404,6 +438,8 @@ int main(int argc, char* argv[])
 		goalmarker.Draw(&invertedHullShader);
 
 		ikframe.Draw(&invertedHullShader);
+		iktrunk.Draw(&invertedHullShader);
+
 
 		glFrontFace(GL_CCW);
 		
@@ -415,6 +451,7 @@ int main(int argc, char* argv[])
 		goalmarker.Draw(&flatShader);
 
 		ikframe.Draw(&flatShader);
+		iktrunk.Draw(&flatShader);
 
 
 		//greenSkybox.Draw(&skyboxShader, &mainCamera);

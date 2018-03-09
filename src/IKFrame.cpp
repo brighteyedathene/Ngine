@@ -2,14 +2,15 @@
 
 
 
-IKFrame::IKFrame()
+IKFrame::IKFrame(int numberOfJoints)
 {
-	numJoints = 3;
-
-	//initialize vectors with default values
+	numJoints = numberOfJoints;
 	joints.resize(numJoints);
 	points.resize(numJoints + 1);
+}
 
+void IKFrame::Init()
+{
 	joints[0].transform.position = transform.position;
 	joints[0].transform.scale.z = joints[0].length;
 	points[0] = transform.position;
@@ -17,19 +18,17 @@ IKFrame::IKFrame()
 
 	for (int i = 1; i < numJoints; i++)
 	{
-		joints[i].transform.position = 
+		joints[i].transform.position =
 			joints[i - 1].transform.position +
 			joints[i - 1].transform.Forward() * joints[i - 1].length;
 
-		//joints[i].transform.scale.z = joints[i].length;
+		joints[i].transform.scale.z = joints[i].length;
 
 		points[i + 1] =
 			joints[i].transform.position +
 			joints[i].transform.Forward() * joints[i].length;
 	}
-
 }
-
 
 IKFrame::~IKFrame()
 {
@@ -59,13 +58,13 @@ void IKFrame::UpdateIK()
 			//UpdateJointsWithConstraints();
 
 
-			glm::vec3 endpoint = joints[numJoints - 1].transform.position + joints[numJoints - 1].transform.Forward() * joints[numJoints - 1].length;
+			//glm::vec3 endpoint = joints[numJoints - 1].transform.position + joints[numJoints - 1].transform.Forward() * joints[numJoints - 1].length;
 			//std:cout << "goal: " << goal.x << " " << goal.y << " " << goal.z << "   endpoint: " << endpoint.x <<" "<< endpoint.y <<" "<< endpoint.z << std::endl;
-			std:cout << "points: " << points[numJoints].x << " " << points[numJoints].y << " " << points[numJoints].z << "   endpoint: " << endpoint.x << " " << endpoint.y << " " << endpoint.z << std::endl;
-			if (glm::distance(endpoint, goal) < threshold)
+			//std:cout << "points: " << points[numJoints].x << " " << points[numJoints].y << " " << points[numJoints].z << "   endpoint: " << endpoint.x << " " << endpoint.y << " " << endpoint.z << std::endl;
+			if (glm::distance(points[numJoints], goal) < threshold)
 			{
 				goalReachable = true;
-				std::cout << "exiting because goal reached" << std::endl;
+				//std::cout << "exiting because goal reached" << std::endl;
 				break;
 			}
 		}
@@ -82,8 +81,14 @@ void IKFrame::UpdateIK()
 void IKFrame::DoFABRIK()
 {
 	ReachBackwards();
-	//ReachForwards();
-	ReachForwardsAndConstrain();
+	if (constrain)
+	{
+		ReachForwardsAndConstrain();
+	} 
+	else
+	{
+		ReachForwards();
+	}
 }
 
 void IKFrame::ReachBackwards()
@@ -148,9 +153,12 @@ glm::vec3 IKFrame::Constrain(glm::vec3 desiredDirection, glm::vec3 oldDirection,
 	glm::mat4 frame = glm::lookAt(glm::vec3(0.0), desiredDirection, transform.Up());
 	
 	// Get the axes 
-	glm::vec3 frameUp = glm::vec3(glm::vec4(0.0, 1.0, 0.0, 0.0) * frame);
-	glm::vec3 frameRight = glm::vec3(glm::vec4(1.0, 0.0, 0.0, 0.0) * frame);
-	
+	//glm::vec3 frameUp = glm::vec3(glm::vec4(0.0, 1.0, 0.0, 0.0) * frame);
+	//glm::vec3 frameRight = glm::vec3(glm::vec4(0.0, 0.0, 1.0, 0.0) * frame);
+	glm::vec3 frameUp = glm::normalize(glm::vec3(0.0, 1.0, 0.0) * glm::mat3(frame));
+	glm::vec3 frameRight = glm::normalize(glm::vec3(0.0, 0.0, 1.0) * glm::mat3(frame));
+
+
 	// Flip axes if necessary
 	if (glm::length(frameUp - desiredDirection) > glm::length(-frameUp - desiredDirection))
 	{
@@ -247,12 +255,14 @@ void IKFrame::UpdateJointsWithConstraints()
 
 void IKFrame::Draw(Shader* pShader)
 {
-	for (int i = 0; i < numJoints + 1; i++)
+	for (int i = 0; i < numJoints; i++)
 	{
-		//pShader->SetMat4("model", joints[i].transform.GetMatrix());
+		pShader->SetMat4("model", joints[i].transform.GetMatrix());
 
-		glm::mat4 mod = glm::translate(glm::mat4(1.0), points[i]);
-		pShader->SetMat4("model", mod);
+		//glm::mat4 rot = glm::lookAt(points[i], points[i+1], transform.Up());
+		//glm::mat4 mod = glm::translate(glm::mat4(1.0), points[i]);
+		//mod = mod * rot;
+		//pShader->SetMat4("model", mod);
 
 		jointModel->Draw(pShader);
 	}

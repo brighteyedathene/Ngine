@@ -15,10 +15,10 @@
 class IKJointConstraint
 {
 public:
-	float up    = 20.0f;
-	float down  = 20.0f;
-	float right = 20.0f;
-	float left  = 20.0f;
+	float up    = 80.0f;
+	float down  = 80.0f;
+	float right = 80.0f;
+	float left  = 80.0f;
 };
 
 class IKJoint
@@ -36,8 +36,10 @@ public:
 class IKFrame
 {
 public:
-	IKFrame();
+	IKFrame(int numberOfJoints);
 	~IKFrame();
+
+	void Init();
 
 	Transform transform;
 
@@ -47,6 +49,7 @@ public:
 	bool goalReachable;
 	float threshold = 0.01f;
 	int maxIterations = 10;
+	bool constrain = true;
 
 	int numJoints;
 	std::vector<IKJoint> joints;

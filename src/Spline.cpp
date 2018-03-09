@@ -95,6 +95,7 @@ void Spline::Smoothen()
 	{
 		glm::vec3 inDirection = controlPoints[i * 3] - controlPoints[i * 3 - 1];
 		float outDistance = glm::length(controlPoints[i * 3 + 1] - controlPoints[i * 3]);
-		controlPoints[i * 3 + 1] = controlPoints[i * 3] + glm::normalize(inDirection) * outDistance;
+		//controlPoints[i * 3 + 1] = controlPoints[i * 3] + glm::normalize(inDirection) * outDistance;
+		controlPoints[i * 3 + 1] = controlPoints[i * 3] + glm::normalize(inDirection) * glm::length(inDirection);
 	}
 }
