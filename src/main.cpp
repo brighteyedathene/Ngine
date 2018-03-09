@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
 	Model ikjointModel(ikjointPath);
 	IKFrame ikframe(3);
 	ikframe.jointModel = &ikjointModel;
-	ikframe.transform.position = glm::vec3(0.0, 0.0, 0.0);
+	ikframe.transform.position = glm::vec3(7.0, 3.0, 0.0);
 	ikframe.goal = glm::vec3(1.0, 1.0, 1.0);
 
 	ikframe.joints[2].length *= 0.3f;
@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
 	// trunk
 	IKFrame iktrunk(20);
 	iktrunk.jointModel = &ikjointModel;
-	iktrunk.transform.position = glm::vec3(6.0, 0.0, 0.0);
+	iktrunk.transform.position = glm::vec3(0.0, 0.0, 0.0);
 	for (int i = 0; i < iktrunk.joints.size(); i++)
 	{
 		iktrunk.joints[i].length = 0.5f;
@@ -356,7 +356,7 @@ int main(int argc, char* argv[])
 		// ik pass
 		float deviation = sin(time/4) / 2 + 0.5;
 		//deviation = 0.4f;
-		ikframe.goal = spline.Sample(deviation);
+		iktrunk.goal = spline.Sample(deviation);
 
 		if (moveIKFrameWithCamera)
 		{
@@ -367,26 +367,26 @@ int main(int argc, char* argv[])
 				mainCamera.transform.Up() * -1.0f;
 
 			cube.transform.rotation = mainCamera.transform.rotation;
-			ikframe.transform.position = cube.transform.position + cube.transform.Forward()*0.6f - cube.transform.Up()*0.3f;
-			ikframe.transform.rotation = cube.transform.rotation;
+			iktrunk.transform.position = cube.transform.position + cube.transform.Forward()*0.6f - cube.transform.Up()*0.3f;
+			iktrunk.transform.rotation = cube.transform.rotation;
 		}
 		else
 		{
-			ikframe.transform.position = cube.transform.position + cube.transform.Forward() *0.6f - cube.transform.Up()*0.3f;
-			ikframe.transform.rotation = cube.transform.rotation;
+			iktrunk.transform.position = cube.transform.position + cube.transform.Forward() *0.6f - cube.transform.Up()*0.3f;
+			iktrunk.transform.rotation = cube.transform.rotation;
 		}
 
-		goalmarker.transform.position = ikframe.goal;
-		sphere.transform.position = ikframe.transform.position;
+		goalmarker.transform.position = iktrunk.goal;
+		sphere.transform.position = iktrunk.transform.position;
 
-		ikframe.UpdateIK();
-		std::cout << "reachable? " << ikframe.goalReachable << std::endl;
+		iktrunk.UpdateIK();
+		std::cout << "reachable? " << iktrunk.goalReachable << std::endl;
 
 
 
 		// ik trunk
-		iktrunk.goal = spline.Sample(deviation);
-		iktrunk.UpdateIK();
+		ikframe.goal = spline.Sample(1-deviation);
+		ikframe.UpdateIK();
 
 
 
