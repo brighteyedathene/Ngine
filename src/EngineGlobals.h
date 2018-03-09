@@ -82,6 +82,8 @@ namespace ngine
 
 	const char* ikjointPath = "./Models/ikjoints/joint.obj";
 	//const char* ikjointPath = "./Models/ikjoints/taperjoint.obj";
+	const char* ikbotPath = "./Models/ikbot/ikbot.obj";
+
 
 	const char* mixamoFBXPATH = "./Models/shit-for-testing/ybot_swagger_withmodel.fbx";
 	

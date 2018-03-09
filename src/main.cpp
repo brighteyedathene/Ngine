@@ -95,12 +95,12 @@ int main(int argc, char* argv[])
 	goalmarker.transform.position = glm::vec3(0.0);
 
 	// Cube
-	Model cubeModel(cubeModelPath);
+	Model cubeModel(ikbotPath);
 	NaiveGameObject cube;
 	cube.SetMesh(&cubeModel);
 	cube.transform.position = glm::vec3(0.0f, 0.0f, -10.0f);
 	cube.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
-	cube.transform.scale = glm::vec3(0.05f);
+	//cube.transform.scale = glm::vec3(0.05f);
 
 	// Missile object
 	Model missileModel(missilePath);
@@ -367,12 +367,12 @@ int main(int argc, char* argv[])
 				mainCamera.transform.Up() * -1.0f;
 
 			cube.transform.rotation = mainCamera.transform.rotation;
-			ikframe.transform.position = cube.transform.position + cube.transform.Forward();
+			ikframe.transform.position = cube.transform.position + cube.transform.Forward()*0.6f - cube.transform.Up()*0.3f;
 			ikframe.transform.rotation = cube.transform.rotation;
 		}
 		else
 		{
-			ikframe.transform.position = cube.transform.position + cube.transform.Forward();
+			ikframe.transform.position = cube.transform.position + cube.transform.Forward() *0.6f - cube.transform.Up()*0.3f;
 			ikframe.transform.rotation = cube.transform.rotation;
 		}
 
