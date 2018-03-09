@@ -29,22 +29,13 @@ glm::vec3 Spline::Sample(float t)
 	segment = min(segment, segments - 1); // sometimes floating points can cause a problem
 	t = (t - segment * segSize) / segSize;
 
+	//float omt = 1 - t; // one minus t
 
-	float omt = 1 - t;
-
-	if (segment * 3 + 3 < controlPoints.size())
-	{
-		return
-			omt * omt*omt * controlPoints[segment * 3] +
-			3 * omt * omt * t * controlPoints[segment * 3 + 1] +
-			3 * omt * t * t * controlPoints[segment * 3 + 2] +
-			t * t * t * controlPoints[segment * 3 + 3];
-	}
-	else
-	{
-		std::cout << "fuugg, segment was " << segment << " need to get controlpoitns[" << segment * 3 + 3 << " but there's only " << controlPoints.size() << std::endl;
-		return glm::vec3(0, 0, 0);
-	}
+	return
+		pow(1 - t, 3) * controlPoints[segment * 3] +
+		3 * pow(1 - t, 2) * t * controlPoints[segment * 3 + 1] +
+		3 * (1 - t) * pow(t, 2) * controlPoints[segment * 3 + 2] +
+		pow(t, 3) * controlPoints[segment * 3 + 3];
 }
 
 

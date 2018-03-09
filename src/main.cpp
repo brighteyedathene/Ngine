@@ -380,12 +380,12 @@ int main(int argc, char* argv[])
 		sphere.transform.position = iktrunk.transform.position;
 
 		iktrunk.UpdateIK();
-		std::cout << "reachable? " << iktrunk.goalReachable << std::endl;
+		//std::cout << "reachable? " << iktrunk.goalReachable << std::endl;
 
 
 
 		// ik trunk
-		ikframe.goal = spline.Sample(1-deviation);
+		ikframe.goal = spline.Sample(deviation);
 		ikframe.UpdateIK();
 
 
@@ -437,7 +437,7 @@ int main(int argc, char* argv[])
 		sphere.Draw(&invertedHullShader);
 		goalmarker.Draw(&invertedHullShader);
 
-		ikframe.Draw(&invertedHullShader);
+		//ikframe.Draw(&invertedHullShader);
 		iktrunk.Draw(&invertedHullShader);
 
 
@@ -450,7 +450,7 @@ int main(int argc, char* argv[])
 		sphere.Draw(&flatShader);
 		goalmarker.Draw(&flatShader);
 
-		ikframe.Draw(&flatShader);
+		//ikframe.Draw(&flatShader);
 		iktrunk.Draw(&flatShader);
 
 

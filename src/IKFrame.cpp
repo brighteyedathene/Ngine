@@ -54,17 +54,10 @@ void IKFrame::UpdateIK()
 		for (int iters = 0; iters < maxIterations; iters++)
 		{
 			DoFABRIK();
-			UpdateJoints();
-			//UpdateJointsWithConstraints();
 
-
-			//glm::vec3 endpoint = joints[numJoints - 1].transform.position + joints[numJoints - 1].transform.Forward() * joints[numJoints - 1].length;
-			//std:cout << "goal: " << goal.x << " " << goal.y << " " << goal.z << "   endpoint: " << endpoint.x <<" "<< endpoint.y <<" "<< endpoint.z << std::endl;
-			//std:cout << "points: " << points[numJoints].x << " " << points[numJoints].y << " " << points[numJoints].z << "   endpoint: " << endpoint.x << " " << endpoint.y << " " << endpoint.z << std::endl;
 			if (glm::distance(points[numJoints], goal) < threshold)
 			{
 				goalReachable = true;
-				//std::cout << "exiting because goal reached" << std::endl;
 				break;
 			}
 		}
@@ -73,9 +66,9 @@ void IKFrame::UpdateIK()
 	{
 		// point straight at the target
 		StraightenOut();
-		UpdateJoints();
 	}
 
+	UpdateJoints();
 }
 
 void IKFrame::DoFABRIK()
