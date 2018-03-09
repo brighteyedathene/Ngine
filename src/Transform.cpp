@@ -1,6 +1,8 @@
 #include "Transform.h"
 
 
+#include <iostream>
+
 Transform::Transform()
 {
 	position = glm::vec3(0.0f);
@@ -96,9 +98,15 @@ std::string Transform::ToString()
 
 void Transform::SetRotationFromDirection(glm::vec3 direction)
 {
-	glm::normalize(direction);
-	rotation.y = atan2f(direction.z, direction.z);
-	rotation.x = asinf(direction.y);
+	direction = glm::normalize(direction);
+	rotation.y = glm::degrees(atan2f(direction.x, direction.z));
+
+	if (abs(direction.y) > 1)
+	{
+		std::cout << "shit, the asin was gived >1" << std::endl;
+	}
+
+	rotation.x = glm::degrees(asinf(-direction.y));
 	rotation.z = 0;
 }
 

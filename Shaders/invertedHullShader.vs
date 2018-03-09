@@ -21,7 +21,7 @@ void main()
 
     Normal = mat3(transpose(inverse(model))) * -aNormal;
 
-	float thickness = thicknessMin + (thicknessMax-thicknessMin )* aColour.r;
+	float thickness = thicknessMin + (thicknessMax-thicknessMin )* max(aColour.r, 0.1);
 	vec3 extendedPos = aPos;
 	//extendedPos = extendedPos + Normal * thickness;
 	extendedPos = extendedPos * (1+thickness);

@@ -153,6 +153,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="IKBot.cpp" />
+    <ClCompile Include="src\Spline.cpp" />
     <ClCompile Include="src\IKFrame.cpp" />
     <ClCompile Include="src\ParticleSystem.cpp" />
     <ClCompile Include="src\Skybox.cpp" />
@@ -179,6 +181,8 @@
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="IKBot.h" />
+    <ClInclude Include="src\Spline.h" />
     <ClInclude Include="src\IKFrame.h" />
     <ClInclude Include="src\ParticleSystem.h" />
     <ClInclude Include="src\Skybox.h" />

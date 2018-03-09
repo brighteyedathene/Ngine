@@ -26,6 +26,9 @@
 #include "AnimatedModel.h"
 #include "Animator.h"
 
+#include "IKFrame.h"
+#include "Spline.h"
+
 #include "NaiveGameObject.h"
 
 // ...it's global for convenience
@@ -62,6 +65,8 @@ int main(int argc, char* argv[])
 
 	Shader invertedHullShader(invertedHullShaderVertexPath, invertedHullShaderFragmentPath);
 
+	Shader colourShader(colourShaderVertexPath, colourShaderFragmentPath);
+
 #pragma region load_assets
 	
 
@@ -81,15 +86,21 @@ int main(int argc, char* argv[])
 	Model sphereModel(sphereModelPath);
 	NaiveGameObject sphere;
 	sphere.SetMesh(&sphereModel);
-	sphere.transform.scale = glm::vec3(10.0f);
+	sphere.transform.scale = glm::vec3(0.12f);
+	sphere.transform.position = glm::vec3(0.0);
+
+	NaiveGameObject goalmarker;
+	goalmarker.SetMesh(&sphereModel);
+	goalmarker.transform.scale = glm::vec3(0.12f);
+	goalmarker.transform.position = glm::vec3(0.0);
 
 	// Cube
 	Model cubeModel(cubeModelPath);
 	NaiveGameObject cube;
 	cube.SetMesh(&cubeModel);
-	cube.transform.position = glm::vec3(30.0f, 0.0f, 0.0f);
+	cube.transform.position = glm::vec3(0.0f, 0.0f, -10.0f);
 	cube.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
-	cube.transform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+	cube.transform.scale = glm::vec3(0.05f);
 
 	// Missile object
 	Model missileModel(missilePath);
@@ -118,11 +129,24 @@ int main(int argc, char* argv[])
 	bear.transform.scale = glm::vec3(5.0f);
 	bear.transform.position = glm::vec3(-30.0, 0.0, 0.0);
 
-	// IK joint model
+	// IK
 	Model ikjointModel(ikjointPath);
-	NaiveGameObject ikjoint;
-	ikjoint.SetMesh(&ikjointModel);
-	// maybe add the ik base here as well
+	IKFrame ikframe;
+	ikframe.jointModel = &ikjointModel;
+	ikframe.transform.position = glm::vec3(0.0, 0.0, 0.0);
+	ikframe.goal = glm::vec3(1.0, 1.0, 1.0);
+
+	//ikframe.joints[1].dof.left = 1.0f;
+	ikframe.joints[0].dof.down = 120.0f;
+	ikframe.joints[0].dof.left = 10.0f;
+	ikframe.joints[0].dof.right = 10.0f;
+	ikframe.joints[0].dof.up = 120.0f;
+
+	// Spline
+	Spline spline(3);
+	spline.model = &sphereModel;
+	spline.controlPoints[3] = glm::vec3(0.0, 3.0, 3.0);
+	spline.Smoothen();
 
 #pragma endregion load_assets
 
@@ -137,8 +161,8 @@ int main(int argc, char* argv[])
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	// set up camera for shader showcase
-	mainCamera.transform.rotation = glm::vec3(0.0, 45.0, 0.0);
-	mainCamera.transform.position = glm::vec3(0.0, 0.0, -20.0);
+	mainCamera.transform.rotation = glm::vec3(0.0, 90.0, 0.0);
+	mainCamera.transform.position = glm::vec3(0.0, 0.0, -2.0);
 
 #pragma endregion camera_init
 
@@ -172,6 +196,7 @@ int main(int argc, char* argv[])
 
 
 	// Demo Stuff
+	// line drawing
 	input.CreateButtonMapping("thicknessMax+", SDL_SCANCODE_KP_4);
 	input.CreateButtonMapping("thicknessMax-", SDL_SCANCODE_KP_5);
 	float thicknessMax = 0.05;
@@ -188,6 +213,10 @@ int main(int argc, char* argv[])
 
 	input.CreateButtonMapping("mipmap_toggle", SDL_SCANCODE_M);
 	input.CreateButtonMapping("anisotropicFiltering_toggle", SDL_SCANCODE_N);
+
+	// ik
+	input.CreateButtonMapping("toggleMoveIKFrameWithCamera", SDL_SCANCODE_T);
+	bool moveIKFrameWithCamera = false;
 
 
 #pragma endregion button_mapping
@@ -222,11 +251,11 @@ int main(int argc, char* argv[])
 		// for now, character movement is handled here...
 		if (input.GetButton("b_Forward"))
 		{
-			cube.transform.position += cube.transform.Forward() * 10.0f;
+			cube.transform.position += cube.transform.Forward() * 0.01f;
 		}
 		if (input.GetButton("b_Backward"))
 		{
-			cube.transform.position -= cube.transform.Forward() * 10.0f;
+			cube.transform.position -= cube.transform.Forward() * 0.01f;
 		}
 		if (input.GetButton("b_YawLeft"))
 			cube.transform.rotation.y += 1.0f;
@@ -289,7 +318,42 @@ int main(int argc, char* argv[])
 			std::cout << "thicknessMin: " << thicknessMin << std::endl;
 		}
 
+		if (input.GetButtonDown("toggleMoveIKFrameWithCamera"))
+		{
+			moveIKFrameWithCamera = !moveIKFrameWithCamera;
+		}
+
 #pragma endregion democontrols
+
+		// ik pass
+		float deviation = sin(time/4) / 2 + 0.5;
+		deviation = 0.4f;
+		ikframe.goal = spline.Sample(deviation);
+
+		if (moveIKFrameWithCamera)
+		{
+			cube.transform.position =
+				mainCamera.transform.position +
+				mainCamera.transform.Forward() * 3.0f +
+				mainCamera.transform.Right() * 2.0f +
+				mainCamera.transform.Up() * -1.0f;
+
+			cube.transform.rotation = mainCamera.transform.rotation;
+			ikframe.transform.position = cube.transform.position + cube.transform.Forward();
+			ikframe.transform.rotation = cube.transform.rotation;
+		}
+		else
+		{
+			ikframe.transform.position = cube.transform.position + cube.transform.Forward();
+			ikframe.transform.rotation = cube.transform.rotation;
+		}
+
+		goalmarker.transform.position = ikframe.goal;
+		sphere.transform.position = ikframe.transform.position;
+
+		ikframe.UpdateIK();
+		//std::cout << "reachable? " << ikframe.goalReachable << std::endl;
+
 
 
 		// rendering
@@ -299,13 +363,17 @@ int main(int argc, char* argv[])
 		glm::mat4 view = mainCamera.GetViewMatrix();
 		glm::mat4 pv = projection * view;
 
-
 		int d_width, d_height;
 		display.GetWindowSize(&d_width, &d_height);
 
 		glViewport(0, 0, d_width, d_height);
 
-		// prepare transmittance shader
+		// prepare colour shader (for splines)
+		colourShader.Use();
+		colourShader.SetMat4("projectionview", pv);
+		spline.Draw(&colourShader);
+
+		// prepare outline shader
 		invertedHullShader.Use();
 		invertedHullShader.SetMat4("projectionview", pv);
 		invertedHullShader.SetVec3("viewPos", mainCamera.transform.position);
@@ -313,36 +381,40 @@ int main(int argc, char* argv[])
 		invertedHullShader.SetFloat("thicknessMin", thicknessMin);
 		invertedHullShader.SetFloat("thicknessMax", thicknessMax);
 
-		// prepare blinn phong shader
-		blinnPhongShader.Use();
-		blinnPhongShader.SetMat4("projectionview", pv);
-		blinnPhongShader.SetVec3("viewPos", mainCamera.transform.position);
-		blinnPhongShader.SetVec3("light.position", mainCamera.transform.position);
-		blinnPhongShader.SetVec3("light.colour", glm::vec3(1.0));
+		// prepare flat shader
+		flatShader.Use();
+		flatShader.SetMat4("projectionview", pv);
+		flatShader.SetVec3("viewPos", mainCamera.transform.position);
+		flatShader.SetVec3("light.position", mainCamera.transform.position);
+		flatShader.SetVec3("light.colour", glm::vec3(1.0));
+		flatShader.SetVec3("material.diffuse", glm::vec3(0.8));
+		flatShader.SetVec3("material.specular", glm::vec3(0.99));
+		flatShader.SetFloat("material.shininess", 32.0);
+		flatShader.SetInt("numShades", 3);
 
-		// Skull
-		skull.transform.rotation.y += sin(gameclock.time*0.5) *0.1;
-		
 
-
+		// Inverted hull stuff
 		glEnable(GL_CULL_FACE);
-		
-		//glCullFace(GL_FRONT);
 		glFrontFace(GL_CW);
-		invertedHullShader.Use();
-		
-		//ikjoint.Draw(&invertedHullShader);
-		//cube.Draw(&invertedHullShader);
-		//bear.Draw(&invertedHullShader);
 
-		//glCullFace(GL_BACK);
+		invertedHullShader.Use();
+
+		cube.Draw(&invertedHullShader);
+		sphere.Draw(&invertedHullShader);
+		goalmarker.Draw(&invertedHullShader);
+
+		ikframe.Draw(&invertedHullShader);
+
 		glFrontFace(GL_CCW);
 		
 		
-		blinnPhongShader.Use();
-		ikjoint.Draw(&blinnPhongShader);
-		//cube.Draw(&blinnPhongShader);
-		//bear.Draw(&blinnPhongShader);
+		flatShader.Use();
+
+		cube.Draw(&flatShader);
+		sphere.Draw(&flatShader);
+		goalmarker.Draw(&flatShader);
+
+		ikframe.Draw(&flatShader);
 
 
 		//greenSkybox.Draw(&skyboxShader, &mainCamera);

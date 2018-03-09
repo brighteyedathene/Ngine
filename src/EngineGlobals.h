@@ -53,6 +53,9 @@ namespace ngine
 	const GLchar* invertedHullShaderVertexPath = "./Shaders/invertedHullShader.vs";
 	const GLchar* invertedHullShaderFragmentPath = "./Shaders/invertedHullShader.fs";
 
+	const GLchar* colourShaderVertexPath = "./Shaders/colourShader.vs";
+	const GLchar* colourShaderFragmentPath = "./Shaders/colourShader.fs";
+
 
 #pragma endregion shaders
 
@@ -78,6 +81,7 @@ namespace ngine
 	const char* sphereModelPath = "./Models/sphere/sphere.obj";
 
 	const char* ikjointPath = "./Models/ikjoints/joint.obj";
+	//const char* ikjointPath = "./Models/ikjoints/taperjoint.obj";
 
 	const char* mixamoFBXPATH = "./Models/shit-for-testing/ybot_swagger_withmodel.fbx";
 	
