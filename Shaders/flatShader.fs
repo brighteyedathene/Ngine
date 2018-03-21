@@ -55,7 +55,7 @@ vec3 FlatShading()
 void main()
 {
 	vec3 result = FlatShading();
-    //result = light.colour;
+    result = light.colour;
 
     FragColor = vec4(result, 1.0);
 }

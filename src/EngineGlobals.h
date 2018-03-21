@@ -53,9 +53,14 @@ namespace ngine
 	const GLchar* invertedHullShaderVertexPath = "./Shaders/invertedHullShader.vs";
 	const GLchar* invertedHullShaderFragmentPath = "./Shaders/invertedHullShader.fs";
 
+	const GLchar* lightInvertedHullShaderVertexPath = "./Shaders/lightInvertedHull.vs";
+	const GLchar* lightInvertedHullShaderFragmentPath = "./Shaders/lightInvertedHull.fs";
+
 	const GLchar* colourShaderVertexPath = "./Shaders/colourShader.vs";
 	const GLchar* colourShaderFragmentPath = "./Shaders/colourShader.fs";
 
+	const GLchar* subpolyVertexPath = "./Shaders/subpoly.vs";
+	const GLchar* subpolyFragmentPath = "./Shaders/subpoly.fs";
 
 #pragma endregion shaders
 
@@ -69,10 +74,16 @@ namespace ngine
 	const char* bearPath = "./Models/bear/bear.fbx";
 	//const char* bearPath = "./Models/bear/mayabear.obj";
 	const char* missilePath = "./Models/missile/missile.obj";
+	
 	//const char* skullPath = "./Models/skull/skull.obj"; // obtained from https://sketchfab.com/models/1a9db900738d44298b0bc59f68123393#
-	const char* skullPath = "./Models/colourmodels/skull.fbx"; // obtained from https://sketchfab.com/models/1a9db900738d44298b0bc59f68123393#
-	const char* bninjaPath = "./Models/bninja/bnin_Idle_Textured.dae";
+	//const char* skullPath = "./Models/colourmodels/skull.fbx";
+	const char* skullPath = "./Models/colourmodels/skull-nonormals.obj"; 
+	//const char* skullPath = "./Models/colourmodels/skull.dae";
 
+	//const char* skullPath = "./Models/sugconmodels/lucy.obj";
+
+
+	const char* bninjaPath = "./Models/bninja/bnin_Idle_Textured.dae";
 	const char* majorkongPath = "./Models/majorkong/majorkong-only.dae";
 	//const char* majorkongPath = "./Models/majorkong/idle-test.dae";
 	//const char* majorkongPath = "./Models/majorkong/kong-nobomb.fbx";

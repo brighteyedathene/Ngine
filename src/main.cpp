@@ -64,8 +64,11 @@ int main(int argc, char* argv[])
 	Shader bumpmapShader(bumpmapShaderVertexPath, bumpmapShaderFragmentPath);
 
 	Shader invertedHullShader(invertedHullShaderVertexPath, invertedHullShaderFragmentPath);
+	Shader lightInvertedHullShader(lightInvertedHullShaderVertexPath, lightInvertedHullShaderFragmentPath);
 
 	Shader colourShader(colourShaderVertexPath, colourShaderFragmentPath);
+
+	Shader subpolyShader(subpolyVertexPath, subpolyFragmentPath);
 
 #pragma region load_assets
 	
@@ -89,11 +92,6 @@ int main(int argc, char* argv[])
 	sphere.transform.scale = glm::vec3(0.12f);
 	sphere.transform.position = glm::vec3(0.0);
 
-	NaiveGameObject goalmarker;
-	goalmarker.SetMesh(&sphereModel);
-	goalmarker.transform.scale = glm::vec3(0.12f);
-	goalmarker.transform.position = glm::vec3(0.0);
-
 	// Cube
 	Model cubeModel(ikbotPath);
 	NaiveGameObject cube;
@@ -102,25 +100,15 @@ int main(int argc, char* argv[])
 	cube.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
 	//cube.transform.scale = glm::vec3(0.05f);
 
+	// Skull
+	Model skullModel(skullPath);
+
+
 	// Missile object
 	Model missileModel(missilePath);
 	NaiveGameObject missile;
 	missile.SetMesh(&missileModel);
 	missile.SetInput(&input);
-
-	// Skull object
-	Model skullModel(skullPath);
-	NaiveGameObject skull;
-	skull.SetMesh(&skullModel);
-	skull.SetInput(&input);
-	skull.transform.scale = glm::vec3(10.0f);
-	skull.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
-	skull.transform.rotation.y = -90.0;
-
-	skull.material.ambient = glm::vec3(0.2f, 0.15f, 0.1f);
-	skull.material.diffuse = glm::vec3(0.9f, 0.7f, 0.5f);
-	skull.material.specular = glm::vec3(0.8, 0.8f, 0.8f);
-	skull.material.shininess = 12.0f;
 
 	// Bear object
 	Model bearModel(bearPath);
@@ -129,41 +117,18 @@ int main(int argc, char* argv[])
 	bear.transform.scale = glm::vec3(5.0f);
 	bear.transform.position = glm::vec3(-30.0, 0.0, 0.0);
 
-	// IK
-	Model ikjointModel(ikjointPath);
-	IKFrame ikframe(3);
-	ikframe.jointModel = &ikjointModel;
-	ikframe.transform.position = glm::vec3(7.0, 3.0, 0.0);
-	ikframe.goal = glm::vec3(1.0, 1.0, 1.0);
+	// Example object
+	NaiveGameObject object;
+	object.SetMesh(&bearModel);
+	object.SetInput(&input);
+	object.transform.scale = glm::vec3(1.0f);
+	object.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	object.transform.rotation.y = -90.0;
 
-	ikframe.joints[2].length *= 0.3f;
-
-	ikframe.joints[1].dof.down = 0.0f;
-	//ikframe.joints[1].dof.left = 1.0f;
-	ikframe.joints[1].dof.right = 0.0f;
-	//ikframe.joints[0].dof.down = 100.0f;
-	//ikframe.joints[0].dof.up = 120.0f;
-
-	ikframe.Init();
-
-
-	// trunk
-	IKFrame iktrunk(20);
-	iktrunk.jointModel = &ikjointModel;
-	iktrunk.transform.position = glm::vec3(0.0, 0.0, 0.0);
-	for (int i = 0; i < iktrunk.joints.size(); i++)
-	{
-		iktrunk.joints[i].length = 0.5f;
-	}
-	iktrunk.Init();
-
-	// Spline
-	Spline spline(3);
-	spline.model = &sphereModel;
-	spline.controlPoints[3] = glm::vec3(0.0, 3.0, 3.0);
-	spline.controlPoints[4] = glm::vec3(1.0, 3.0, 3.0);
-	spline.controlPoints[5] = glm::vec3(2.0, 5.0, 3.0);
-	spline.Smoothen();
+	object.material.ambient = glm::vec3(0.2f, 0.15f, 0.1f);
+	object.material.diffuse = glm::vec3(0.9f, 0.7f, 0.5f);
+	object.material.specular = glm::vec3(0.8, 0.8f, 0.8f);
+	object.material.shininess = 12.0f;
 
 #pragma endregion load_assets
 
@@ -216,29 +181,28 @@ int main(int argc, char* argv[])
 	// line drawing
 	input.CreateButtonMapping("thicknessMax+", SDL_SCANCODE_KP_4);
 	input.CreateButtonMapping("thicknessMax-", SDL_SCANCODE_KP_5);
-	float thicknessMax = 0.05;
+	float thicknessMax = 0.004;
 
 	input.CreateButtonMapping("thicknessMin+", SDL_SCANCODE_KP_1);
 	input.CreateButtonMapping("thicknessMin-", SDL_SCANCODE_KP_2);
-	float thicknessMin = 0.01;
+	float thicknessMin = 0.002;
 
-	input.CreateButtonMapping("mag_filter+", SDL_SCANCODE_KP_7);
-	input.CreateButtonMapping("mag_filter-", SDL_SCANCODE_KP_8);
+	input.CreateButtonMapping("edgeThreshold+", SDL_SCANCODE_KP_7);
+	input.CreateButtonMapping("edgeThreshold-", SDL_SCANCODE_KP_8);
+	float edgeThreshold = 0.1;
 
-	input.CreateButtonMapping("mip_texture+", SDL_SCANCODE_KP_1);
-	input.CreateButtonMapping("mip_texture-", SDL_SCANCODE_KP_2);
+	input.CreateButtonMapping("toggleShader", SDL_SCANCODE_KP_9);
+	bool shaderOn = false;
 
-	input.CreateButtonMapping("mipmap_toggle", SDL_SCANCODE_M);
-	input.CreateButtonMapping("anisotropicFiltering_toggle", SDL_SCANCODE_N);
+	input.CreateButtonMapping("setPenMode", SDL_SCANCODE_1);
+	input.CreateButtonMapping("setInkMode", SDL_SCANCODE_2);
+	input.CreateButtonMapping("setSuggestiveMode", SDL_SCANCODE_3);
+	input.CreateButtonMapping("setThinMode", SDL_SCANCODE_4);
+	input.CreateButtonMapping("setInvertedHullOff", SDL_SCANCODE_5);
+	input.CreateButtonMapping("setSubpolyOff", SDL_SCANCODE_6);
 
-	// ik
-	input.CreateButtonMapping("toggleMoveIKFrameWithCamera", SDL_SCANCODE_T);
-	bool moveIKFrameWithCamera = false;
-	 
-	input.CreateButtonMapping("toggleConstraints", SDL_SCANCODE_C);
-	bool constrainIK = false;
-	ikframe.constrain = constrainIK;
-	iktrunk.constrain = constrainIK;
+	input.CreateButtonMapping("toggleDepthTest", SDL_SCANCODE_0);
+	bool disableDepthTest = true;
 
 #pragma endregion button_mapping
 
@@ -252,9 +216,10 @@ int main(int argc, char* argv[])
 
 
 	// render loop!
-	while (!display.IsClosed()) 
+	while (!display.IsClosed())
 	{
-		display.Clear(0.8f, 0.8f, 0.8f, 1.0f);
+		//display.Clear(0.8f, 0.8f, 0.8f, 1.0f);
+		display.Clear(1.0f, 1.0f, 1.0f, 1.0f);
 
 		// logic
 		if (input.GetButtonDown("Escape"))
@@ -272,32 +237,32 @@ int main(int argc, char* argv[])
 		// for now, character movement is handled here...
 		if (input.GetButton("b_Forward"))
 		{
-			cube.transform.position += cube.transform.Forward() * 0.01f;
+			object.transform.position += object.transform.Forward() * 0.01f;
 		}
 		if (input.GetButton("b_Backward"))
 		{
-			cube.transform.position -= cube.transform.Forward() * 0.01f;
+			object.transform.position -= object.transform.Forward() * 0.01f;
 		}
 		if (input.GetButton("b_YawLeft"))
-			cube.transform.rotation.y += 1.0f;
+			object.transform.rotation.y += 1.0f;
 		if (input.GetButton("b_YawRight"))
-			cube.transform.rotation.y -= 1.0f;
+			object.transform.rotation.y -= 1.0f;
 		if (input.GetButton("b_PitchUp"))
-			cube.transform.rotation.x -= 1.0f;
+			object.transform.rotation.x -= 1.0f;
 		if (input.GetButton("b_PitchDown"))
-			cube.transform.rotation.x += 1.0f;
+			object.transform.rotation.x += 1.0f;
 		if (input.GetButton("b_RollLeft"))
-			cube.transform.rotation.z -= 1.0f;
+			object.transform.rotation.z -= 1.0f;
 		if (input.GetButton("b_RollRight"))
-			cube.transform.rotation.z += 1.0f;
-		
+			object.transform.rotation.z += 1.0f;
+
 
 		// Handle Camera controls // TODO move this to the camera controller
 		if (input.GetButtonDown("Freeze"))
 		{
 			freezecam = !freezecam;
 
-			if (freezecam) 
+			if (freezecam)
 			{
 				SDL_SetRelativeMouseMode(SDL_FALSE);
 				//std::cout << "Camera position: " << mainCamera.transform.ToString() << std::endl;
@@ -306,7 +271,7 @@ int main(int argc, char* argv[])
 				SDL_SetRelativeMouseMode(SDL_TRUE);
 
 		}
-		if(!freezecam)
+		if (!freezecam)
 			camController.Tick();
 
 		if (input.GetButtonDown("OrthoToggle"))
@@ -319,75 +284,91 @@ int main(int argc, char* argv[])
 
 		if (input.GetButton("thicknessMax+"))
 		{
-			thicknessMax += 0.0001;
+			thicknessMax += 0.00005;
 			std::cout << "thicknessMax: " << thicknessMax << std::endl;
 		}
 		if (input.GetButton("thicknessMax-"))
 		{
-			thicknessMax -= 0.0001;
+			thicknessMax -= 0.00005;
 			std::cout << "thicknessMax: " << thicknessMax << std::endl;
 		}
 
 		if (input.GetButton("thicknessMin+"))
 		{
-			thicknessMin += 0.0001;
+			thicknessMin += 0.00005;
 			std::cout << "thicknessMin: " << thicknessMin << std::endl;
 		}
 		if (input.GetButton("thicknessMin-"))
 		{
-			thicknessMin -= 0.0001;
+			thicknessMin -= 0.00005;
 			std::cout << "thicknessMin: " << thicknessMin << std::endl;
 		}
 
-		if (input.GetButtonDown("toggleMoveIKFrameWithCamera"))
+		if (input.GetButton("edgeThreshold+"))
 		{
-			moveIKFrameWithCamera = !moveIKFrameWithCamera;
+			edgeThreshold += 0.005;
+			std::cout << "edgeThreshold: " << edgeThreshold << std::endl;
 		}
-		if (input.GetButtonDown("toggleConstraints"))
+		if (input.GetButton("edgeThreshold-"))
 		{
-			constrainIK = !constrainIK;
-			ikframe.constrain = constrainIK;
-			iktrunk.constrain = constrainIK;
-			std::cout << "constrain joints: " << constrainIK << std::endl;
+			edgeThreshold -= 0.005;
+			std::cout << "edgeThreshold: " << edgeThreshold << std::endl;
+		}
+
+		if (input.GetButtonDown("toggleShader"))
+		{
+			shaderOn = !shaderOn;
+			std::cout << "inverted hull shader: " << shaderOn << std::endl;
+		}
+
+
+		if (input.GetButtonDown("setPenMode"))
+		{
+			std::cout << "pen" << std::endl;
+			edgeThreshold = 0.14;
+			thicknessMax = 0.004;
+			thicknessMin = 0.0031;
+		}
+		if (input.GetButtonDown("setInkMode"))
+		{
+			std::cout << "ink" << std::endl;
+			edgeThreshold = 0.36;
+			thicknessMax = 0.0029;
+			thicknessMin = 0.0026;
+		}
+		if (input.GetButtonDown("setSuggestiveMode"))
+		{
+			std::cout << "thick ink" << std::endl;
+			edgeThreshold = 0.44;
+			thicknessMax = 0.0014;
+			thicknessMin = 0.0004;
+		}
+		if (input.GetButtonDown("setThinMode"))
+		{
+			std::cout << "thin" << std::endl;
+			edgeThreshold = 0.15;
+			thicknessMax = 0.0019;
+			thicknessMin = 0.0017;
+		}
+		if (input.GetButtonDown("setInvertedHullOff"))
+		{
+			std::cout << "Inverted hull off" << std::endl;
+			thicknessMax = 0.0f;
+			thicknessMin = 0.0f;
+		}
+		if (input.GetButtonDown("setSubpolyOff"))
+		{
+			std::cout << "Subpoly off" << std::endl;
+			edgeThreshold = -1.0f;
+		}
+
+		if (input.GetButtonDown("toggleDepthTest"))
+		{
+			disableDepthTest = !disableDepthTest;
+			std::cout << "disable depth test: " << disableDepthTest << std::endl;
 		}
 
 #pragma endregion democontrols
-
-		// ik pass
-		float deviation = sin(time/4) / 2 + 0.5;
-		//deviation = 0.4f;
-		iktrunk.goal = spline.Sample(deviation);
-
-		if (moveIKFrameWithCamera)
-		{
-			cube.transform.position =
-				mainCamera.transform.position +
-				mainCamera.transform.Forward() * 3.0f +
-				mainCamera.transform.Right() * 2.0f +
-				mainCamera.transform.Up() * -1.0f;
-
-			cube.transform.rotation = mainCamera.transform.rotation;
-			iktrunk.transform.position = cube.transform.position + cube.transform.Forward()*0.6f - cube.transform.Up()*0.3f;
-			iktrunk.transform.rotation = cube.transform.rotation;
-		}
-		else
-		{
-			iktrunk.transform.position = cube.transform.position + cube.transform.Forward() *0.6f - cube.transform.Up()*0.3f;
-			iktrunk.transform.rotation = cube.transform.rotation;
-		}
-
-		goalmarker.transform.position = iktrunk.goal;
-		sphere.transform.position = iktrunk.transform.position;
-
-		iktrunk.UpdateIK();
-		//std::cout << "reachable? " << iktrunk.goalReachable << std::endl;
-
-
-
-		// ik trunk
-		ikframe.goal = spline.Sample(deviation);
-		ikframe.UpdateIK();
-
 
 
 		// rendering
@@ -402,57 +383,90 @@ int main(int argc, char* argv[])
 
 		glViewport(0, 0, d_width, d_height);
 
-		// prepare colour shader (for splines)
-		colourShader.Use();
-		colourShader.SetMat4("projectionview", pv);
-		spline.Draw(&colourShader);
+		// move light
+		//sphere.transform.position.x = 4 * sin(time / 1);
+		//sphere.transform.position.z = 4 * cos(time / 1);
+		sphere.transform.position.x = 7;
 
-		// prepare outline shader
+		// prepare inverted hull shader (colour)
 		invertedHullShader.Use();
 		invertedHullShader.SetMat4("projectionview", pv);
 		invertedHullShader.SetVec3("viewPos", mainCamera.transform.position);
-		invertedHullShader.SetFloat("edgeThreshold", 0.3);
+		invertedHullShader.SetFloat("edgeThreshold", edgeThreshold);
 		invertedHullShader.SetFloat("thicknessMin", thicknessMin);
 		invertedHullShader.SetFloat("thicknessMax", thicknessMax);
+
+		// prepare inverted hull (light)
+		lightInvertedHullShader.Use();
+		lightInvertedHullShader.SetMat4("projectionview", pv);
+		lightInvertedHullShader.SetVec3("viewPos", mainCamera.transform.position); 
+		lightInvertedHullShader.SetVec3("light.position", sphere.transform.position);
+		lightInvertedHullShader.SetVec3("light.colour", glm::vec3(1.0));
+		lightInvertedHullShader.SetFloat("edgeThreshold", edgeThreshold);
+		lightInvertedHullShader.SetFloat("thicknessMin", thicknessMin);
+		lightInvertedHullShader.SetFloat("thicknessMax", thicknessMax);
 
 		// prepare flat shader
 		flatShader.Use();
 		flatShader.SetMat4("projectionview", pv);
 		flatShader.SetVec3("viewPos", mainCamera.transform.position);
-		flatShader.SetVec3("light.position", mainCamera.transform.position);
+		flatShader.SetVec3("light.position", sphere.transform.position);
 		flatShader.SetVec3("light.colour", glm::vec3(1.0));
 		flatShader.SetVec3("material.diffuse", glm::vec3(0.8));
 		flatShader.SetVec3("material.specular", glm::vec3(0.99));
 		flatShader.SetFloat("material.shininess", 32.0);
 		flatShader.SetInt("numShades", 3);
-
-
+		
 		// Inverted hull stuff
 		glEnable(GL_CULL_FACE);
 		glFrontFace(GL_CW);
+		if(disableDepthTest)
+			glDisable(GL_DEPTH_TEST);
 
-		invertedHullShader.Use();
-
-		cube.Draw(&invertedHullShader);
-		sphere.Draw(&invertedHullShader);
-		goalmarker.Draw(&invertedHullShader);
-
-		//ikframe.Draw(&invertedHullShader);
-		iktrunk.Draw(&invertedHullShader);
-
+		//cube.Draw(&invertedHullShader);
+		//sphere.Draw(&invertedHullShader);
+		if (shaderOn)
+		{
+			invertedHullShader.Use();
+			object.Draw(&invertedHullShader);
+			sphere.Draw(&invertedHullShader);
+		}
+		else
+		{
+			lightInvertedHullShader.Use();
+			object.Draw(&lightInvertedHullShader);
+			sphere.Draw(&lightInvertedHullShader);
+		}
 
 		glFrontFace(GL_CCW);
-		
-		
+		if(disableDepthTest)
+			glEnable(GL_DEPTH_TEST);
+
+		// Draw light
+		lightShader.Use();
+		lightShader.SetMat4("mvp", pv * sphere.transform.GetMatrix());
+		lightShader.SetVec3("ucolour", glm::vec3(1.0f));
+		sphere.Draw(&lightShader);
+
+
 		flatShader.Use();
 
-		cube.Draw(&flatShader);
-		sphere.Draw(&flatShader);
-		goalmarker.Draw(&flatShader);
+		//cube.Draw(&flatShader);
+		//sphere.Draw(&flatShader);
+		//object.Draw(&flatShader);
 
-		//ikframe.Draw(&flatShader);
-		iktrunk.Draw(&flatShader);
+		// Subpoly shader stuff
+		subpolyShader.Use();
+		subpolyShader.SetMat4("projectionview", pv);
+		subpolyShader.SetVec3("viewPos", mainCamera.transform.position);
+		subpolyShader.SetVec3("light.position", sphere.transform.position);
+		subpolyShader.SetVec3("light.colour", glm::vec3(1.0));
 
+		subpolyShader.SetFloat("thicknessMin", thicknessMin);
+		subpolyShader.SetFloat("thicknessMax", thicknessMax);
+		subpolyShader.SetFloat("edgeThreshold", edgeThreshold);
+
+		object.Draw(&subpolyShader);
 
 		//greenSkybox.Draw(&skyboxShader, &mainCamera);
 
