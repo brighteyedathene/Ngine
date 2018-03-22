@@ -3,46 +3,36 @@
 out vec4 FragColor;
 
 
-uniform vec3 objectColor;
-uniform vec3 viewPos;
+struct Light {
+    vec3 position;
+    vec3 colour;
+};
+uniform Light light;  
 
 uniform float edgeThreshold;
+
+uniform vec3 lineColour;
 
 in vec3 Normal;
 in vec3 FragPos;
 
 in float viewDotNormal;
-in vec3 vColour;
 
 in float lambert;
 
 void main()
 {
-    // light direction and normal
-    //vec3 lightDir = light.position - FragPos;
-    //float distance = length(lightDir);
-    //lightDir = normalize(lightDir);
+    // Find lambertian value at this fragment
+    vec3 lightDir = light.position - FragPos;
+    lightDir = normalize(lightDir);
+    float lambertian = max(dot(Normal, lightDir), 0.0);
 
-    // diffuse
-    //float lambertian = max(dot(Normal, lightDir), 0.0);
-
-
-
-    //if (abs(viewDotNormal) < (1 - lambertian) * edgeThreshold){
-    if (viewDotNormal <= min((1 - lambert) * edgeThreshold, edgeThreshold)){
-    //if (viewDotNormal <=  edgeThreshold){
-    	//FragColor = vec4(1, 0, 0, 1);
-    	//FragColor = vec4(vec3(lambert), 1.0);
-    	FragColor = vec4(0, 0, 0, 1);
+	if (viewDotNormal <= min((1 - lambertian) * edgeThreshold, edgeThreshold)){
+    	FragColor = vec4(lineColour, 1);
     }
     else{
     	FragColor = vec4(1);
-    	//FragColor = vec4(vec3(0.5 + lambert/2), 1);
     }
 
-    //FragColor = vec4(vec3(0.5 + viewDotNormal/2), 1);
-
-
-    //FragColor = vec4(vColour.r, 0.5, 0.5, 1.0);
  
 }

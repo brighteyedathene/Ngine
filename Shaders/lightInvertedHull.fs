@@ -2,17 +2,17 @@
 
 out vec4 FragColor;
 
-uniform float edgeThreshold;
+
+uniform vec3 lineColour;
 
 in vec3 Normal;
 in vec3 FragPos;
 
-in float lambert;
 
 void main()
 {
+    FragColor = vec4(lineColour, 1);
+    
 
-
-    //FragColor = vec4(vec3(lambert), 1.0);
-    FragColor = vec4(vec3(0.0), 1.0);
+    
 }

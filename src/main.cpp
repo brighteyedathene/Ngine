@@ -204,6 +204,10 @@ int main(int argc, char* argv[])
 	input.CreateButtonMapping("toggleDepthTest", SDL_SCANCODE_0);
 	bool disableDepthTest = true;
 
+	input.CreateButtonMapping("toggleDebugColours", SDL_SCANCODE_9);
+	bool enableDebugColours = false;
+
+
 #pragma endregion button_mapping
 
 	float time = 0;
@@ -327,7 +331,7 @@ int main(int argc, char* argv[])
 			std::cout << "pen" << std::endl;
 			edgeThreshold = 0.14;
 			thicknessMax = 0.004;
-			thicknessMin = 0.0031;
+			thicknessMin = 0.0035;
 		}
 		if (input.GetButtonDown("setInkMode"))
 		{
@@ -368,6 +372,12 @@ int main(int argc, char* argv[])
 			std::cout << "disable depth test: " << disableDepthTest << std::endl;
 		}
 
+		if (input.GetButtonDown("toggleDebugColours"))
+		{
+			enableDebugColours = !enableDebugColours;
+			std::cout << "Enable debug colours: " << enableDebugColours << std::endl;
+		}
+
 #pragma endregion democontrols
 
 
@@ -405,19 +415,16 @@ int main(int argc, char* argv[])
 		lightInvertedHullShader.SetFloat("edgeThreshold", edgeThreshold);
 		lightInvertedHullShader.SetFloat("thicknessMin", thicknessMin);
 		lightInvertedHullShader.SetFloat("thicknessMax", thicknessMax);
+		if (enableDebugColours)
+			lightInvertedHullShader.SetVec3("lineColour", glm::vec3(0.9f, 0.0f, 0.1f));
+		else
+			lightInvertedHullShader.SetVec3("lineColour", glm::vec3(0.0f));
 
-		// prepare flat shader
-		flatShader.Use();
-		flatShader.SetMat4("projectionview", pv);
-		flatShader.SetVec3("viewPos", mainCamera.transform.position);
-		flatShader.SetVec3("light.position", sphere.transform.position);
-		flatShader.SetVec3("light.colour", glm::vec3(1.0));
-		flatShader.SetVec3("material.diffuse", glm::vec3(0.8));
-		flatShader.SetVec3("material.specular", glm::vec3(0.99));
-		flatShader.SetFloat("material.shininess", 32.0);
-		flatShader.SetInt("numShades", 3);
+
 		
 		// Inverted hull stuff
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		//glEnable(GL_BLEND);
 		glEnable(GL_CULL_FACE);
 		glFrontFace(GL_CW);
 		if(disableDepthTest)
@@ -439,6 +446,8 @@ int main(int argc, char* argv[])
 		}
 
 		glFrontFace(GL_CCW);
+		//glDisable(GL_BLEND);
+		//glEnable(GL_CULL_FACE);
 		if(disableDepthTest)
 			glEnable(GL_DEPTH_TEST);
 
@@ -449,11 +458,7 @@ int main(int argc, char* argv[])
 		sphere.Draw(&lightShader);
 
 
-		flatShader.Use();
 
-		//cube.Draw(&flatShader);
-		//sphere.Draw(&flatShader);
-		//object.Draw(&flatShader);
 
 		// Subpoly shader stuff
 		subpolyShader.Use();
@@ -465,6 +470,11 @@ int main(int argc, char* argv[])
 		subpolyShader.SetFloat("thicknessMin", thicknessMin);
 		subpolyShader.SetFloat("thicknessMax", thicknessMax);
 		subpolyShader.SetFloat("edgeThreshold", edgeThreshold);
+		if (enableDebugColours)
+			subpolyShader.SetVec3("lineColour", glm::vec3(0.0f, 0.9f, 0.1f));
+		else
+			subpolyShader.SetVec3("lineColour", glm::vec3(0.0f));
+
 
 		object.Draw(&subpolyShader);
 

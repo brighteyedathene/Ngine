@@ -24,7 +24,6 @@ out vec3 FragPos;
 
 out float viewDotNormal;
 out float viewDistance;
-out vec3 vColour;
 
 out float lambert;
 
@@ -33,10 +32,9 @@ void main()
 
     FragPos = vec3(model * vec4(aPos, 1.0f));
     Normal = normalize(mat3(transpose(inverse(model))) * aNormal);
-    vColour = aColour;
 
-    vec3 lightDir = light.position - FragPos;
-    lambert = max(dot(Normal, lightDir), 0.0);
+    //vec3 lightDir = light.position - FragPos;
+    //lambert = min(1, max(dot(Normal, lightDir), 0.0));
 
 
 
