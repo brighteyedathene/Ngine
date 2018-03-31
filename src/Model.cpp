@@ -28,7 +28,8 @@ void Model::LoadModel(string path)
 		aiProcess_Triangulate | 
 		aiProcess_FlipUVs | 
 		aiProcess_CalcTangentSpace |
-		aiProcess_GenSmoothNormals
+		aiProcess_GenSmoothNormals |
+		aiProcess_RemoveComponent
 	);
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -62,6 +63,8 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene)
 	vector<unsigned int> indices;
 	vector<Texture> textures;
 
+//	Vertex previousVertex;
+
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 	{
 		Vertex vertex;
@@ -73,6 +76,12 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene)
 		vector.y = mesh->mVertices[i].y;
 		vector.z = mesh->mVertices[i].z;
 		vertex.Position = vector;
+
+		//if (vertex.Position == previousVertex.Position)
+		//{
+		//	std::cout << "old: " << previousVertex.Position.x << " " << previousVertex.Position.y << " " << previousVertex.Position.z << " "
+		//		<< "    new: " << vertex.Position.x << " " << vertex.Position.y << " " << vertex.Position.z << " " << std::endl;
+		//}
 
 		if (mesh->HasNormals())
 		{		
@@ -108,7 +117,8 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene)
 			vector.y = mesh->mColors[0][i].g;
 			vector.z = mesh->mColors[0][i].b;
 
-			//std::cout << mesh->mColors[0][i].r << " " << mesh->mColors[0][i].g << " " << mesh->mColors[0][i].b << std::endl;
+			//if (mesh->mColors[0][i].r != 1)
+			//	std::cout << mesh->mColors[0][i].r << " " << mesh->mColors[0][i].g << " " << mesh->mColors[0][i].b << std::endl;
 
 			//vector.x = mesh->mColors[i];
 			//vector.y = mesh->mColors[i].g;
@@ -132,6 +142,8 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene)
 			vertex.TexCoords = glm::vec2(0.0f, 0.0f);
 		}
 		vertices.push_back(vertex);
+		//previousVertex = vertex;
+		
 	}
 	// process indices
 	for (unsigned int i = 0; i < mesh->mNumFaces; i++)

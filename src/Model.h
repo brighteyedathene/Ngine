@@ -11,6 +11,13 @@
 #include "Mesh.h"
 #include "IDrawable.h"
 
+
+// Remove normals to force assimp to recalcualate them 
+// ... if the flag is set when reading the file
+// 
+#define AI_CONFIG_PP_RVC_FLAGS   aiComponent_NORMALS
+
+
 class Model : public IDrawable
 {
 public:

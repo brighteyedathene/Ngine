@@ -71,11 +71,25 @@ namespace ngine
 	const GLchar* otherTexturePath = "./Textures/otherTexture.jpg";
 	const GLchar* eyePath = "./Textures/eye.jpg";
 
-	const char* bearPath = "./Models/bear/bear.fbx";
+	//const char* bearPath = "./Models/bear/bear.fbx";
+	const char* bearPath = "./Models/bear/bear-colours.dae";
+	//const char* bearPath = "./Models/bear/bear-colours.fbx";
+
+	// lion obtained from https://sketchfab.com/models/d5e6b6a11da646f68a5fcba661dcae99
+	/* 
+	If the colours don't load properly, find the line
+		<param name="A" type="float"/>
+	and delete it. Some bug with Assimp's dae loader.
+	 */
+	const char* lionPath = "./Models/lion-crushing-a-serpent/lion-colours.dae"; 
+	//const char* lionPath = "./Models/lion-crushing-a-serpent/lion.obj";
+	//const char* lionPath = "./Models/lion-crushing-a-serpent/lion.fbx";
+
 	//const char* bearPath = "./Models/bear/mayabear.obj";
 	const char* missilePath = "./Models/missile/missile.obj";
 	
-	//const char* skullPath = "./Models/skull/skull.obj"; // obtained from https://sketchfab.com/models/1a9db900738d44298b0bc59f68123393#
+	// skull obtained from https://sketchfab.com/models/1a9db900738d44298b0bc59f68123393#
+	//const char* skullPath = "./Models/skull/skull.obj"; 
 	//const char* skullPath = "./Models/colourmodels/skull.fbx";
 	const char* skullPath = "./Models/colourmodels/skull-nonormals.obj"; 
 	//const char* skullPath = "./Models/colourmodels/skull.dae";
