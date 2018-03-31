@@ -19,12 +19,12 @@ out vec3 FragPos;
 void main()
 {
 
-    Normal = mat3(transpose(inverse(model))) * -aNormal;
+    Normal = mat3(transpose(inverse(model))) * aNormal;
 
-	float thickness = thicknessMin + (thicknessMax-thicknessMin )* max(aColour.r, 0.1);
+	float thickness = thicknessMin + (thicknessMax-thicknessMin )* max(aColour.r, 0);
 	vec3 extendedPos = aPos;
-	//extendedPos = extendedPos + Normal * thickness;
-	extendedPos = extendedPos * (1+thickness);
+	extendedPos = extendedPos + aNormal * thickness;
+	//extendedPos = extendedPos * (1+thickness);
 
     FragPos = vec3(model * vec4(extendedPos, 1.0f));
 
