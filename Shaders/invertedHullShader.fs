@@ -13,6 +13,8 @@ uniform vec3 viewPos;
 
 uniform float edgeThreshold;
 
+uniform vec3 lineColour;
+
 in vec3 Normal;
 in vec3 FragPos;
 
@@ -48,5 +50,5 @@ void main()
     }
     //FragColor = vec4(result, 1.0);
 
-    FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    FragColor = vec4(lineColour, 1.0);
 }

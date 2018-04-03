@@ -452,7 +452,7 @@ int main(int argc, char* argv[])
 			invertedHullShader.SetFloat("thicknessMin", thicknessMin);
 			invertedHullShader.SetFloat("thicknessMax", thicknessMax);
 			if (enableDebugColours)
-				invertedHullShader.SetVec3("lineColour", glm::vec3(0.9f, 0.0f, 0.1f));
+				invertedHullShader.SetVec3("lineColour", glm::vec3(0.0f, 0.1f, 0.9f));
 			else
 				invertedHullShader.SetVec3("lineColour", glm::vec3(0.0f));
 			object.Draw(&invertedHullShader);
