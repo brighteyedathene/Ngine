@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
 	//cube.transform.scale = glm::vec3(0.05f);
 
 	// Skull
-	//Model skullModel(skullPath);
+	Model skullModel(skullPath);
 
 	// Lion
 	Model lionModel(lionPath);
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 	//missile.SetInput(&input);
 
 	// Bear object
-	//Model bearModel(bearPath);
+	Model bearModel(bearPath);
 	//NaiveGameObject bear;
 	//bear.SetMesh(&bearModel);
 	//bear.transform.scale = glm::vec3(5.0f);
@@ -169,6 +169,9 @@ int main(int argc, char* argv[])
 	input.CreateButtonMapping("b_RollLeft", SDL_SCANCODE_U);
 	input.CreateButtonMapping("b_RollRight", SDL_SCANCODE_O);
 
+	input.CreateButtonMapping("toggleSpin", SDL_SCANCODE_G);
+	bool spinning = false;
+
 
 	// Demo Stuff
 	// line drawing
@@ -207,6 +210,13 @@ int main(int argc, char* argv[])
 
 
 	input.CreateButtonMapping("setLightPosition", SDL_SCANCODE_T);
+
+	input.CreateButtonMapping("switchModel", SDL_SCANCODE_KP_3);
+	int modelNumber = 0;
+	vector<Model*> modelArray;
+	modelArray.push_back(&lionModel);
+	modelArray.push_back(&bearModel);
+	modelArray.push_back(&skullModel);
 
 
 #pragma endregion button_mapping
@@ -261,6 +271,15 @@ int main(int argc, char* argv[])
 		if (input.GetButton("b_RollRight"))
 			object.transform.rotation.z += 1.0f;
 
+		if (input.GetButtonDown("toggleSpin"))
+		{
+			spinning = !spinning;
+			std::cout << "spinning: " << spinning << std::endl;
+		}
+		if (spinning)
+		{
+			object.transform.rotation.y += 0.2f;
+		}
 
 		// Handle Camera controls // TODO move this to the camera controller
 		if (input.GetButtonDown("Freeze"))
@@ -396,6 +415,12 @@ int main(int argc, char* argv[])
 		if (input.GetButtonDown("setLightPosition"))
 		{
 			sphere.transform.position = mainCamera.transform.position;
+		}
+
+		if (input.GetButtonDown("switchModel"))
+		{
+			modelNumber = (modelNumber + 1) % modelArray.size();
+			object.SetMesh(modelArray[modelNumber]);
 		}
 
 #pragma endregion democontrols

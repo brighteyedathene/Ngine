@@ -5,7 +5,7 @@ out vec4 FragColor;
 
 struct Light {
     vec3 position;
-    vec3 colour;
+    //vec3 colour;
 };
 uniform Light light;  
 
@@ -27,12 +27,11 @@ void main()
     lightDir = normalize(lightDir);
     float lambertian = max(dot(Normal, lightDir), 0.0);
 
-	if (viewDotNormal <= min((1 - lambertian) * edgeThreshold, edgeThreshold)){
-    	FragColor = vec4(lineColour, 1);
+    if (viewDotNormal <= (1 - lambertian) * edgeThreshold){
+        FragColor = vec4(lineColour, 1);
     }
     else{
-    	FragColor = vec4(1);
+        FragColor = vec4(1);
     }
 
- 
 }

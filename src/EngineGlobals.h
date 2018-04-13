@@ -11,8 +11,8 @@
 
 namespace ngine
 {
-	int WINDOW_WIDTH = 1280; // initial width
-	int WINDOW_HEIGHT = 720; // initial height
+	int WINDOW_WIDTH = 1920; // initial width
+	int WINDOW_HEIGHT = 1080; // initial height
 
 
 #pragma region shaders
@@ -91,8 +91,8 @@ namespace ngine
 	// skull obtained from https://sketchfab.com/models/1a9db900738d44298b0bc59f68123393#
 	//const char* skullPath = "./Models/skull/skull.obj"; 
 	//const char* skullPath = "./Models/colourmodels/skull.fbx";
-	const char* skullPath = "./Models/colourmodels/skull-nonormals.obj"; 
-	//const char* skullPath = "./Models/colourmodels/skull.dae";
+	//const char* skullPath = "./Models/colourmodels/skull-nonormals.obj"; 
+	const char* skullPath = "./Models/skull/skull-colourA.dae";
 
 	//const char* skullPath = "./Models/sugconmodels/lucy.obj";
 
