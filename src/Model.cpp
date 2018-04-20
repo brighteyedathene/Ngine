@@ -151,6 +151,10 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene)
 		aiFace face = mesh->mFaces[i];
 		for (unsigned int j = 0; j < face.mNumIndices; j++)
 			indices.push_back(face.mIndices[j]);
+		
+		glm::vec3 p0 = vertices[face.mIndices[0]].Position;
+		glm::vec3 p1 = vertices[face.mIndices[1]].Position;
+		glm::vec3 p2 = vertices[face.mIndices[2]].Position;
 	}
 	
 	// process material
