@@ -56,11 +56,17 @@ namespace ngine
 	const GLchar* lightInvertedHullShaderVertexPath = "./Shaders/lightInvertedHull.vs";
 	const GLchar* lightInvertedHullShaderFragmentPath = "./Shaders/lightInvertedHull.fs";
 
-	const GLchar* colourShaderVertexPath = "./Shaders/colourShader.vs";
-	const GLchar* colourShaderFragmentPath = "./Shaders/colourShader.fs";
+	const GLchar* vertexColourShaderVertexPath = "./Shaders/vertexColourShader.vs";
+	const GLchar* vertexColourShaderFragmentPath = "./Shaders/vertexColourShader.fs";
 
 	const GLchar* subpolyVertexPath = "./Shaders/subpoly.vs";
 	const GLchar* subpolyFragmentPath = "./Shaders/subpoly.fs";
+
+	const GLchar* subpolyWithColourVertexPath = "./Shaders/subpolyWithColour.vs";
+	const GLchar* subpolyWithColourFragmentPath = "./Shaders/subpolyWithColour.fs";
+
+	const GLchar* lambertianVertexPath = "./Shaders/lambertian.vs";
+	const GLchar* lambertianFragmentPath = "./Shaders/lambertian.fs";
 
 #pragma endregion shaders
 
@@ -94,7 +100,8 @@ namespace ngine
 	//const char* skullPath = "./Models/colourmodels/skull-nonormals.obj"; 
 	const char* skullPath = "./Models/skull/skull-colourA.dae";
 
-	//const char* skullPath = "./Models/sugconmodels/lucy.obj";
+	// buddha is from stanford
+	const char* buddhaPath = "./Models/buddha/buddha-D.dae";
 
 
 	const char* bninjaPath = "./Models/bninja/bnin_Idle_Textured.dae";

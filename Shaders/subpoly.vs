@@ -3,6 +3,8 @@
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 
+layout (location = 5) in vec3 aColour;
+ 
 uniform mat4 projectionview;
 uniform mat4 model;
 

@@ -63,12 +63,15 @@ int main(int argc, char* argv[])
 	Shader particleShader(particleShaderVertexPath, particleShaderFragmentPath);
 	Shader bumpmapShader(bumpmapShaderVertexPath, bumpmapShaderFragmentPath);
 
+	// primary shaders (first pass)
 	Shader invertedHullShader(invertedHullShaderVertexPath, invertedHullShaderFragmentPath);
 	Shader lightInvertedHullShader(lightInvertedHullShaderVertexPath, lightInvertedHullShaderFragmentPath);
 
-	Shader colourShader(colourShaderVertexPath, colourShaderFragmentPath);
-
+	// secondary shaders (second pass)
+	Shader vertexColourShader(vertexColourShaderVertexPath, vertexColourShaderFragmentPath);
 	Shader subpolyShader(subpolyVertexPath, subpolyFragmentPath);
+	Shader subpolyWithColourShader(subpolyWithColourVertexPath, subpolyWithColourFragmentPath);
+	Shader lambertianShader(lambertianVertexPath, lambertianFragmentPath);
 
 #pragma region load_assets
 	
@@ -96,6 +99,9 @@ int main(int argc, char* argv[])
 
 	// Lion
 	Model lionModel(lionPath);
+
+	// Buddha
+	Model buddhaModel(buddhaPath);
 
 	// Missile object
 	//Model missileModel(missilePath);
@@ -187,12 +193,21 @@ int main(int argc, char* argv[])
 	input.CreateButtonMapping("edgeThreshold-", SDL_SCANCODE_KP_8);
 	float edgeThreshold = 0.1;
 
-	input.CreateButtonMapping("toggleShaderA", SDL_SCANCODE_KP_9);
-	bool shaderAOn = true;
-	input.CreateButtonMapping("toggleShaderB", SDL_SCANCODE_KP_6);
-	bool shaderBOn = true;
+	input.CreateButtonMapping("cyclePrimaryShader", SDL_SCANCODE_KP_9);
+	bool primaryShaderIndex = 0;
+	vector<Shader*> primaryShaders;
+	primaryShaders.push_back(&invertedHullShader);
+	primaryShaders.push_back(&lightInvertedHullShader);
 
-	input.CreateButtonMapping("setUnlitMode", SDL_SCANCODE_7);
+	input.CreateButtonMapping("cycleSecondaryShader", SDL_SCANCODE_KP_6);
+	int secondaryShaderIndex = 0;
+	vector<Shader*> secondaryShaders;
+	secondaryShaders.push_back(&subpolyShader);
+	secondaryShaders.push_back(&subpolyWithColourShader);
+	secondaryShaders.push_back(&vertexColourShader);
+	secondaryShaders.push_back(&lambertianShader);
+
+	input.CreateButtonMapping("toggleCVertexColourUse", SDL_SCANCODE_7);
 
 
 	input.CreateButtonMapping("setPenMode", SDL_SCANCODE_1);
@@ -215,6 +230,7 @@ int main(int argc, char* argv[])
 	int modelNumber = 0;
 	vector<Model*> modelArray;
 	modelArray.push_back(&lionModel);
+	modelArray.push_back(&buddhaModel);
 	modelArray.push_back(&bearModel);
 	modelArray.push_back(&skullModel);
 
@@ -339,15 +355,15 @@ int main(int argc, char* argv[])
 			std::cout << "edgeThreshold: " << edgeThreshold << std::endl;
 		}
 
-		if (input.GetButtonDown("toggleShaderA"))
+		if (input.GetButtonDown("cyclePrimaryShader"))
 		{
-			shaderAOn = !shaderAOn;
-			std::cout << "inverted hull shader: " << shaderAOn << std::endl;
+			primaryShaderIndex = (primaryShaderIndex + 1) % primaryShaders.size();
+			std::cout << "primary shader index: " << primaryShaderIndex << std::endl;
 		}
-		if (input.GetButtonDown("toggleShaderB"))
+		if (input.GetButtonDown("cycleSecondaryShader"))
 		{
-			shaderBOn = !shaderBOn;
-			std::cout << "inner shader: " << shaderBOn << std::endl;
+			secondaryShaderIndex = (secondaryShaderIndex + 1) % secondaryShaders.size();
+			std::cout << "secondary shader index: " << secondaryShaderIndex << std::endl;
 		}
 
 
@@ -448,41 +464,39 @@ int main(int argc, char* argv[])
 		if(disableDepthTest)
 			glDisable(GL_DEPTH_TEST);
 
-		if (shaderAOn)
-		{
-			// prepare inverted hull (light)
-			lightInvertedHullShader.Use();
-			lightInvertedHullShader.SetMat4("projectionview", pv);
-			lightInvertedHullShader.SetVec3("viewPos", mainCamera.transform.position);
-			lightInvertedHullShader.SetVec3("light.position", sphere.transform.position);
-			lightInvertedHullShader.SetVec3("light.colour", glm::vec3(1.0));
-			lightInvertedHullShader.SetFloat("edgeThreshold", edgeThreshold);
-			lightInvertedHullShader.SetFloat("thicknessMin", thicknessMin);
-			lightInvertedHullShader.SetFloat("thicknessMax", thicknessMax);
-			if (enableDebugColours)
-				lightInvertedHullShader.SetVec3("lineColour", glm::vec3(0.9f, 0.0f, 0.1f));
-			else
-				lightInvertedHullShader.SetVec3("lineColour", glm::vec3(0.0f));
+		Shader* pShaderA = primaryShaders[primaryShaderIndex];
+		Shader* pShaderB = secondaryShaders[secondaryShaderIndex];
+		glm::vec3 debugColourA;
+		glm::vec3 debugColourB;
 
-			object.Draw(&lightInvertedHullShader);
-			sphere.Draw(&lightInvertedHullShader);
+		if (primaryShaderIndex == 0)
+		{
+			pShaderA = &lightInvertedHullShader;
+			debugColourA = glm::vec3(0.9f, 0.0f, 0.1f);
 		}
 		else
 		{
-			// prepare inverted hull shader (colour)
-			invertedHullShader.Use();
-			invertedHullShader.SetMat4("projectionview", pv);
-			invertedHullShader.SetVec3("viewPos", mainCamera.transform.position);
-			invertedHullShader.SetFloat("edgeThreshold", edgeThreshold);
-			invertedHullShader.SetFloat("thicknessMin", thicknessMin);
-			invertedHullShader.SetFloat("thicknessMax", thicknessMax);
-			if (enableDebugColours)
-				invertedHullShader.SetVec3("lineColour", glm::vec3(0.0f, 0.1f, 0.9f));
-			else
-				invertedHullShader.SetVec3("lineColour", glm::vec3(0.0f));
-			object.Draw(&invertedHullShader);
-			sphere.Draw(&invertedHullShader);
+			pShaderA = &invertedHullShader;
+			debugColourA = glm::vec3(0.0f, 0.1f, 0.9f);
 		}
+
+		// prepare silhouette shader
+		pShaderA->Use();
+		pShaderA->SetMat4("projectionview", pv);
+		pShaderA->SetVec3("viewPos", mainCamera.transform.position);
+		pShaderA->SetVec3("light.position", sphere.transform.position);
+		pShaderA->SetVec3("light.colour", glm::vec3(1.0));
+		pShaderA->SetFloat("edgeThreshold", edgeThreshold);
+		pShaderA->SetFloat("thicknessMin", thicknessMin);
+		pShaderA->SetFloat("thicknessMax", thicknessMax);
+		if (enableDebugColours)
+			pShaderA->SetVec3("lineColour", debugColourA);
+		else
+			pShaderA->SetVec3("lineColour", glm::vec3(0.0f));
+
+		object.Draw(pShaderA);
+		sphere.Draw(pShaderA);
+
 
 		glFrontFace(GL_CCW);
 		//glDisable(GL_BLEND);
@@ -493,42 +507,26 @@ int main(int argc, char* argv[])
 		// Draw light
 		lightShader.Use();
 		lightShader.SetMat4("mvp", pv * sphere.transform.GetMatrix());
-		lightShader.SetVec3("ucolour", glm::vec3(1.0f));
+		lightShader.SetVec3("ucolour", glm::vec3(0.5f));
 		sphere.Draw(&lightShader);
 
 
-
-		if (shaderBOn)
-		{
-			// Subpoly shader stuff
-			subpolyShader.Use();
-			subpolyShader.SetMat4("projectionview", pv);
-			subpolyShader.SetVec3("viewPos", mainCamera.transform.position);
-			subpolyShader.SetVec3("light.position", sphere.transform.position);
-			subpolyShader.SetVec3("light.colour", glm::vec3(1.0));
-
-			subpolyShader.SetFloat("thicknessMin", thicknessMin);
-			subpolyShader.SetFloat("thicknessMax", thicknessMax);
-			subpolyShader.SetFloat("edgeThreshold", edgeThreshold);
-			if (enableDebugColours)
-				subpolyShader.SetVec3("lineColour", glm::vec3(0.0f, 0.9f, 0.1f));
-			else
-				subpolyShader.SetVec3("lineColour", glm::vec3(0.0f));
-
-			object.Draw(&subpolyShader);
-			sphere.Draw(&subpolyShader);
-
-		}
+		// prepare internal shader
+		pShaderB->Use();
+		pShaderB->SetMat4("projectionview", pv);
+		pShaderB->SetVec3("viewPos", mainCamera.transform.position);
+		pShaderB->SetVec3("light.position", sphere.transform.position);
+		//pShaderB->SetVec3("light.position", mainCamera.transform.position);
+		pShaderB->SetVec3("light.colour", glm::vec3(1.0));
+		pShaderB->SetFloat("edgeThreshold", edgeThreshold);
+		if (enableDebugColours)
+			pShaderB->SetVec3("lineColour", debugColourB);
 		else
-		{
-			// Show vertex colours
-			blinnPhongShader.Use();
-			blinnPhongShader.SetMat4("projectionview", pv);
-			blinnPhongShader.SetVec3("viewPos", mainCamera.transform.position);
+			pShaderB->SetVec3("lineColour", glm::vec3(0.0f));
 
-			object.Draw(&blinnPhongShader);
-			sphere.Draw(&blinnPhongShader);
-		}
+		object.Draw(pShaderB);
+		sphere.Draw(pShaderB);
+
 
 
 
